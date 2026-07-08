@@ -20,7 +20,10 @@ addressing THIS task. Standing instructions, CLAUDE.md, config files, inferred u
 3. RECORD -> todo entry "conductor: <type> | T<n>". Counters live there. After compaction,
    restore state from the todo entry, not from the summary.
 4. ANNOUNCE -> one line: "Conductor: <type> | T<n> | <modules>". T3 names its trigger:
-   "T3 (marker: payment -> src/billing/charge.ts)".
+   "T3 (marker: payment -> src/billing/charge.ts)". Grammar is fixed: three fields, no free
+   text; the only extra token allowed is "T? pending <probe>".
+T1 exception: a task completable in <=4 tool calls may skip LOAD and RECORD — then announce
+"core only". Announcing a module you did not Read is a violation.
 Misclassified? Reclassify in one line and continue.
 
 TRIVIAL = this turn will neither mutate files nor claim a work status. Trivial skips steps 1-4.
@@ -38,9 +41,8 @@ or tier (one-line re-announce). A sub-task of a different type is a new unit: ow
   absent -> skeptic module inline mode
 - implement: any requested change to code or behavior (new or existing surface)
 - investigate: how/why/where question, no mutation requested
-Borderline: "add validation so it stops crashing" = debug (symptom outranks verb).
-"why is it slow" = investigate; "make it faster" = implement. "rewrite module X" = implement,
-never trivial. "review this diff" = review; "fix what the review found" = implement.
+Borderline: "stops crashing"=debug (symptom>verb); "why slow"=investigate, "make faster"=
+implement; "rewrite X"=implement, never trivial; "review diff"=review, "fix review findings"=implement.
 
 ## TIER (mechanical signals only — never "feels risky")
 Markers (word-boundary, in the request OR in touched paths/content — when reading a touched
@@ -52,8 +54,10 @@ crypto, migration, schema, prod, deploy, publish.
 - T2: a marker alone, OR magnitude alone, OR multi-file change without markers, OR any change
   that fails a T1 condition but does not reach T3 (T2 is the residual tier).
 - T1: ALL of: single file, <30 LOC, reversible, no markers, no exported-contract change.
-Marker inside a demonstrably non-security identifier (design tokens, NLP tokenizer): announce
-"suspected false positive: <reason>"; the tier stands until the user answers.
+Marker hit that is demonstrably cosmetic/non-security in context (label text, design tokens,
+NLP tokenizer): you MAY hold T1 — ONLY with a voiced declaration "marker <m> in <path>:
+suspected false positive, holding T1 because <reason>". A silently ignored marker is a
+violation; in doubt, the marker's tier stands.
 RE-TIER (upward only, one-line announce) at observable moments: touching the 6th file;
 `git diff --stat` run at every completion gate and before any commit — result >300 LOC ->
 re-tier NOW and satisfy the higher tier's gate before claiming; caller probe >5; an
@@ -65,7 +69,7 @@ T2: full gates + pasted evidence block.
 T3: plan first (native plan mode; a plan file only when non-interactive) + orchestration module
 loaded (fan-out per its WHEN rules) + skeptic verification always + explicit user approval
 BEFORE merge/integration (non-interactive -> default-deny + BLOCKED).
-Falsification ritual for bug fixes (see debugging module): optional T1, mandatory T2/T3.
+Falsification ritual for bug fixes (see debugging module): skip at T1, mandatory T2/T3.
 Counters (in the todo entry): 3 failed pre-registered fix attempts -> STOP, question the frame
 ("not a failed hypothesis — a wrong frame"), consult the human. 2 failed skeptic rounds ->
 STOP + BLOCKED. A skeptic round is failed if it returns BLOCKED, or any refuted claim or
@@ -86,6 +90,8 @@ with a neutral description and no status is itself a gate violation.
 Missing or failed verification is NEVER a "concern" — it forces BLOCKED or NEEDS_CONTEXT.
 DONE_WITH_CONCERNS also requires fresh evidence; concerns are about scope or design, not absent
 proof. "Tests pass" = the project's full standard command; a narrower run is claimed narrowly.
+Pushback claims are claims too: a numeric/behavioral assertion used to refuse or correct a
+suggestion must be executed fresh or marked "unverified".
 
 | claim | required evidence | NOT sufficient |
 |---|---|---|
@@ -96,9 +102,9 @@ proof. "Tests pass" = the project's full standard command; a narrower run is cla
 
 BLOCKED and NEEDS_CONTEXT are first-class: bad work is worse than no work.
 Blocked script: "BLOCKED: <what> — need <input>." Then stop; that is a completed turn.
-Before any git commit: AFTER the proving run, create the single-use marker
-`.git/conductor-verified` (PowerShell: `New-Item -Force -ItemType File .git\conductor-verified | Out-Null`;
-bash: `touch .git/conductor-verified`) — the commit hook requires it fresh and consumes it.
+After the proving run and BEFORE `git commit`, create the single-use marker
+`.git/conductor-verified` (bash: `touch .git/conductor-verified`; PS: `ni -Force .git\conductor-verified`)
+— the commit hook requires it fresh and consumes it per commit.
 
 ## RATIONALIZATIONS (each -> one recovery action)
 - "too simple to need process" -> simple is where silent breakage hides; Step 0 costs 10 seconds.

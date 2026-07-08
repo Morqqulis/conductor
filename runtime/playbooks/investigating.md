@@ -17,6 +17,9 @@ Every claim in the answer carries file:line (or command output) evidence.
    - more than 8 candidate files OR more than 2 independent angles -> load orchestration.md
      and fan out;
    - within thresholds -> serial reading is legal.
+   The threshold fires on COUNT alone: file size, estimated read cost, and "serial is faster
+   here" are judgments and NEVER override it. The only sanctioned inline path is
+   orchestration's Degradation rule (Agent tool unavailable — announce it).
 2. MAP in this order: entry points -> boundary contracts (types/schemas) -> data flow -> storage.
 3. ANSWER with the map; each statement cites file:line. An unverified inference must be marked
    "inferred, not verified" explicitly.

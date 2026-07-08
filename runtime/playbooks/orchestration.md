@@ -36,7 +36,8 @@ this whitelist (with its restricted status set DONE | BLOCKED), not an exception
 
 ## Routing (controller-side, per returned status)
 - DONE -> verify by artifact: inspect the diff / run the check yourself. The report is never
-  the evidence (core claim table).
+  the evidence (core claim table). Proportionality: on small scopes spot-check the
+  load-bearing claims — re-reading everything the agents read defeats the fan-out.
 - DONE_WITH_CONCERNS -> read each named concern; it becomes a follow-up item or an accepted
   risk recorded in your own report.
 - BLOCKED -> NEVER re-dispatch the same prompt; fix the blocker or split the task.

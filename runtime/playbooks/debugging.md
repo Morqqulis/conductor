@@ -26,8 +26,11 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user
    confirmed it is a different bug. At 3 failed attempts -> STOP per core counter rules and
    consult the human.
-6. FALSIFICATION RITUAL (mandatory T2/T3, optional T1). First run probes.md#dirty-tree —
-   unrelated changes in the tree must not enter the stash.
+6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks). First run
+   probes.md#dirty-tree — unrelated changes must not enter the stash. If any fix-touched file
+   is untracked (`git ls-files --error-unmatch <file>` fails) or stash is unusable, do a
+   manual revert instead: restore the original content (`git show HEAD:<file>`), run, then
+   re-apply the fix — never skip the MUST-FAIL run because tooling was awkward.
    ```
    identify/write a regression test for the ORIGINAL symptom
    run  -> MUST pass

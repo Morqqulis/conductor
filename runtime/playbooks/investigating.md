@@ -6,8 +6,13 @@ Load trigger: investigate classification; or tempted to answer from priors.
 Every claim in the answer carries file:line (or command output) evidence.
 
 ## Sequence
+0. GRAPH CHECK: if `graphify-out/` exists in the project root (Glob it), query the knowledge
+   graph FIRST (/graphify) — connections there are data, not guesses; seed the enumeration
+   list from its answers.
 1. ENUMERATE first — always. Build the candidate list with Glob/Grep: the files AND the
    distinct search angles (by-name, by-content, by-caller, by-config). State the list's length.
+   For cross-module questions, run probes.md#hidden-coupling on the target — its findings are
+   candidate-list entries too.
    The list is the branch input:
    - more than 8 candidate files OR more than 2 independent angles -> load orchestration.md
      and fan out;

@@ -377,6 +377,13 @@ v1.1 upgrade path (documented, not built): UserPromptSubmit hook one-line remind
 content ages out of attention by turn ~30); Stop/PreToolUse(git commit) hook machine-checking a
 fresh verification artifact; mined tripwire tables; ledger if compaction-loss is observed.
 
+v1.1 SHIPPED EARLY (2026-07-09, user request — "connection amplifiers" for non-obvious
+cross-module links): graphify graph-check as investigating.md step 0 (mechanical predicate:
+graphify-out/ exists); probes.md#hidden-coupling (co-change git archaeology + shared-writes/
+events/env/magic-string greps); intersection rule in orchestration.md integration (file named
+by >=2 agents from different angles = coupling hotspot). Deployed to live tree only after the
+A/B benchmark completed (measurement isolation).
+
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).
 - Fully autonomous: hook-driven activation; the user's only interactions are optional vetoes

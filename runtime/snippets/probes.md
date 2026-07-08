@@ -26,4 +26,18 @@ PowerShell: `git status --porcelain`   # any output = dirty
 bash:       `git status --porcelain`   # any output = dirty
 # Dirty -> stop: commit, stash, or get an explicit user decision first. Never discard silently.
 
+## probes.md#hidden-coupling
+Mechanical detectors for connections no import reveals. Run when investigating cross-module
+behavior, and before editing a module at T2+ where blast radius matters:
+1. Co-change archaeology — files that repeatedly change in the same commits as the target are
+   coupled even with zero static links:
+   bash: `git log --follow --pretty=format:'%H' -50 -- <target> | while read c; do git show --name-only --pretty=format: $c; done | sort | uniq -c | sort -rn | head -10`
+   PowerShell: `git log --follow --pretty=format:'%H' -50 -- <target> | % { git show --name-only --pretty=format: $_ } | ? { $_ } | Group-Object | Sort Count -Desc | Select -First 10`
+   Appears in >=3 shared commits -> treat as coupled.
+2. Shared writes: Grep the DB table/collection name -> every other writer is coupled.
+3. Events/topics: Grep the event name -> emitters + listeners are one system.
+4. Shared env/config keys: Grep the key -> every reader is blast radius.
+5. Duplicated magic strings: Grep the literal -> copy-paste coupling.
+Findings feed the enumeration list (investigating) and the re-tier decision (core).
+
 Shell choice rule: use the shell this session already used; default PowerShell on this host.

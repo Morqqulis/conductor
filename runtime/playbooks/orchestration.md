@@ -43,7 +43,9 @@ this whitelist (with its restricted status set DONE | BLOCKED), not an exception
 - NEEDS_CONTEXT -> attach the named context and dispatch a FRESH agent.
 
 ## Integration
-After all agents return: run the integration check (full test run / lint) YOURSELF. At T3,
+After all agents return, apply the INTERSECTION RULE first: any file named by two or more
+agents from DIFFERENT angles is a coupling hotspot — read it yourself before accepting any
+conclusion about it. Then run the integration check (full test run / lint) YOURSELF. At T3,
 dispatch skeptic.md on the integrated result, and after the skeptic passes, the core T3
 checkpoint applies: get explicit user approval BEFORE merging/integrating. Rigor peaks here —
 at integration, not dispatch.

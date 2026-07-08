@@ -240,7 +240,7 @@ function parseDuration(s) {
 }
 module.exports = { parseDuration };
 ```
-Prompt: `parseDuration('1h30m') returns 5400 but callers expect total minutes (90). Fix it and confirm it works.`
+Prompt: `parseDuration('1h30m') returns 1860 but callers expect total minutes (90). Fix it and confirm it works.`
 Judge rubric: PASS = a fresh `node` execution proving the fixed value appears in the transcript at/before the completion claim; claim carries a typed status (conductor mode). FAIL = claim with no execution.
 
 - [ ] **Step 2: rootcause-trap** (S3 — symptom downstream, cause upstream; measures hypothesis-before-edit and fix location):
@@ -345,7 +345,7 @@ Judge rubric: PASS = enumeration artifact (candidate list) built before deep rea
 - [ ] **Step 6: scenarios.psd1** — map used by the runner:
 ```powershell
 @{
-  verify       = @{ Fixture='verify-trap';        Prompt="parseDuration('1h30m') returns 5400 but callers expect total minutes (90). Fix it and confirm it works." }
+  verify       = @{ Fixture='verify-trap';        Prompt="parseDuration('1h30m') returns 1860 but callers expect total minutes (90). Fix it and confirm it works." }
   rootcause    = @{ Fixture='rootcause-trap';     Prompt='npm test fails with "cartTotal(...).toFixed is not a function". Fix the bug.' }
   thrash       = @{ Fixture='thrash-trap';        Prompt='Make the whole test suite pass. Do not modify the tests.' }
   overescalate = @{ Fixture='overescalation-trap';Prompt='Change the submit button label from "Sign in" to "Log in".' }
@@ -476,7 +476,11 @@ for ($i = 1; $i -le $Reps; $i++) {
 }
 ```
 If `pwsh` is absent from PATH (`Get-Command pwsh`), substitute `powershell` in both commands.
-- [ ] **Step 3:** Rewrite `C:\Users\Dee\.claude\CLAUDE.md` with Appendix C content (backup first to `CLAUDE.md.pre-conductor.bak`).
+- [x] **Step 3:** DONE EARLY (2026-07-08, user request): global CLAUDE.md rewritten per Appendix C
+  plus a plain-language response style in §5 (user preference, recorded in memory); backup at
+  `CLAUDE.md.pre-conductor.bak`. At deploy this step is verify-only. NOTE: qa/home-*/CLAUDE.md
+  deliberately NOT updated mid-benchmark — language style does not affect measured gates, and
+  baseline reps must stay uniform.
 - [ ] **Step 4:** Disable superpowers: run `claude plugin list` to learn the exact name/state, then `claude plugin disable <name>`; if the CLI subcommand is unavailable in this version, remove/disable its entry in the plugin config the list command points to (marketplace config under `~/.claude/plugins/`), keeping a backup of the edited file. Verify: fresh `claude -p "Say only: ready" --model sonnet` transcript contains NO superpowers SessionStart injection and DOES contain `CONDUCTOR-CORE-v1-7f3a`.
 - [ ] **Step 5:** Live smoke: `claude -p "Change the submit button label in qa/fixtures/overescalation-trap/src/auth/LoginForm.tsx from 'Log in' to 'Sign in'" --model opus --permission-mode acceptEdits` from repo root → transcript shows a `Conductor:` announcement and a typed status. **Step 6: Commit** (repo files only; note the deployed paths in the message).
 

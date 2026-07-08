@@ -13,13 +13,16 @@ Every claim in the answer carries file:line (or command output) evidence.
    distinct search angles (by-name, by-content, by-caller, by-config). State the list's length.
    For cross-module questions, run probes.md#hidden-coupling on the target — its findings are
    candidate-list entries too.
-   The list is the branch input:
-   - more than 8 candidate files OR more than 2 independent angles -> load orchestration.md
-     and fan out;
-   - within thresholds -> serial reading is legal.
-   The threshold fires on COUNT alone: file size, estimated read cost, and "serial is faster
-   here" are judgments and NEVER override it. The only sanctioned inline path is
-   orchestration's Degradation rule (Agent tool unavailable — announce it).
+   The list is the branch input — every input MEASURED, never estimated:
+   - more than 2 independent angles -> load orchestration.md and fan out;
+   - more than 8 candidate files AND total volume over 400 lines (bash: `wc -l`;
+     PS: `Get-Content <files> | Measure-Object -Line`) -> load orchestration.md and fan out;
+   - more than 8 files but measured volume <=400 lines -> inline reading is legal ONLY with
+     the voiced declaration "fan-out hit on count; measured volume <N> lines <=400 — reading
+     inline". A silent skip is a violation.
+   Batched/parallel self-reads and content probes past a firing threshold ARE reading past
+   it — not a compliance path. Besides the measured-volume declaration, the only inline path
+   is orchestration's Degradation rule (Agent tool unavailable — announce it).
 2. MAP in this order: entry points -> boundary contracts (types/schemas) -> data flow -> storage.
 3. ANSWER with the map; each statement cites file:line. An unverified inference must be marked
    "inferred, not verified" explicitly.

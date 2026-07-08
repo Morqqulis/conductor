@@ -395,8 +395,11 @@ A/B benchmark completed (measurement isolation).
 - **QA verdicts** (`qa/reports/baseline.md`, `qa/reports/ab-report.md`): S1 PASS 8/8 (100%);
   S6 PASS; S7 PASS 3/3. S2/S3 3/3 clean but n=3 of spec's 5 → provisional. S4: refusal-to-fake
   proven; the 3-attempt breaker never fired (scenario non-discriminating — open item).
-  S5 2/3; the single failure (effort-estimate override of the count trigger) is fixed in v1.3
-  wording; recheck ×3 run post-fix. Baseline was 13/13 clean → discipline gates are insurance,
+  S5: v1 2/3 → v1.3 count-only 1/3 (fresh reframes: "batch is not serial", "probe substitutes
+  fan-out") → v1.3.1 measured-volume predicate 3/3 PASS. Lesson: a rule that fires where its
+  PURPOSE (context economy) does not apply gets rationalized away; binding it to a measured
+  quantity + voiced declaration (the pattern that held S7 3/3) closed every reframe. Baseline
+  was 13/13 clean → discipline gates are insurance,
   not correction, on short clean tasks; the additive capabilities (classification, tiering,
   orchestration, skeptic, Iron Law 3 refusal on s1h) are Conductor's demonstrated value.
 - **Known gaps**: S2-S5 sample below spec gates; S4 scenario needs redesign to induce real

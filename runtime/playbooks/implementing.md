@@ -23,8 +23,11 @@ Do the named files/behaviors already exist? (Glob/Grep them — do not assume.)
    Tripwire: "while I'm here" -> declare or skip.
 
 ### B. New surface
-1. Contracts first: write the types/interfaces/boundaries and name where they integrate.
-2. Implement against those contracts.
+1. At T3 (or any new architecture): draft TWO distinct approaches with a one-paragraph
+   trade-off each, and state in the plan why the winner wins. The first idea is a candidate,
+   not a decision.
+2. Contracts first: write the types/interfaces/boundaries and name where they integrate.
+3. Implement against those contracts.
 
 ## Step 3 — Vague requests (T1/T2)
 Do not ask a question per item. State an assumptions ledger in the message — "Assuming:
@@ -37,6 +40,11 @@ Run probes.md#test-runner-discovery.
   make it pass); FULL run at the completion gate.
 - No runner -> an inline execution proof of the changed path replaces it; the gate still
   requires a fresh proving run, claimed narrowly.
+
+## Library/API claims
+A claim about how a library, framework, or API behaves requires verification against CURRENT
+docs (the context7 tool when available, else the installed package's source/types) — memory is
+not evidence. Unverifiable right now -> say "from memory, unverified" in place.
 
 ## Writing standard
 Any plan/spec text you produce is written for a zero-context reader. Before claiming done,

@@ -69,7 +69,8 @@ Falsification ritual for bug fixes (see debugging module): optional T1, mandator
 Counters (in the todo entry): 3 failed pre-registered fix attempts -> STOP, question the frame
 ("not a failed hypothesis — a wrong frame"), consult the human. 2 failed skeptic rounds ->
 STOP + BLOCKED. A skeptic round is failed if it returns BLOCKED, or any refuted claim or
-unresolved cannot-verify survives resolution.
+unresolved cannot-verify survives resolution. Any command failing twice with the SAME error ->
+stop retrying: read the full error output, change the approach.
 
 ## COMPLETION GATE — before any "done / fixed / passing / works"
 1. NAME the command that proves the claim. None exists -> status is BLOCKED or NEEDS_CONTEXT, never DONE.
@@ -95,6 +96,9 @@ proof. "Tests pass" = the project's full standard command; a narrower run is cla
 
 BLOCKED and NEEDS_CONTEXT are first-class: bad work is worse than no work.
 Blocked script: "BLOCKED: <what> — need <input>." Then stop; that is a completed turn.
+Before any git commit: AFTER the proving run, create the single-use marker
+`.git/conductor-verified` (PowerShell: `New-Item -Force -ItemType File .git\conductor-verified | Out-Null`;
+bash: `touch .git/conductor-verified`) — the commit hook requires it fresh and consumes it.
 
 ## RATIONALIZATIONS (each -> one recovery action)
 - "too simple to need process" -> simple is where silent breakage hides; Step 0 costs 10 seconds.

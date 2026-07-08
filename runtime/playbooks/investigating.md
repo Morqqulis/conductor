@@ -22,7 +22,8 @@ Every claim in the answer carries file:line (or command output) evidence.
    "inferred, not verified" explicitly.
 
 ## Tripwires (in your own output)
-- "this framework usually…" / "typically this means…" -> priors are not evidence; open the file.
+- "this framework usually…" / "typically this means…" -> priors are not evidence; open the
+  file (for library behavior: current docs / context7, not memory).
 - About to read any file NOT on the enumeration list -> add it to the list BEFORE reading.
   The thresholds re-evaluate on every addition: the moment the list exceeds 8 files or
   2 angles, stop serial reading and apply the fan-out rule — mid-investigation, not only at

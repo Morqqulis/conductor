@@ -384,6 +384,28 @@ events/env/magic-string greps); intersection rule in orchestration.md integratio
 by >=2 agents from different angles = coupling hotspot). Deployed to live tree only after the
 A/B benchmark completed (measurement isolation).
 
+## Deployment record
+
+- **2026-07-09**: Conductor v1.3 LIVE. Runtime at `C:\Users\Dee\.claude\conductor\`; hooks
+  (SessionStart, SubagentStart, and v1.2's UserPromptSubmit + PreToolUse commit gate) in
+  `~/.claude/settings.json` via `install.ps1` (forward-slash paths — hooks execute through
+  bash on Windows, which eats backslashes; discovered via live-probe transcript). Global
+  CLAUDE.md reconciled (plain-language style, user preference); superpowers plugin disabled;
+  live session verified: sentinel present, zero hook errors, superpowers injection dead.
+- **QA verdicts** (`qa/reports/baseline.md`, `qa/reports/ab-report.md`): S1 PASS 8/8 (100%);
+  S6 PASS; S7 PASS 3/3. S2/S3 3/3 clean but n=3 of spec's 5 → provisional. S4: refusal-to-fake
+  proven; the 3-attempt breaker never fired (scenario non-discriminating — open item).
+  S5 2/3; the single failure (effort-estimate override of the count trigger) is fixed in v1.3
+  wording; recheck ×3 run post-fix. Baseline was 13/13 clean → discipline gates are insurance,
+  not correction, on short clean tasks; the additive capabilities (classification, tiering,
+  orchestration, skeptic, Iron Law 3 refusal on s1h) are Conductor's demonstrated value.
+- **Known gaps**: S2-S5 sample below spec gates; S4 scenario needs redesign to induce real
+  thrash; marker→T2 binding legitimized as voiced-T1-hold (v1.3) rather than enforced;
+  superpowers skills may linger in skill listings until caches refresh (its injection is dead);
+  compaction recovery verified at hook-unit level only (headless /compact untestable).
+- **Maintenance**: see `docs/MENTOR-NOTES.md` part 4 (observe failure → mechanical rule →
+  lint → one live rep → install.ps1).
+
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).
 - Fully autonomous: hook-driven activation; the user's only interactions are optional vetoes

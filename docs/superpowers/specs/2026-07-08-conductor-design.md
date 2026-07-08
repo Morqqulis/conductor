@@ -408,6 +408,17 @@ A/B benchmark completed (measurement isolation).
   compaction recovery verified at hook-unit level only (headless /compact untestable).
 - **Maintenance**: see `docs/MENTOR-NOTES.md` part 4 (observe failure → mechanical rule →
   lint → one live rep → install.ps1).
+- **2026-07-09 (v1.4.1)**: commit gate root-caused and FIXED. Symptom: markerless `git commit`
+  passed through silently. Proven causes (live-payload instrumentation + discriminating
+  chcp-866 pipe tests): (1) a headless pwsh decodes hook stdin AND git stdout with the OEM
+  codepage — the Cyrillic repo path corrupts, `rev-parse` fails, fail-open allows silently;
+  (2) the PreToolUse matcher covered only `Bash`, so PowerShell-tool commits were never gated
+  at all. Fix: explicit UTF-8 in both directions in `pre-commit-gate.ps1` (+ stderr report
+  when the repo root is unresolvable — silence is what hid this bug), matcher →
+  `Bash|PowerShell` (install.ps1 + settings.json). Verified: falsification ritual
+  pass/FAIL/pass on the OEM-866 regression check; live markerless Bash commit DENIED by the
+  harness; marker allow-path passes and consumes the marker. Residual: the new matcher loads
+  at session start — the PowerShell-tool live check belongs to the next session.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

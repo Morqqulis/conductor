@@ -38,7 +38,7 @@ if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
 $sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @([pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 }) }
 $subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
 $promptEntry   = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $promptCmd; timeout = 10 }) }
-$commitEntry   = [pscustomobject]@{ matcher = 'Bash'; hooks = @([pscustomobject]@{ type = 'command'; command = $commitCmd; timeout = 10 }) }
+$commitEntry   = [pscustomobject]@{ matcher = 'Bash|PowerShell'; hooks = @([pscustomobject]@{ type = 'command'; command = $commitCmd; timeout = 10 }) }
 foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry), @('UserPromptSubmit', $promptEntry), @('PreToolUse', $commitEntry))) {
     $name = $pair[0]; $entry = $pair[1]
     $kept = @()

@@ -3,7 +3,11 @@
 # Fail-open by design: any internal error allows the commit (a broken gate must not brick git),
 # but failures are reported to stderr so they are visible.
 try {
-    $raw = [Console]::In.ReadToEnd()
+    # A headless PowerShell defaults both console encodings to the OEM codepage, while the
+    # harness pipes UTF-8 JSON and git prints UTF-8 paths - non-ASCII repo paths (e.g.
+    # Cyrillic dirs) corrupt in both directions without explicit UTF-8.
+    [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+    $raw = (New-Object System.IO.StreamReader([Console]::OpenStandardInput(), (New-Object System.Text.UTF8Encoding($false)))).ReadToEnd()
     if (-not $raw) { exit 0 }
     $evt = $raw | ConvertFrom-Json
     $cmd = $evt.tool_input.command
@@ -11,7 +15,10 @@ try {
     $cwd = $evt.cwd
     if (-not $cwd) { exit 0 }
     $root = git -C $cwd rev-parse --show-toplevel 2>$null
-    if (-not $root) { exit 0 }
+    if (-not $root) {
+        [Console]::Error.WriteLine("conductor commit gate: repo root not resolvable from cwd '$cwd' (fail-open)")
+        exit 0
+    }
     $marker = Join-Path $root '.git/conductor-verified'
     $ok = $false
     if (Test-Path $marker) {

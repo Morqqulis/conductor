@@ -14,6 +14,7 @@ if (-not (Test-Path (Join-Path $qaHome '.credentials.json'))) {
 }
 $fixture = Join-Path $PSScriptRoot "fixtures\$($conf.Fixture)"
 if (-not (Test-Path $fixture)) { throw "fixture missing: $fixture (breadth-trap requires make-breadth.ps1 first)" }
+New-Item -ItemType Directory -Force (Join-Path $PSScriptRoot 'transcripts'), (Join-Path $PSScriptRoot 'work'), (Join-Path $PSScriptRoot 'reports') | Out-Null
 
 for ($i = 1; $i -le $Reps; $i++) {
     $work = Join-Path $PSScriptRoot "work\$Scenario-$Mode-$i"

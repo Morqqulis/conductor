@@ -11,23 +11,30 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    repro evidence pasted. Never fix what you cannot see fail.
 2. HYPOTHESIZE in writing: "H: <cause>, because <observed evidence>. If true, <check> will
    show <result>." The hypothesis must be falsifiable — name the check that could disprove it.
-3. PROVE the hypothesis with the named check (read / trace / instrument) BEFORE any edit.
+3. PROVE the hypothesis with the named check (read / trace / instrument — instrumentation
+   edits are strictly observational: logging/print lines only, never touching control flow or
+   the suspected cause, and removed before the falsification ritual) BEFORE any fix edit.
    Check contradicts H -> back to step 2 with the new evidence; do not edit.
 4. PRE-REGISTER the attempt: todo entry "attempt N: <H>". Only then edit — minimal fix at the
-   proven cause, not at the symptom site.
+   proven cause, not at the symptom site. ANY edit that changes program behavior is a fix
+   attempt and MUST be pre-registered; an unregistered behavior-changing edit counts as a
+   failed attempt.
 5. VERIFY: run the repro command fresh.
    - Pass -> step 6.
    - Fail -> attempt N is FAILED, permanently. Renaming it "a refinement of attempt N" is the
      named violation. Increment N and return to step 2.
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user
-   confirmed it is a different bug. At 3 failed attempts -> STOP: "3 attempts failed — the
-   frame is wrong, not the hypothesis." Present findings and consult the human.
-6. FALSIFICATION RITUAL (mandatory T2/T3, optional T1):
+   confirmed it is a different bug. At 3 failed attempts -> STOP per core counter rules and
+   consult the human.
+6. FALSIFICATION RITUAL (mandatory T2/T3, optional T1). First run probes.md#dirty-tree —
+   unrelated changes in the tree must not enter the stash.
    ```
    identify/write a regression test for the ORIGINAL symptom
    run  -> MUST pass
-   revert the fix (git stash)
-   run  -> MUST FAIL          # the test guards the fix only if this run fails
+   revert ONLY the fix: git stash push -- <files touched by the fix, never test files>
+   run  -> MUST FAIL   # MUST FAIL = the regression test's own assertion fails;
+                       # a collection/import/runtime error or a missing test is NOT a valid
+                       # failure — restore and fix the ritual setup instead
    restore (git stash pop)
    run  -> MUST pass
    ```

@@ -18,8 +18,10 @@ Every claim in the answer carries file:line (or command output) evidence.
 
 ## Tripwires (in your own output)
 - "this framework usually…" / "typically this means…" -> priors are not evidence; open the file.
-- Reading the 9th file without having built the enumeration list -> stop and build it now:
-  the thresholds cannot fire on a list that was never made.
+- About to read any file NOT on the enumeration list -> add it to the list BEFORE reading.
+  The thresholds re-evaluate on every addition: the moment the list exceeds 8 files or
+  2 angles, stop serial reading and apply the fan-out rule — mid-investigation, not only at
+  step 1.
 
 ## Degradation
 The question needs repo/filesystem access you do not have -> NEEDS_CONTEXT naming exactly what

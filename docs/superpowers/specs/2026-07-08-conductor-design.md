@@ -385,3 +385,7 @@ fresh verification artifact; mined tripwire tables; ledger if compaction-loss is
   review delegated to native tooling.
 - Runtime tree at `~/.claude/conductor/`, not `~/.claude/skills/`.
 - Statuses stay English tokens inside Russian reports (machine-checkable anchors).
+- Verifier verdict symbols: ASCII `V | X | ?` in runtime instead of this spec's ✅/❌/⚠️
+  (hook-stdout encoding safety on Windows). Deliberate deviation — do not flag as drift.
+- Core manifest heading is "MODULES" (base `~\.claude\conductor\`), covering playbooks\ and
+  snippets\probes.md, so probe references resolve from a stated base (pressure-test finding).

@@ -7,9 +7,9 @@ Mechanical sequence (Glob/Read; first hit wins):
 2. Cargo.toml -> `cargo test`; go.mod -> `go test ./...`; pyproject.toml / pytest.ini /
    setup.cfg with [tool:pytest] -> `pytest`
 3. .github/workflows/*.yml -> the run: line of a test step
-NONE FOUND -> a "tests pass" claim is impossible -> status BLOCKED (never guess a command).
-An inline execution proof (node/python invocation of the changed path) may substitute for the
-gate's proving run — claim it narrowly.
+NONE FOUND -> a "tests pass" claim specifically is impossible (never guess a command); the
+turn is not automatically BLOCKED: an inline execution proof (node/python invocation of the
+changed path) may serve as the gate's proving run — claim it narrowly.
 
 ## probes.md#caller-count
 Grep tool: pattern = the exported symbol name (word-boundary), output_mode = files_with_matches.
@@ -17,6 +17,8 @@ Callers = matching files minus the defining file. Result feeds the >5-callers re
 (core). Grep tool unavailable -> shell fallback:
 PowerShell: `(git grep -l "\b<symbol>\b" | Measure-Object).Count`
 bash:       `git grep -l "\b<symbol>\b" | wc -l`
+Both fallbacks count the defining file — callers = count - 1. The -1 is mandatory before
+comparing to the >5 trigger.
 
 ## probes.md#dirty-tree
 Run BEFORE any merge/discard/branch-switch:

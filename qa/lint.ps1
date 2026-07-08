@@ -4,7 +4,8 @@ $root = Join-Path $PSScriptRoot '..\runtime'
 function Check($cond, $msg) { if (-not $cond) { $script:fail += $msg } }
 
 $core = [System.IO.File]::ReadAllText("$root\core.md", [System.Text.Encoding]::UTF8)
-Check ($core.Length -le 9500) "core.md over budget: $($core.Length)/9500 chars"
+$payload = @{ hookSpecificOutput = @{ hookEventName = 'SessionStart'; additionalContext = $core } } | ConvertTo-Json -Depth 3 -Compress
+Check ($payload.Length -le 9500) "core.md escaped payload over budget: $($payload.Length)/9500 chars (harness truncates at 10000)"
 Check ($core -match 'CONDUCTOR-CORE-v1-7f3a') "core.md missing sentinel"
 $contract = [System.IO.File]::ReadAllText("$root\subagent-contract.md", [System.Text.Encoding]::UTF8)
 Check ($contract.Length -le 2500) "contract over budget: $($contract.Length)/2500"

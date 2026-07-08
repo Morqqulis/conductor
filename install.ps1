@@ -1,0 +1,93 @@
+param(
+    [switch]$SkipGlobalClaudeMd,
+    [switch]$KeepSuperpowers
+)
+$ErrorActionPreference = 'Stop'
+$repo = $PSScriptRoot
+$claudeHome = Join-Path $env:USERPROFILE '.claude'
+$conductorDir = Join-Path $claudeHome 'conductor'
+$settingsPath = Join-Path $claudeHome 'settings.json'
+$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+
+Write-Output '=== Conductor installer ==='
+
+# 1. Runtime tree -> ~/.claude/conductor
+if (-not (Test-Path (Join-Path $repo 'runtime\core.md'))) { throw "run this script from the conductor repo root (runtime\core.md not found next to install.ps1)" }
+New-Item -ItemType Directory -Force $conductorDir | Out-Null
+Copy-Item (Join-Path $repo 'runtime\*') $conductorDir -Recurse -Force
+Write-Output "[1/5] runtime tree -> $conductorDir"
+
+# 2. Hooks -> settings.json (idempotent merge, backup first)
+if (Test-Path $settingsPath) {
+    Copy-Item $settingsPath "$settingsPath.bak-$stamp" -Force
+    $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
+} else {
+    $settings = [pscustomobject]@{}
+}
+$shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
+$sessionCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorDir\hooks\session-start.ps1"
+$subagentCmd = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorDir\hooks\subagent-start.ps1"
+if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
+    $settings | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
+}
+$alreadyWired = ($settings.hooks | ConvertTo-Json -Depth 20) -match 'conductor'
+if ($alreadyWired) {
+    Write-Output '[2/5] hooks already reference conductor - leaving settings.json untouched'
+} else {
+    $sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @([pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 }) }
+    $subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
+    foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry))) {
+        $name = $pair[0]; $entry = $pair[1]
+        if ($settings.hooks.PSObject.Properties.Name -contains $name) {
+            $settings.hooks.$name = @($settings.hooks.$name) + $entry
+        } else {
+            $settings.hooks | Add-Member -NotePropertyName $name -NotePropertyValue @($entry)
+        }
+    }
+    $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
+    Write-Output "[2/5] hooks registered in settings.json (backup: settings.json.bak-$stamp)"
+}
+
+# 3. Global CLAUDE.md
+if ($SkipGlobalClaudeMd) {
+    Write-Output '[3/5] global CLAUDE.md skipped (flag)'
+} else {
+    $globalMd = Join-Path $claudeHome 'CLAUDE.md'
+    if (Test-Path $globalMd) { Copy-Item $globalMd "$globalMd.bak-$stamp" -Force }
+    Copy-Item (Join-Path $repo 'deploy\global-CLAUDE.md') $globalMd -Force
+    Write-Output "[3/5] global CLAUDE.md installed (backup: CLAUDE.md.bak-$stamp)"
+}
+
+# 4. Disable superpowers (double-mandate prevention)
+if ($KeepSuperpowers) {
+    Write-Output '[4/5] superpowers left enabled (flag) - WARNING: two process systems will conflict'
+} else {
+    $disabled = $false
+    try {
+        claude plugin disable superpowers@claude-plugins-official 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { $disabled = $true }
+    } catch {}
+    if (-not $disabled) {
+        try {
+            $s = Get-Content $settingsPath -Raw | ConvertFrom-Json
+            if ($s.PSObject.Properties.Name -contains 'enabledPlugins' -and
+                $s.enabledPlugins.PSObject.Properties.Name -contains 'superpowers@claude-plugins-official') {
+                $s.enabledPlugins.'superpowers@claude-plugins-official' = $false
+                $s | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
+                $disabled = $true
+            }
+        } catch {}
+    }
+    if ($disabled) { Write-Output '[4/5] superpowers disabled' }
+    else { Write-Output '[4/5] WARNING: could not disable superpowers automatically - run: claude plugin disable superpowers@claude-plugins-official' }
+}
+
+# 5. Smoke test: hook emits valid payload with sentinel
+$out = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $conductorDir 'hooks\session-start.ps1')
+$ok = $false
+try { $ok = (($out | ConvertFrom-Json).hookSpecificOutput.additionalContext -match 'CONDUCTOR-CORE-v1-7f3a') } catch {}
+if ($ok) { Write-Output "[5/5] smoke test PASS (payload $($out.Length)/10000 chars)" }
+else { throw '[5/5] smoke test FAILED - hook did not emit the core sentinel' }
+
+Write-Output ''
+Write-Output 'Done. Open a NEW Claude Code session - Conductor announces itself as: "Conductor: <type> | T<n>"'

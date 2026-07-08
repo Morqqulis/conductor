@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\Dee\\.claude\\conductor\\hooks\\session-start.ps1", "timeout": 10 }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\Dee\\.claude\\conductor\\hooks\\subagent-start.ps1", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

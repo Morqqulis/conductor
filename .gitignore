@@ -1,5 +1,5 @@
 qa/transcripts/
-qa/home-baseline/
-qa/home-conductor/
-qa/home-probe/
 qa/work/
+qa/home-*/*
+!qa/home-*/settings.json
+!qa/home-*/CLAUDE.md

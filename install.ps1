@@ -17,7 +17,9 @@ New-Item -ItemType Directory -Force $conductorDir | Out-Null
 Copy-Item (Join-Path $repo 'runtime\*') $conductorDir -Recurse -Force
 Write-Output "[1/5] runtime tree -> $conductorDir"
 
-# 2. Hooks -> settings.json (idempotent merge, backup first)
+# 2. Hooks -> settings.json (backup, REPLACE any prior conductor entries, add fresh)
+# Hook commands use FORWARD slashes: Claude Code runs hook commands through bash on Windows,
+# and bash eats backslashes ('C:\Users\...' arrives as 'C:Users...'). pwsh accepts C:/... fine.
 if (Test-Path $settingsPath) {
     Copy-Item $settingsPath "$settingsPath.bak-$stamp" -Force
     $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
@@ -25,28 +27,25 @@ if (Test-Path $settingsPath) {
     $settings = [pscustomobject]@{}
 }
 $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
-$sessionCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorDir\hooks\session-start.ps1"
-$subagentCmd = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorDir\hooks\subagent-start.ps1"
+$conductorFwd = $conductorDir -replace '\\', '/'
+$sessionCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/session-start.ps1"
+$subagentCmd = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/subagent-start.ps1"
 if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
     $settings | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
 }
-$alreadyWired = ($settings.hooks | ConvertTo-Json -Depth 20) -match 'conductor'
-if ($alreadyWired) {
-    Write-Output '[2/5] hooks already reference conductor - leaving settings.json untouched'
-} else {
-    $sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @([pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 }) }
-    $subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
-    foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry))) {
-        $name = $pair[0]; $entry = $pair[1]
-        if ($settings.hooks.PSObject.Properties.Name -contains $name) {
-            $settings.hooks.$name = @($settings.hooks.$name) + $entry
-        } else {
-            $settings.hooks | Add-Member -NotePropertyName $name -NotePropertyValue @($entry)
-        }
+$sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @([pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 }) }
+$subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
+foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry))) {
+    $name = $pair[0]; $entry = $pair[1]
+    $kept = @()
+    if ($settings.hooks.PSObject.Properties.Name -contains $name) {
+        $kept = @($settings.hooks.$name) | Where-Object { ($_ | ConvertTo-Json -Depth 20) -notmatch 'conductor' }
+        $settings.hooks.PSObject.Properties.Remove($name)
     }
-    $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
-    Write-Output "[2/5] hooks registered in settings.json (backup: settings.json.bak-$stamp)"
+    $settings.hooks | Add-Member -NotePropertyName $name -NotePropertyValue (@($kept) + $entry)
 }
+$settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
+Write-Output "[2/5] hooks registered (forward-slash paths; backup: settings.json.bak-$stamp)"
 
 # 3. Global CLAUDE.md
 if ($SkipGlobalClaudeMd) {
@@ -82,8 +81,8 @@ if ($KeepSuperpowers) {
     else { Write-Output '[4/5] WARNING: could not disable superpowers automatically - run: claude plugin disable superpowers@claude-plugins-official' }
 }
 
-# 5. Smoke test: hook emits valid payload with sentinel
-$out = & $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $conductorDir 'hooks\session-start.ps1')
+# 5. Smoke test: hook emits valid payload with sentinel, invoked the same way the harness does
+$out = & $shell -NoProfile -ExecutionPolicy Bypass -File "$conductorFwd/hooks/session-start.ps1"
 $ok = $false
 try { $ok = (($out | ConvertFrom-Json).hookSpecificOutput.additionalContext -match 'CONDUCTOR-CORE-v1-7f3a') } catch {}
 if ($ok) { Write-Output "[5/5] smoke test PASS (payload $($out.Length)/10000 chars)" }

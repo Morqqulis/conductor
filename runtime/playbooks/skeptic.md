@@ -41,6 +41,12 @@ In a SEPARATE message from the one that wrote the code: re-read the diff against
 claim->evidence table, with fresh runs where runnable, and produce the same verdict-per-line
 format, then apply the same resolution rules. Never verify in the same message that implemented.
 
+## Inversion pass (run before the verdict)
+For the claim under review, ask: "What must be TRUE for this to be correct?" List those
+preconditions, then tag each PROVEN (you ran/read it) or ASSUMED. Every ASSUMED precondition
+is a candidate finding — an unverified assumption is the usual place a plausible claim is
+actually wrong. This is the depth move: it converts confidence into a checkable list.
+
 ## Rigor gradient
 Verification depth rises toward integration and merge — the last gate before the user is the
 strictest one, never the most trusting.

@@ -9,9 +9,11 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
 1. REPRODUCE. Run the failing thing; capture the exact command + output. This is your repro
    command — the attempt counter binds to it. Cannot reproduce -> BLOCKED with the attempted
    repro evidence pasted. Never fix what you cannot see fail.
-2. HYPOTHESIZE in writing: "H: <cause>, because <observed evidence>. If true, <check> will
-   show <result>." The hypothesis must be falsifiable — name the check that could disprove it.
-3. PROVE the hypothesis with the named check (read / trace / instrument — instrumentation
+2. HYPOTHESIZE in writing — at least TWO candidate causes, not one (the first cause is where
+   diagnosis goes to die). Rank them by likelihood, and for each name the ONE check that best
+   discriminates it from the others: "H1 (likely): <cause>, because <evidence>; discriminating
+   check <c1>. H2: <cause>; check <c2>." Each must be falsifiable. Prove the top-ranked first.
+3. PROVE the top hypothesis with its named check (read / trace / instrument — instrumentation
    edits are strictly observational: logging/print lines only, never touching control flow or
    the suspected cause, and removed before the falsification ritual) BEFORE any fix edit.
    Check contradicts H -> back to step 2 with the new evidence; do not edit.

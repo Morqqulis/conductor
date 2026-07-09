@@ -463,6 +463,12 @@ A/B benchmark completed (measurement isolation).
   adjusts). Evidence: 8/8 offline matrix across three candidate payload schemas +
   OEM-866 Cyrillic byte-pipe. Headless `agy` probe stalled on interactive auth (killed);
   IDE probe protocol in plan doc phase 3.
+- **2026-07-10 (global rollout)**: `install-global.ps1` run — Cursor hook global via
+  `~/.cursor/hooks.json`, Antigravity hook global via `~/.gemini/config/hooks.json` +
+  digest as `~/.gemini/AGENTS.md` (personal GEMINI.md untouched), gate scripts deployed
+  to `~/.claude/conductor/adapters/`. Git layer deliberately stays per-repo (global
+  core.hooksPath would disable repos' own hooks). Cursor global rule = one-time UI paste
+  (no file surface). Verified: both deployed gates deny from global paths; configs parse.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

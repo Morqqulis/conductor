@@ -188,6 +188,30 @@ Gemini CLI appears: GEMINI.md digest + hooks in `.gemini/settings.json` (same pr
 protocol). Browser Gemini: values digest pasted into saved instructions; no enforcement
 possible — say so, do not pretend otherwise.
 
+## Global rollout (2026-07-10, `install-global.ps1`)
+
+The user wants Conductor everywhere, not per-project. Global surfaces used:
+- Gate scripts deployed once to `~/.claude/conductor/adapters/{cursor,antigravity}/gate.ps1`
+  (stable absolute paths for global hook configs).
+- **Cursor**: global hook in `~/.cursor/hooks.json` (user level, all projects). The global
+  RULE has no file representation in Cursor — pasted once into Settings → Rules from
+  `adapters/cursor/conductor-core.mdc` (body).
+- **Antigravity**: global hook in `~/.gemini/config/hooks.json`; digest installed as the
+  global rules file `~/.gemini/AGENTS.md` (auto-generated from the adapter digest, body
+  from "## Iron laws" on). The user's personal `~/.gemini/GEMINI.md` is never touched;
+  note: on conflicts GEMINI.md wins over AGENTS.md by Antigravity precedence, and rules
+  share a "customization budget" that silently truncates when exceeded (~46% used on this
+  machine before install).
+- **Claude Code**: already global via `install.ps1`.
+- **Git-native layer stays per-repository BY DESIGN**: a global `core.hooksPath` would
+  silently disable every repo's own hooks (husky and ours alike). Per project:
+  `install-git-gate.ps1 -Repo <path>`.
+Project-level installs (`install-cursor.ps1` / `install-antigravity.ps1`) remain the
+version-controlled option and coexist with global hooks (both layers fire; the gate is
+idempotent per marker check, and with the git gate installed neither consumes).
+Verified 2026-07-10: both deployed gates deny correctly from their global paths; both
+merged configs parse; AGENTS.md body starts at Iron laws (no workspace-UI noise).
+
 ## Cross-phase invariants
 
 - Every adapter ships only after its own live verification battery passes on this machine.

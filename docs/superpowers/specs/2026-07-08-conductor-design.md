@@ -446,6 +446,23 @@ A/B benchmark completed (measurement isolation).
   false deliberately: the hook fires on every terminal command, fail-closed would brick
   the terminal on a gate crash). Evidence: 11/11 offline matrix incl. OEM-866 Cyrillic
   byte-pipe. Live probe protocol: plan doc phase 2.
+  [Live probe, same day: L1 PROVEN — the Cursor agent announced "Conductor: implement |
+  T1 | core only" (digest rule active); L3 PROVEN — markerless commit denied by the
+  git-native gate inside Cursor's terminal with the correct marker message, HEAD
+  unchanged. L2 (beforeShellExecution) did not visibly fire — command reached git;
+  instrumented gate.ps1 deployed (stable log %LOCALAPPDATA%\conductor\), re-probe when
+  the user's Cursor quota returns. Unrelated find: the superpowers plugin inside Cursor
+  ships Claude-Code-format hooks that break Cursor on Windows (the "open session-start
+  with" dialog + a wedged terminal pipeline); removed by the user, terminal recovered.]
+- **2026-07-09 (phase 3, Antigravity adapter)**: BUILT and offline-verified; live probe
+  pending. `adapters/antigravity/` + `install-antigravity.ps1` (installs into
+  `<repo>/.agents/`); installed into this repo, `.agents/` gitignored. Reply schema
+  pinned by binary forensics of `agy.exe` (protobuf `allow_tool`/`deny_reason`, payload
+  `toolCall.args.CommandLine`/`cwd`/`workspacePaths`) — exact-schema replies only;
+  hooks.json shape is the one researched item forensics could not confirm (live probe
+  adjusts). Evidence: 8/8 offline matrix across three candidate payload schemas +
+  OEM-866 Cyrillic byte-pipe. Headless `agy` probe stalled on interactive auth (killed);
+  IDE probe protocol in plan doc phase 3.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

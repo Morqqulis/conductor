@@ -142,14 +142,44 @@ and retry → commit lands and post-commit consumes the marker. If the hook neve
 check Cursor version (hooks shipped 1.7+) and that the agent session was restarted after
 install.
 
-## Phase 3 — Antigravity desktop adapter
+## Phase 3 — Antigravity desktop adapter (BUILT 2026-07-09, offline-verified; live probe pending)
 
-STEP 0 gates the phase: a live probe on the user's installed desktop IDE — minimal
-`.agents/hooks.json` PreToolUse hook that (a) logs its invocation payload, (b) denies a
-`run_command` containing `git commit`. Docs prove hook enforcement only for the `agy` CLI;
-no source demonstrates the IDE honoring a deny. If the probe fails, the adapter ships
-L1 text (`.agents/rules/` Always-On digest, split into <=12k-char files) + L3 git gate
-only, and the gap is recorded here with a re-check on each Antigravity release.
+Delivered: `adapters/antigravity/conductor-core.md` (digest, plain Markdown — activation
+mode "Always On" is set in the Antigravity rules UI, not in the file),
+`adapters/antigravity/gate.ps1` (PreToolUse port, matcher `run_command`),
+`install-antigravity.ps1` (installs into `<repo>/.agents/`, merges hooks.json preserving
+foreign entries). Installed into the Conductor repo; `.agents/` gitignored (artifact,
+`adapters/` is source). Gate debug logs live at a STABLE path readable by any future
+session: `%LOCALAPPDATA%\conductor\antigravity-gate-debug.log` (the Cursor debug copy was
+moved to `...\cursor-gate-debug.log` for the same reason).
+
+Schema pinned by binary forensics (strings/struct tags in `agy.exe`), not blog posts:
+hook reply is protobuf-backed `{"allow_tool": bool, "deny_reason": string}` — EXACT
+fields only, protobuf JSON parsing may reject unknowns (so no superset replies); payload
+carries `toolCall.args.CommandLine`, `cwd`, `workspacePaths`; events PreToolUse /
+PostToolUse / PreInvocation / PostInvocation exist. The gate still reads command text
+through a fallback chain (toolCall.args.CommandLine → tool_input.command → command) —
+covers variants until the live payload is captured in the debug log. Unconfirmed by
+forensics: the exact `hooks.json` config shape (no `json:"matcher"` tag found) — shipped
+per the researched shape (named block → event → [{matcher, hooks:[...]}]); the live probe
+adjusts it if wrong.
+
+Verified offline (2026-07-09): 8/8 matrix — deny/allow correct across all three candidate
+payload schemas and the workspacePaths-as-cwd fallback; marker kept on allow with the git
+gate installed; OEM-866 Cyrillic byte-pipe deny/allow.
+
+Live probe attempt via `agy` CLI (headless): STALLED — the process produced no output and
+ignored --print-timeout, consistent with an interactive auth/first-run wait; killed. If
+the user logs into `agy` once interactively, future sessions can drive live probes
+headlessly. Until then the probe path is the IDE:
+
+IDE probe (needs the user): open the Conductor repo in Antigravity, set the
+`conductor-core` rule to Always On (Customizations → Rules), restart the agent session,
+ask the agent to run `git commit --allow-empty -m gate-probe`. Expected: the PreToolUse
+hook denies with the marker message BEFORE execution (check
+`%LOCALAPPDATA%\conductor\antigravity-gate-debug.log` for the invocation + raw payload);
+if the hook stays silent, the git-native layer still denies (exit 1) — then the log
+decides whether the config shape or IDE hook support is at fault.
 
 ## Phase 4 — Gemini surfaces
 

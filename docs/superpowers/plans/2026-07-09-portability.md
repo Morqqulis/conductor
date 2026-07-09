@@ -212,6 +212,45 @@ idempotent per marker check, and with the git gate installed neither consumes).
 Verified 2026-07-10: both deployed gates deny correctly from their global paths; both
 merged configs parse; AGENTS.md body starts at Iron laws (no workspace-UI noise).
 
+## Zero-friction enforcement + full methodology (2026-07-10, user-approved)
+
+User feedback that reframed the work: all projects are production, per-repo PowerShell
+runs are unacceptable friction, and the goal is the METHODOLOGY everywhere, not just the
+commit gate. Both addressed:
+
+1. **Self-installing git gate.** All three shell gates (Claude Code, Cursor, Antigravity)
+   now carry `Ensure-GitGate`: on first commit contact with any repo they install the
+   git-native hooks themselves — post-commit BEFORE pre-commit (a partial install must
+   never enable the check without its marker consumer), foreign hooks backed up and
+   chained, `core.hooksPath` repos skipped with a stderr note, fail-open, never throws.
+   The fast path requires the sentinel in BOTH hooks, so a deleted post-commit heals on
+   next contact. Plus `init.templateDir` -> `~/.claude/conductor/git-template` (new repos
+   are born gated; a foreign templateDir is respected — hooks copied into it with
+   same-name backup). Plus `install-git-gate.ps1 -Sweep <root>` for explicit mass
+   rollout; the harness permission layer blocks ME from sweeping the user's D:\ repos, so
+   the sweep command is handed to the user (consented 2026-07-10).
+   Antigravity note: its Desktop app (Agent Manager) did NOT invoke the global hook in
+   two live probes (debug log empty at probe timestamps) — for Antigravity the git-native
+   layer IS the enforcement; its digest rule instructs the marker protocol.
+
+2. **Methodology pack.** The four portable playbooks (debugging: reproduce -> two causes
+   -> prove -> falsify; investigating: enumerate -> read -> cite; implementing: full-region
+   read, assumptions ledger, test-first; self-skepticism: inversion pass PROVEN/ASSUMED)
+   distilled into both adapter rule files (~5.2k chars each, well under Antigravity's 12k
+   per-file cap) and regenerated into global `~/.gemini/AGENTS.md`.
+
+Honest ceiling (told to the user in so many words): text transfers the METHOD, hooks
+transfer the ENFORCEMENT, but model quality does not transfer — Conductor raises another
+model's floor, it does not make it Fable. Adapter texts are untested against Gemini/Cursor
+models beyond the live L1 observation in Cursor (the agent announced Conductor
+classification unprompted).
+
+Skeptic round 1 (T3): CONFIRMED bug — Install-GateInto's Write-Output lines polluted its
+boolean return (PowerShell output stream), so skip/fail paths reported success and the
+sweep count lied. Fixed with Write-Host + re-verified (honest exit 1 + SKIP; mixed sweep
+reports 1/2). Also fixed from the same round: both-hook fast path, debug-log 1MB cap,
+foreign-template same-name backup.
+
 ## Cross-phase invariants
 
 - Every adapter ships only after its own live verification battery passes on this machine.

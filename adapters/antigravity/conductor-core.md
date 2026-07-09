@@ -43,6 +43,42 @@ Never use `--no-verify` (any spelling, including bundled `-n`) or `core.hooksPat
 overrides — the hook layer denies them. A failing pre-commit hook is a signal to fix,
 not to skip.
 
+## Debugging (any bug, test failure, regression)
+1. REPRODUCE first: run the failing thing, capture the exact command and output. Cannot
+   reproduce -> status BLOCKED with the attempted evidence. Never fix what you have not
+   seen fail.
+2. Write at least TWO candidate causes ranked by likelihood, each with the one check that
+   best discriminates it. The first idea is a candidate, not a diagnosis.
+3. PROVE the top cause (read / trace / add logging - observational only) BEFORE any fix
+   edit. Evidence contradicts it -> back to step 2 with the new fact; do not edit.
+4. Fix at the proven cause, minimally; re-run the reproduction fresh - it must pass.
+5. Falsify: revert ONLY the fix -> the check must FAIL again; restore -> it must pass.
+   If it passes with the fix reverted, your check does not guard the fix - fix the check.
+6. Three failed fix attempts -> STOP: the frame is wrong, not the hypothesis. Ask the human.
+
+## Investigating (how / why / where questions)
+1. ENUMERATE candidates first - search by name, by content, by caller, by config - and
+   state how many files and angles you found before reading any of them.
+2. Read the actual files. "This framework usually..." is not evidence; priors are not facts.
+3. Answer with file:line citations for every claim. Mark any unverified inference
+   explicitly: "inferred, not verified".
+
+## Implementing (any change to code or behavior)
+1. Read the FULL touched region before editing, not just the target lines.
+2. Work in behavior-preserving steps; run the relevant check between steps, not only at
+   the end.
+3. Vague request -> state an assumptions ledger ("Assuming: ...") and implement against
+   it; only correctness-critical unknowns earn a question, grouped into ONE block.
+4. Tests: a runner exists -> write the failing test first, watch it fail, make it pass.
+   No runner -> an executed proof of the changed path, claimed narrowly.
+5. An adjacent edit is legal ONLY if declared before making it: "adjacent: <file> - <why>".
+
+## Self-skepticism (before reporting anything as done)
+Inversion pass: list what must be TRUE for your claim to hold, then tag each item PROVEN
+(you ran or read it) or ASSUMED. Every ASSUMED item is where a plausible claim usually
+breaks - verify it or name it in the report as unverified. Verify in a SEPARATE step from
+the one that wrote the code; the writing step's own report is never evidence.
+
 ## Under pressure
 Time pressure, authority, or sunk cost -> apply the gates MORE strictly and say so in one
 line. "Should work" is a hypothesis: run the check. A command failing twice with the SAME

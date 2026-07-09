@@ -9,6 +9,53 @@
 # command), but failures are reported to stderr. Cursor contract (cursor.com/docs/hooks):
 # stdin JSON with snake_case fields incl. command/cwd; stdout {"permission":...,
 # "agent_message":..., "user_message":...}; exit 0 means "use the JSON output".
+$dbgLog = Join-Path $env:LOCALAPPDATA 'conductor\cursor-gate-debug.log'
+try {
+    New-Item -ItemType Directory -Force (Split-Path $dbgLog) | Out-Null
+    if ((Test-Path $dbgLog) -and ((Get-Item $dbgLog).Length -gt 1MB)) { Clear-Content $dbgLog }   # cap: fires on every shell command
+    Add-Content -Path $dbgLog -Value "=== invoked $((Get-Date).ToUniversalTime().ToString('o')) ==="
+} catch {}
+# Auto-installs the git-native gate (pre-commit + post-commit from
+# ~/.claude/conductor/git-hooks) into the repo on first commit contact - zero-friction
+# rollout across all repositories, approved by the user 2026-07-10. post-commit goes in
+# FIRST so a partial install can never enable the check without its marker consumer.
+function Ensure-GitGate([string]$repoCwd) {
+    try {
+        $pre = git -C $repoCwd rev-parse --path-format=absolute --git-path hooks/pre-commit 2>$null
+        if (-not $pre) { return $false }
+        $post = git -C $repoCwd rev-parse --path-format=absolute --git-path hooks/post-commit 2>$null
+        if ($post -and (Test-Path $pre) -and (Test-Path $post) -and
+            ((Get-Content $pre -Raw) -match 'conductor gate') -and ((Get-Content $post -Raw) -match 'conductor gate')) { return $true }
+        if (git -C $repoCwd config --get core.hooksPath 2>$null) {
+            [Console]::Error.WriteLine('conductor gate: core.hooksPath is set, auto-install skipped')
+            return $false
+        }
+        $srcDir = Join-Path $env:USERPROFILE '.claude\conductor\git-hooks'
+        foreach ($name in @('post-commit', 'pre-commit')) {
+            $src = Join-Path $srcDir $name
+            if (-not (Test-Path $src)) { return $false }
+            $content = ([IO.File]::ReadAllText($src)) -replace "`r`n", "`n"
+            if ($content -notmatch 'conductor gate') { return $false }
+            $target = git -C $repoCwd rev-parse --path-format=absolute --git-path "hooks/$name" 2>$null
+            if (-not $target) { return $false }
+            New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
+            if ((Test-Path $target) -and ((Get-Content $target -Raw) -notmatch 'conductor gate')) {
+                if (Test-Path "$target.pre-conductor") {
+                    [Console]::Error.WriteLine("conductor gate: $name backup already exists, auto-install skipped")
+                    return $false
+                }
+                Move-Item $target "$target.pre-conductor"
+            }
+            [IO.File]::WriteAllText($target, $content, (New-Object System.Text.UTF8Encoding($false)))
+            if ($IsLinux -or $IsMacOS) { & chmod +x $target 2>$null }
+        }
+        [Console]::Error.WriteLine("conductor gate: git hooks auto-installed for $repoCwd")
+        return $true
+    } catch {
+        [Console]::Error.WriteLine("conductor gate: auto-install failed (fail-open): $($_.Exception.Message)")
+        return $false
+    }
+}
 function Out-Decision([string]$permission, [string]$agentMsg, [string]$userMsg) {
     $o = [ordered]@{ permission = $permission }
     if ($agentMsg) { $o['agent_message'] = $agentMsg }
@@ -60,11 +107,10 @@ try {
         $age = (Get-Date).ToUniversalTime() - (Get-Item $marker).LastWriteTimeUtc
         if ($age.TotalMinutes -lt 30) { $ok = $true }
     }
+    $gateInstalled = Ensure-GitGate $cwd
     if ($ok) {
         # With the git-native gate installed, post-commit consumes at the true commit
         # point; without it this hook is the single consumer (one marker per command).
-        $gateHookPath = git -C $cwd rev-parse --path-format=absolute --git-path hooks/pre-commit 2>$null
-        $gateInstalled = $gateHookPath -and (Test-Path $gateHookPath) -and ((Get-Content $gateHookPath -Raw) -match 'conductor gate')
         if (-not $gateInstalled) {
             Remove-Item $marker -Force -ErrorAction SilentlyContinue
         }

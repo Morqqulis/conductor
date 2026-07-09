@@ -27,7 +27,7 @@ foreach ($tool in @('cursor', 'antigravity')) {
     New-Item -ItemType Directory -Force $dir | Out-Null
     Copy-Item (Join-Path $PSScriptRoot "adapters\$tool\gate.ps1") (Join-Path $dir 'gate.ps1') -Force
 }
-Write-Output "[1/4] gate scripts deployed -> $deployRoot\{cursor,antigravity}\gate.ps1"
+Write-Output "[1/5] gate scripts deployed -> $deployRoot\{cursor,antigravity}\gate.ps1"
 
 # 2. Cursor: global hooks.json
 $cursorGate = Join-Path $deployRoot 'cursor\gate.ps1'
@@ -49,7 +49,7 @@ if (Test-Path $cursorHooks) {
     $cfg = [pscustomobject]@{ version = 1; hooks = [pscustomobject]@{ beforeShellExecution = @($cursorEntry) } }
 }
 $cfg | ConvertTo-Json -Depth 20 | Set-Content $cursorHooks -Encoding utf8
-Write-Output "[2/4] Cursor global hook -> $cursorHooks"
+Write-Output "[2/5] Cursor global hook -> $cursorHooks"
 Write-Output "      Cursor global RULE: paste the body of adapters\cursor\conductor-core.mdc"
 Write-Output "      once into Cursor Settings -> Rules (no global rules file exists in Cursor)."
 
@@ -74,7 +74,7 @@ if (Test-Path $agHooks) {
     $cfg = [pscustomobject]@{ 'conductor-commit-gate' = $agBlock }
 }
 $cfg | ConvertTo-Json -Depth 20 | Set-Content $agHooks -Encoding utf8
-Write-Output "[3/4] Antigravity global hook -> $agHooks"
+Write-Output "[3/5] Antigravity global hook -> $agHooks"
 
 $digestSrc = Get-Content (Join-Path $PSScriptRoot 'adapters\antigravity\conductor-core.md') -Raw
 $bodyStart = $digestSrc.IndexOf('## Iron laws')
@@ -83,8 +83,39 @@ $agentsMd = "# Conductor Core (global rules)`n`n" + $digestSrc.Substring($bodySt
 $agentsPath = Join-Path $env:USERPROFILE '.gemini\AGENTS.md'
 if (Test-Path $agentsPath) { Copy-Item $agentsPath "$agentsPath.bak-$stamp" -Force }
 [IO.File]::WriteAllText($agentsPath, $agentsMd, (New-Object System.Text.UTF8Encoding($false)))
-Write-Output "[4/4] Antigravity global rules -> $agentsPath (GEMINI.md untouched)"
+Write-Output "[4/5] Antigravity global rules -> $agentsPath (GEMINI.md untouched)"
+
+# 5. Git template: every NEW repo (git init / clone) is born with the gate. Existing
+# repos are covered by auto-install inside the shell gates (first commit contact) or by
+# install-git-gate.ps1. An existing foreign templateDir is respected: our hooks are
+# copied into it instead of repointing the config.
+$tplRoot = Join-Path $env:USERPROFILE '.claude\conductor\git-template'
+$tplHooks = Join-Path $tplRoot 'hooks'
+New-Item -ItemType Directory -Force $tplHooks | Out-Null
+foreach ($name in @('post-commit', 'pre-commit')) {
+    $content = ([IO.File]::ReadAllText((Join-Path $PSScriptRoot "runtime\git-hooks\$name"))) -replace "`r`n", "`n"
+    [IO.File]::WriteAllText((Join-Path $tplHooks $name), $content, (New-Object System.Text.UTF8Encoding($false)))
+}
+$existingTpl = git config --global --get init.templateDir
+if (-not $existingTpl) {
+    git config --global init.templateDir $tplRoot
+    Write-Output "[5/5] init.templateDir -> $tplRoot (new repos get the gate at init/clone)"
+} elseif ($existingTpl -eq $tplRoot) {
+    Write-Output "[5/5] init.templateDir already points at the conductor template (hooks refreshed)"
+} else {
+    $foreignHooks = Join-Path $existingTpl 'hooks'
+    New-Item -ItemType Directory -Force $foreignHooks | Out-Null
+    foreach ($name in @('post-commit', 'pre-commit')) {
+        $dest = Join-Path $foreignHooks $name
+        if ((Test-Path $dest) -and ((Get-Content $dest -Raw) -notmatch 'conductor gate')) {
+            Copy-Item $dest "$dest.pre-conductor" -Force   # the gate chains to this name at runtime
+        }
+        Copy-Item (Join-Path $tplHooks $name) $dest -Force
+    }
+    Write-Output "[5/5] existing init.templateDir '$existingTpl' kept - conductor hooks copied into it (same-name hooks backed up to *.pre-conductor)"
+}
 
 Write-Output ''
 Write-Output 'Done. Restart Cursor and Antigravity to pick up global hooks.'
-Write-Output 'Git-native layer stays per-repo: install-git-gate.ps1 -Repo <path> for each project.'
+Write-Output 'Existing repos get the git gate automatically on first agent commit (auto-install),'
+Write-Output 'or explicitly via install-git-gate.ps1 -Repo <path> / -Sweep <projects root>.'

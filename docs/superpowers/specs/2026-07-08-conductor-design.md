@@ -469,6 +469,20 @@ A/B benchmark completed (measurement isolation).
   to `~/.claude/conductor/adapters/`. Git layer deliberately stays per-repo (global
   core.hooksPath would disable repos' own hooks). Cursor global rule = one-time UI paste
   (no file surface). Verified: both deployed gates deny from global paths; configs parse.
+- **2026-07-10 (v1.6, zero-friction + methodology)**: user reframed the goal — all
+  projects are production, per-repo installs unacceptable, methodology > commit gate.
+  Shipped: (1) self-installing git gate in all three shell hooks (`Ensure-GitGate`:
+  post-commit first, foreign hooks chained, hooksPath skipped, both-hook sentinel fast
+  path); (2) `init.templateDir` — new repos born gated; (3) `-Sweep` mode for mass
+  rollout (harness denied me sweeping D:\ — command handed to the user); (4) four
+  playbooks distilled into adapter rules (~5.2k chars) + regenerated global AGENTS.md.
+  Live fact: Antigravity's Agent Manager does NOT invoke global hooks (2 probes, empty
+  debug log) — git layer is THE enforcement there. T3 skeptic round 1 CONFIRMED a real
+  bug (Write-Output polluted Install-GateInto's boolean return -> false success + lying
+  sweep counts) + 3 hardening items; all fixed; round 2 verified all four with fresh
+  runs (deployed copies byte-match). Battery: auto-install 7/7, fix re-verify R1-R4.
+  User deletions of CLAUDE.md + qa/home-conductor/CLAUDE.md observed in the tree —
+  excluded from commits, escalated.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

@@ -436,6 +436,16 @@ A/B benchmark completed (measurement isolation).
   common hooks dir from a linked worktree. Full design, verified list, and named limits:
   `docs/superpowers/plans/2026-07-09-portability.md`. HANDOFF.md was retired by the user
   (a2d1ce0); the plan doc + this record are the session-transition state now.
+- **2026-07-09 (phase 2, Cursor adapter)**: BUILT and offline-verified; live probe pending
+  (needs the user to drive Cursor). `adapters/cursor/` (alwaysApply digest of core +
+  beforeShellExecution gate, same segment-scan matchers and `--git-path` marker protocol
+  as the Claude Code layer) + `install-cursor.ps1` (merges hooks.json, preserves foreign
+  entries). Installed into this repo; `.cursor/` gitignored (installed artifact,
+  `adapters/` is source). Contract pinned from cursor.com/docs/hooks (snake_case stdin,
+  `permission`/`agent_message` stdout, exit 2 blocks, failClosed default false — left
+  false deliberately: the hook fires on every terminal command, fail-closed would brick
+  the terminal on a gate crash). Evidence: 11/11 offline matrix incl. OEM-866 Cyrillic
+  byte-pipe. Live probe protocol: plan doc phase 2.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

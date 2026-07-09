@@ -103,23 +103,44 @@ Known limits (named, not hidden):
 Rollout: run `install-git-gate.ps1 -Repo <path>` per repository. Installed in the
 Conductor repo itself on 2026-07-09.
 
-## Phase 2 — Cursor adapter (NEXT)
+## Phase 2 — Cursor adapter (BUILT 2026-07-09, offline-verified; live probe pending)
 
-Deliverables:
-1. `adapters/cursor/conductor-core.mdc` — digest of core.md compiled for `alwaysApply`
-   (guidance cap: keep under 500 lines per Cursor docs).
-2. `adapters/cursor/hooks.json` + `adapters/cursor/gate.ps1` — `beforeShellExecution`
-   port of the commit gate: same marker protocol, same deny reasons, `failClosed: true`
-   (stricter than the Claude Code layer: hook crash blocks instead of fail-open),
-   plus the `--no-verify` textual denial. `sessionStart` hook injects the digest as
-   `additional_context`.
-3. Installer target: `install.ps1 -Target cursor` or a separate `install-cursor.ps1`
-   copying into `~/.cursor/` (user level) or `<repo>/.cursor/` (project level — preferred:
-   version-controlled).
+Delivered:
+1. `adapters/cursor/conductor-core.mdc` — digest of core.md (iron laws, classification
+   line, completion gate + evidence table, marker protocol, pressure rules), `alwaysApply`.
+2. `adapters/cursor/gate.ps1` — `beforeShellExecution` port of the commit gate: identical
+   segment-scan matchers and `--git-path` marker protocol as the Claude Code layer;
+   Cursor I/O contract per cursor.com/docs/hooks (snake_case stdin incl. command/cwd,
+   stdout `{"permission","agent_message","user_message"}`).
+3. `install-cursor.ps1` — installs rule + gate + hooks entry into `<repo>/.cursor/`
+   (project level), merging an existing hooks.json with backup and preserving foreign
+   entries; detects and reports whether the git-native layer is present. Installed into
+   the Conductor repo itself (`.cursor/` is gitignored there — the installed copy is an
+   artifact; `adapters/` is the source).
 
-Verification protocol (mirror of 2026-07-09 debugging): instrumented hook logs its raw
-stdin payload first; markerless commit denied; marker allow + consume via L3; `--no-verify`
-denied; Cyrillic-path repo exercised explicitly (encoding lesson).
+Decisions that deviate from the original sketch, with reasons:
+- `failClosed` stays FALSE (default) and the script itself is fail-open with stderr
+  reporting: `beforeShellExecution` fires on EVERY terminal command, so a crashed gate
+  under failClosed would brick the whole terminal, not just commits — violating "a broken
+  gate must not brick git". The git-native layer remains the enforcer when the shell layer
+  fails open.
+- No `sessionStart` hook: the `alwaysApply` rule already injects the digest every session;
+  a second injection channel would double-maintain the same text.
+
+Verified offline (2026-07-09): 11/11 matrix against the installed gate — all bypass
+spellings denied with agent_message (bundled `-nm`, `--no-veri`, `git.exe` form,
+`core.hooksPath` override, second commit after `&&`), false-positive cases clean (`-n` in
+message, `head -n` compound, quoted mention, `--dry-run`), markerless deny embeds the
+absolute marker path, marker kept on allow when the git gate is installed; OEM-866
+byte-pipe with Cyrillic cwd: deny without marker, allow with marker (encoding lesson
+holds for this adapter).
+
+Live probe (needs the user — cannot be driven from this harness): open the Conductor repo
+in Cursor, agent mode, ask it to run `git commit --allow-empty -m test` WITHOUT a marker →
+expect a deny whose reason names the marker path; then create the marker per the digest
+and retry → commit lands and post-commit consumes the marker. If the hook never fires,
+check Cursor version (hooks shipped 1.7+) and that the agent session was restarted after
+install.
 
 ## Phase 3 — Antigravity desktop adapter
 

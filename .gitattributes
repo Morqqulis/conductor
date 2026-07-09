@@ -1,0 +1,2 @@
+# sh hooks must keep LF endings: Git for Windows runs them through sh, which breaks on CRLF
+runtime/git-hooks/* text eol=lf

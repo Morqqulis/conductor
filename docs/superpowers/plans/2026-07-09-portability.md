@@ -1,0 +1,144 @@
+# Conductor Portability Plan — multi-harness (Cursor, Antigravity, Gemini)
+
+Date: 2026-07-09. Owner: solo user. Scope decided with the user: targets are Cursor,
+Google Antigravity (desktop IDE), and Gemini surfaces; ChatGPT is out of scope (user
+does not use it). Phase order approved by the user: git-native gate first.
+
+## Research base (web survey, 2026-07-09)
+
+Four-agent web survey of official docs; full structured results in the session that
+produced this plan. Key verified facts:
+
+| Harness | Rules text | Blocking hook (deny a shell command) | Per-turn re-injection |
+|---|---|---|---|
+| Claude Code | CLAUDE.md + hooks | PreToolUse (deployed, v1.4.1) | UserPromptSubmit (deployed) |
+| Cursor | `.cursor/rules/*.mdc` (`alwaysApply`), AGENTS.md | `beforeShellExecution` in `.cursor/hooks.json`, JSON stdin/stdout, `permission: deny`, `failClosed` option — cursor.com/docs/hooks | none (sessionStart only) |
+| OpenAI Codex CLI/IDE | AGENTS.md (32 KiB combined cap) | PreToolUse hooks GA 2026-05-14, same `permissionDecision: deny` JSON as Claude Code — developers.openai.com/codex/hooks | UserPromptSubmit additionalContext |
+| Antigravity 2.0 (desktop + `agy` CLI) | `.agents/rules/*.md`, per-file Always On, 12k chars/file | `.agents/hooks.json` PreToolUse deny — proven for the CLI; **IDE enforcement unconfirmed by any source** | none |
+| Gemini CLI | GEMINI.md / AGENTS.md | hooks in `.gemini/settings.json` (converging pattern) | unverified |
+| ChatGPT web | 1500-char custom instructions | none (cloud-side execution) | none |
+
+Model caveat: all Conductor texts were tuned against Opus behavior (qa/ S1–S7). Other
+model families may respond differently to the same wording — every adapter needs its own
+minimal live reps before being called installed.
+
+## Architecture: three layers, one source of truth
+
+- **L1 — instruction text** (`runtime/core.md`, playbooks): portable markdown; adapters
+  carry a *digest* (iron laws + completion gate + marker protocol), not the full playbooks,
+  until per-model reps justify more.
+- **L2 — harness hooks**: per-tool blocking scripts; each adapter reimplements the thin
+  I/O shell around the same marker protocol. Windows lesson (v1.4.1): always read hook
+  stdin and child-process output as explicit UTF-8 — OEM codepages corrupt non-ASCII paths.
+- **L3 — git-native gate**: `runtime/git-hooks/pre-commit` — harness-agnostic, enforced by
+  git itself for any agent or human. The only layer that covers ALL tools at once.
+
+`runtime/` stays the single source; adapters are generated/copied by installers, never
+hand-forked.
+
+## Phase 1 — git-native commit gate (DONE 2026-07-09, hardened after 3-lens review)
+
+Files: `runtime/git-hooks/pre-commit` + `runtime/git-hooks/post-commit` (POSIX sh),
+`install-git-gate.ps1` (per-repo installer), `.gitattributes` (eol=lf for sh hooks),
+`runtime/hooks/pre-commit-gate.ps1` (harness layer reworked).
+
+Marker protocol v2 (decision): **pre-commit checks** the single-use marker,
+**post-commit consumes** it — post-commit fires only on a successful commit, so attempts
+that die later (commit-msg hook, "nothing to commit", aborted editor) keep the marker
+alive for retry. The harness hook only checks freshness and provides the model-readable
+deny reason — and consumes itself ONLY in repos without the git gate (there one marker
+admits one command, not one commit; the git layer is required for strict per-commit
+accounting). Rejected alternatives: harness-side consumption (marker eaten at PreToolUse
+time, before the git hook runs — every gated commit falsely denied); pre-commit-side
+consumption (v1 of this phase — a failed attempt after pre-commit burned the proving run,
+verified live in review).
+
+All paths in both layers resolve through `git rev-parse --path-format=absolute
+--git-path ...` — a single source of truth that is correct inside linked worktrees
+(marker per-worktree, hooks in the common dir) and under `core.hooksPath`. String-joining
+`<root>/.git/...` was the review's top finding: it broke every worktree/submodule commit.
+
+Harness textual denials (any accepted spelling, scanned per shell segment after stripping
+quoted text): `--no-verify` incl. bundled short flags (`-n`, `-nm`, `-anm`) and
+abbreviations (`--no-veri`); `core.hooksPath` overrides (`-c core.hooksPath=`,
+`--config-env`) — both disable the git layer (the documented agent bypass,
+anthropics/claude-code#40117). `--dry-run` commits are ignored (no hooks run, nothing
+lands — consuming a marker for them was a verified false burn).
+
+Verified (scratch repo + linked worktree + live, 2026-07-09): deny without marker; commit
+lands and post-commit consumes; single-use (second commit denied); stale (>30 min) denied;
+failed attempt after pre-commit keeps the marker, same marker then lands a real commit;
+worktree: deny -> marker at `--git-path` location -> commit -> consumed; foreign hook
+displaced to `*.pre-conductor` chains after the gate with its shebang honored, veto aborts
+the commit with the marker surviving — in the main worktree AND from a linked worktree via
+the common hooks dir; installer idempotent, refuses `core.hooksPath` repos, decodes git
+output as UTF-8 (OEM codepage silently installed into a garbage-named dir — review
+finding, Cyrillic path); harness matcher matrix 11/11 (bypass spellings denied; `-n` in
+commit messages, `head -n` in compound commands, PowerShell `-not/-ne` after separators,
+quoted `git commit` mentions all pass clean; second commit hidden after `&&` scanned);
+hooks.json matcher changes hot-reload mid-session (observed live).
+
+Known limits (named, not hidden):
+1. `--no-verify` bypasses the git layer itself; the harness denies every literal spelling,
+   but runtime string construction (`'--no-' + 'verify'`), a quoted absolute path to
+   git.exe, or `sh -c 'git commit ...'` (detector strips quoted text) slip any text
+   matcher — inherent to command-text hooks. True backstop is server-side (CI re-running
+   checks / pre-receive on a self-hosted forge). Note: with the gate installed, a
+   `--no-verify` commit still consumes the marker via post-commit — strict direction.
+2. `git merge`, `rebase`, `cherry-pick`, `revert` create commits without running
+   `pre-commit` (merges run `pre-merge-commit`). Candidate phase 1.1: install the gate as
+   `pre-merge-commit` too. The harness text matcher does not cover these verbs either.
+   A merge DOES run post-commit and consumes a present marker (strict direction).
+3. Repos with `core.hooksPath` (husky etc.): installer refuses; integrate the marker check
+   into that manager's pre-commit manually — the harness gate detector follows
+   `--git-path hooks/pre-commit`, which respects `core.hooksPath`, so a manager-hosted
+   sentinel is detected correctly.
+4. A marker is per-repo (per-worktree); a command that commits into a different repo than
+   the session cwd is checked by the harness against the session repo's marker (strict
+   direction: may falsely deny, never falsely allow).
+5. In harness-only repos (git gate not installed) one marker admits one command; a command
+   with several commits lands them all on one proving run. Install the git gate where
+   per-commit accounting matters.
+
+Rollout: run `install-git-gate.ps1 -Repo <path>` per repository. Installed in the
+Conductor repo itself on 2026-07-09.
+
+## Phase 2 — Cursor adapter (NEXT)
+
+Deliverables:
+1. `adapters/cursor/conductor-core.mdc` — digest of core.md compiled for `alwaysApply`
+   (guidance cap: keep under 500 lines per Cursor docs).
+2. `adapters/cursor/hooks.json` + `adapters/cursor/gate.ps1` — `beforeShellExecution`
+   port of the commit gate: same marker protocol, same deny reasons, `failClosed: true`
+   (stricter than the Claude Code layer: hook crash blocks instead of fail-open),
+   plus the `--no-verify` textual denial. `sessionStart` hook injects the digest as
+   `additional_context`.
+3. Installer target: `install.ps1 -Target cursor` or a separate `install-cursor.ps1`
+   copying into `~/.cursor/` (user level) or `<repo>/.cursor/` (project level — preferred:
+   version-controlled).
+
+Verification protocol (mirror of 2026-07-09 debugging): instrumented hook logs its raw
+stdin payload first; markerless commit denied; marker allow + consume via L3; `--no-verify`
+denied; Cyrillic-path repo exercised explicitly (encoding lesson).
+
+## Phase 3 — Antigravity desktop adapter
+
+STEP 0 gates the phase: a live probe on the user's installed desktop IDE — minimal
+`.agents/hooks.json` PreToolUse hook that (a) logs its invocation payload, (b) denies a
+`run_command` containing `git commit`. Docs prove hook enforcement only for the `agy` CLI;
+no source demonstrates the IDE honoring a deny. If the probe fails, the adapter ships
+L1 text (`.agents/rules/` Always-On digest, split into <=12k-char files) + L3 git gate
+only, and the gap is recorded here with a re-check on each Antigravity release.
+
+## Phase 4 — Gemini surfaces
+
+The user's Gemini use runs through Antigravity desktop (phase 3 covers it). If standalone
+Gemini CLI appears: GEMINI.md digest + hooks in `.gemini/settings.json` (same probe-first
+protocol). Browser Gemini: values digest pasted into saved instructions; no enforcement
+possible — say so, do not pretend otherwise.
+
+## Cross-phase invariants
+
+- Every adapter ships only after its own live verification battery passes on this machine.
+- Digest first, full playbooks only after per-model reps show the texts transfer.
+- Every known limit is written down here the day it is found; silent gaps are defects.

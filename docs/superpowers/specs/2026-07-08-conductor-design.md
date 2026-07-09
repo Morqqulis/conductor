@@ -419,6 +419,23 @@ A/B benchmark completed (measurement isolation).
   pass/FAIL/pass on the OEM-866 regression check; live markerless Bash commit DENIED by the
   harness; marker allow-path passes and consumes the marker. Residual: the new matcher loads
   at session start — the PowerShell-tool live check belongs to the next session.
+  [Closed same day: the harness hot-reloads settings.json — a PowerShell-tool call was
+  denied by the gate minutes after re-registration, no new session needed.]
+- **2026-07-09 (v1.5)**: portability phase 1 — git-native commit gate LIVE. New layer
+  enforced by git itself for ANY agent or human: `runtime/git-hooks/pre-commit` (checks a
+  fresh <=30 min marker) + `post-commit` (consumes it only after a successful commit);
+  per-repo installer `install-git-gate.ps1` (installed into this repo). Harness gate
+  reworked: paths via `git rev-parse --git-path` (worktree/submodule-correct, matches the
+  sh layer exactly), textual denial of `--no-verify` in every accepted spelling and of
+  `core.hooksPath` overrides, per-segment scanning with quoted text stripped (no false
+  denies from `-n` in messages or PowerShell operators). Hardened against 19 findings from
+  a three-lens adversarial review (sh portability / PowerShell logic / protocol holes),
+  most review-verified live. Evidence: harness matcher matrix 11/11; git-layer battery
+  T1-T8 incl. failed-attempt marker survival and linked-worktree deny→allow→consume;
+  chained foreign hook veto aborts with marker surviving in main worktree and via the
+  common hooks dir from a linked worktree. Full design, verified list, and named limits:
+  `docs/superpowers/plans/2026-07-09-portability.md`. HANDOFF.md was retired by the user
+  (a2d1ce0); the plan doc + this record are the session-transition state now.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

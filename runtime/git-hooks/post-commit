@@ -1,0 +1,23 @@
+#!/bin/sh
+# conductor gate: companion consumer (this line is the sentinel installers/detectors grep).
+# Conductor commit gate companion: consumes the single-use verification marker only after
+# a commit actually lands (post-commit fires on success alone), so attempts rejected by
+# commit-msg hooks, empty commits, or an aborted editor keep the marker alive for retry.
+# Commits that legitimately skip pre-commit but run post-commit (e.g. merge) also consume
+# a present marker - the strict direction: may force a re-prove, never a false allow.
+MARKER=$(git rev-parse --path-format=absolute --git-path conductor-verified 2>/dev/null) ||
+    MARKER="$(git rev-parse --absolute-git-dir 2>/dev/null)/conductor-verified"
+case "$MARKER" in
+    /conductor-verified) exit 0 ;;
+esac
+[ -f "$MARKER" ] && rm -f "$MARKER"
+
+CHAINED=$(git rev-parse --path-format=absolute --git-path hooks/post-commit.pre-conductor 2>/dev/null)
+if [ -n "$CHAINED" ] && [ -f "$CHAINED" ]; then
+    if [ -x "$CHAINED" ]; then
+        "$CHAINED" "$@"
+    else
+        sh "$CHAINED" "$@"
+    fi
+fi
+exit 0

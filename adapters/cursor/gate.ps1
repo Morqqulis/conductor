@@ -75,6 +75,7 @@ try {
     if (-not $raw) { Out-Decision 'allow'; exit 0 }
     $evt = $raw | ConvertFrom-Json
     $cmd = $evt.command
+    if ($cmd -match '(^|[\s(\\/])git(\.exe)?\s') { try { Add-Content -Path $dbgLog -Value "cmd: $cmd | cwd: $($evt.cwd)" } catch {} }
     if (-not $cmd) { Out-Decision 'allow'; exit 0 }
 
     # Strip quoted segments (flags inside commit messages must not deny; `git commit`

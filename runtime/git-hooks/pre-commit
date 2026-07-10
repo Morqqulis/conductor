@@ -17,7 +17,8 @@ esac
 
 deny() {
     echo "conductor gate: $1" >&2
-    echo "Run the proving command (read its full output), then create the marker and retry:" >&2
+    echo "The marker is SINGLE-USE: every commit consumes it, so EACH commit needs its own" >&2
+    echo "fresh proving run + marker, created in its OWN command BEFORE the commit command:" >&2
     echo "  bash:       touch \"$MARKER\"" >&2
     echo "  PowerShell: New-Item -Force -ItemType File \"$MARKER\" | Out-Null" >&2
     exit 1

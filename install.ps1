@@ -29,13 +29,17 @@ if (Test-Path $settingsPath) {
 $shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
 $conductorFwd = $conductorDir -replace '\\', '/'
 $sessionCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/session-start.ps1"
+$lessonsCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/lessons-inject.ps1"
 $subagentCmd = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/subagent-start.ps1"
 $promptCmd   = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/user-prompt.ps1"
 $commitCmd   = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/pre-commit-gate.ps1"
 if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
     $settings | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
 }
-$sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @([pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 }) }
+$sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; hooks = @(
+    [pscustomobject]@{ type = 'command'; command = $sessionCmd; timeout = 10 },
+    [pscustomobject]@{ type = 'command'; command = $lessonsCmd; timeout = 10 }
+) }
 $subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
 $promptEntry   = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $promptCmd; timeout = 10 }) }
 $commitEntry   = [pscustomobject]@{ matcher = 'Bash|PowerShell'; hooks = @([pscustomobject]@{ type = 'command'; command = $commitCmd; timeout = 10 }) }

@@ -16,7 +16,11 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
 3. PROVE the top hypothesis with its named check (read / trace / instrument — instrumentation
    edits are strictly observational: logging/print lines only, never touching control flow or
    the suspected cause, and removed before the falsification ritual) BEFORE any fix edit.
-   Check contradicts H -> back to step 2 with the new evidence; do not edit.
+   State the check's EXPECTED output before running it — the surprise against your prediction
+   is the evidence; follow it, not the plan.
+   Check contradicts H -> back to step 2 with the new evidence; do not edit. A falsified
+   hypothesis is a lesson: append one line to ~/.claude/conductor/lessons.md
+   (date | trigger | rule).
 4. PRE-REGISTER the attempt: todo entry "attempt N: <H>". Only then edit — minimal fix at the
    proven cause, not at the symptom site. ANY edit that changes program behavior is a fix
    attempt and MUST be pre-registered; an unregistered behavior-changing edit counts as a

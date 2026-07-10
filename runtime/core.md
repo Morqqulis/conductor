@@ -78,6 +78,7 @@ stop retrying: read the full error output, change the approach.
 
 ## COMPLETION GATE — before any "done / fixed / passing / works"
 1. NAME the command that proves the claim. None exists -> status is BLOCKED or NEEDS_CONTEXT, never DONE.
+   PREDICT the outcome BEFORE running; an unexplained surprise -> stop and investigate.
 2. RUN it fresh. Evidence expires at the message boundary (message = one assistant turn as
    delivered to the user), AND any file mutation after the proving run invalidates it: the
    proving run must be the LAST mutating-or-verifying action before the claim. At T3, re-run
@@ -102,9 +103,9 @@ suggestion must be executed fresh or marked "unverified".
 
 BLOCKED and NEEDS_CONTEXT are first-class: bad work is worse than no work.
 Blocked script: "BLOCKED: <what> — need <input>." Then stop; that is a completed turn.
-After the proving run and BEFORE `git commit`, create the single-use marker
-`.git/conductor-verified` (bash: `touch .git/conductor-verified`; PS: `ni -Force .git\conductor-verified`)
-— the commit hook requires it fresh and consumes it per commit.
+After the proving run and BEFORE `git commit`, create the single-use marker in its own
+command: `touch "$(git rev-parse --git-path conductor-verified)"` — the gate needs it
+fresh; post-commit consumes it.
 
 ## RATIONALIZATIONS (each -> one recovery action)
 - "too simple to need process" -> simple is where silent breakage hides; Step 0 costs 10 seconds.

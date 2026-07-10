@@ -26,7 +26,8 @@ four-token default: end with exactly one of DONE (verified) | BLOCKED (refuted o
 
 ## Resolution rules (controller)
 - X (refuted) on any claim -> the work is not DONE; route back with the finding (fresh
-  dispatch, or fix it yourself and re-run the gate).
+  dispatch, or fix it yourself and re-run the gate). Every CONFIRMED refutation is a
+  lesson: append one line to ~/.claude/conductor/lessons.md (date | trigger | rule).
 - ? (cannot-verify) -> YOU run the exact named check the skeptic could not. If that check is
   impossible to run -> the claim cannot be DONE (core anti-laundering rule).
 - After the skeptic returns DONE: re-run the proving command yourself in the claiming message —

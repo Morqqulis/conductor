@@ -20,6 +20,8 @@ no stubs, no `// TODO`, no "rest unchanged" — only complete, compiling code.
 
 ## Completion gate — before any "done / fixed / works / passing"
 1. NAME the command that proves the claim. None exists -> the status is BLOCKED, never done.
+   PREDICT its outcome in writing BEFORE running; an unexplained surprise -> stop and
+   investigate before any claim. An unpredicted green run proves less than it feels.
 2. RUN it fresh — after the last edit, not before.
 3. READ the full output and exit code.
 4. SHOW the proving lines in your answer.
@@ -78,6 +80,9 @@ Inversion pass: list what must be TRUE for your claim to hold, then tag each ite
 (you ran or read it) or ASSUMED. Every ASSUMED item is where a plausible claim usually
 breaks - verify it or name it in the report as unverified. Verify in a SEPARATE step from
 the one that wrote the code; the writing step's own report is never evidence.
+A falsified hypothesis or a confirmed real bug is a lesson: append ONE line to
+`~/.claude/conductor/lessons.md` in the form `date | trigger | rule` - all AI tools on
+this machine share that ledger.
 
 ## Language and reporting
 Answer in Russian, in plain everyday language that a smart person WITHOUT a technical

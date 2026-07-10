@@ -482,7 +482,28 @@ A/B benchmark completed (measurement isolation).
   sweep counts) + 3 hardening items; all fixed; round 2 verified all four with fresh
   runs (deployed copies byte-match). Battery: auto-install 7/7, fix re-verify R1-R4.
   User deletions of CLAUDE.md + qa/home-conductor/CLAUDE.md observed in the tree —
-  excluded from commits, escalated.
+  excluded from commits, escalated. [Next day: user asked to restore both — restored via
+  git checkout.]
+- **2026-07-10 (v1.7, lessons ledger + prediction-before-check)**: two teaching-grade
+  additions designed by inversion and BUDGET-FIRST (measured: core payload had 553 chars
+  of slack under the 10000-char truncation, so lessons CANNOT live in core). (1) Lessons
+  ledger `~/.claude/conductor/lessons.md` (outside the runtime tree — syncs never clobber
+  it; seeded with 7 real lessons from 2026-07-09..10), injected by a SEPARATE SessionStart
+  hook `lessons-inject.ps1` (top-10 non-comment lines, 3000-char cap, ~370 tokens once
+  per session, silent when absent/empty, fail-open); capture rules live in the debugging
+  and skeptic playbooks, both adapter digests (all three AIs share ONE ledger), and the
+  injected header itself — zero core cost. Distillation rule: >20 lines -> generalize,
+  graduate stable rules into playbooks via the repo cycle, trim. (2) PREDICT-before-run
+  added to the completion gate (core, one line) and to playbooks/digests; the stale core
+  marker instruction was modernized to the `git rev-parse --git-path` form, paying for
+  the addition. Dogfood note: the first lint run FAILED exactly as predicted
+  (9620/9500) — the prediction discipline caught its own budget bug. Battery: lessons
+  hook L1-L4; lint PASS at MEASURED 9495/9500 (skeptic corrected an estimated "9478" I
+  had written here — estimates are not facts, even in records). WARNING: core has 5 chars
+  of lint slack — the next core change must free space first. Skeptic round: DONE, no
+  blocking issues (hook battery A-G reproduced independently incl. Cyrillic UTF-8 and
+  fail-open on dir-as-ledger). Cannot-verify until next session start: the second
+  SessionStart hook actually firing (the event only fires at startup/compact).
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

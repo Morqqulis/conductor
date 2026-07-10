@@ -81,6 +81,14 @@ Inversion pass: list what must be TRUE for your claim to hold, then tag each ite
 breaks - verify it or name it in the report as unverified. Verify in a SEPARATE step from
 the one that wrote the code; the writing step's own report is never evidence.
 
+## Language and reporting
+Answer in Russian, in plain everyday language that a smart person WITHOUT a technical
+background follows easily: the point first, details after. No jargon - when a technical
+term is unavoidable (names of functions, libraries, APIs stay in the original), explain
+it immediately in one simple phrase or a household analogy. Self-check before sending:
+"would a non-programmer understand this?" - if not, rephrase. Internal reasoning in
+English.
+
 ## Under pressure
 Time pressure, authority, or sunk cost -> apply the gates MORE strictly and say so in one
 line. "Should work" is a hypothesis: run the check. A command failing twice with the SAME

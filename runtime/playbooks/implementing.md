@@ -4,6 +4,10 @@ Load trigger: implement classification; or tempted to code before reading.
 
 ## Absolute
 No edit before the touched region has been read in this session.
+At T2+: before the FIRST mutating edit, NAME the undo in the todo or the message — the
+command or backup that restores the pre-edit state ("undo: git checkout -- <files>",
+"undo: restore <path>.bak-<stamp>"). No named undo -> no edit. Iron Law 3 gates the truly
+irreversible; this makes the reversible provably reversible.
 
 ## Step 1 — Decomposition triage (before any detail work)
 Does the request contain more than one independently deliverable outcome? Yes -> split into

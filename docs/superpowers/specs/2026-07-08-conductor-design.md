@@ -504,6 +504,21 @@ A/B benchmark completed (measurement isolation).
   blocking issues (hook battery A-G reproduced independently incl. Cyrillic UTF-8 and
   fail-open on dir-as-ledger). Cannot-verify until next session start: the second
   SessionStart hook actually firing (the event only fires at startup/compact).
+- **2026-07-10 (v1.8, undo-first + cross-model skeptic)**: (1) implementing.md Absolute —
+  at T2+ the FIRST mutating edit requires a NAMED undo (command or backup) recorded in
+  the todo/message; same rule as item 6 in both adapter digests (deliberately without a
+  tier qualifier there — digests have no tier system). (2) skeptic.md "Cross-model
+  variant": at T3 probe a different-model-family CLI (agy/Gemini) with a HARD external
+  25s kill (agy hangs past its own --print-timeout when unauthenticated — measured
+  twice), dispatch the verbatim verifier prompt through it when OK; UNAVAILABLE -> same-
+  model skeptic with the downgrade stated (silent downgrade = violation). First placement
+  in probes.md blew its 3200 lint budget — the surprise was caught by the new PREDICT
+  rule, the lesson recorded in the ledger ("measure ANY runtime file's budget before
+  adding"), and the probe was co-located into skeptic.md (its only consumer) at
+  4217/6000. Degradation path exercised live (UNAVAILABLE in 25s, no leftover
+  processes). Skeptic round: DONE, same-model, downgrade documented; try/catch +
+  temp-file cleanup added per its advisories. Weekly self-test (item 5 of the mentor
+  list) explicitly declined by the user — twice.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

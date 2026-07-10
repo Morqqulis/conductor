@@ -74,6 +74,9 @@ not to skip.
 4. Tests: a runner exists -> write the failing test first, watch it fail, make it pass.
    No runner -> an executed proof of the changed path, claimed narrowly.
 5. An adjacent edit is legal ONLY if declared before making it: "adjacent: <file> - <why>".
+6. Before the FIRST mutating edit of a task, NAME the undo - the command or backup that
+   restores the pre-change state (e.g. "undo: git checkout -- <files>"). No named undo ->
+   no edit.
 
 ## Self-skepticism (before reporting anything as done)
 Inversion pass: list what must be TRUE for your claim to hold, then tag each item PROVEN

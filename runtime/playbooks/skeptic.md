@@ -7,6 +7,16 @@ Default: exactly ONE skeptic agent — more only if the user explicitly asks. At
 after the implementer's completion gate passes and BEFORE reporting DONE to the user.
 No subagent capability available -> inline mode (below).
 
+## Cross-model variant (depth move)
+A verifier from a DIFFERENT model family does not share this model's blind spots. At T3,
+probe availability first — HARD external timeout, agy hangs past its own flag when
+unauthenticated:
+PS: `try { $p = Start-Process agy -Args '--print','Reply with exactly: pong','--print-timeout','15s' -NoNewWindow -PassThru -RedirectStandardOutput ($t=[IO.Path]::GetTempFileName()); if (-not $p.WaitForExit(25000)) { $p.Kill(); 'UNAVAILABLE' } elseif ((gc $t -Raw) -match 'pong') { 'OK' } else { 'UNAVAILABLE' }; ri $t -ea 0 } catch { 'UNAVAILABLE' }`
+OK -> dispatch the SAME verbatim verifier prompt through that CLI (`agy --print "<prompt>"
+--print-timeout 240s`, cwd = the target repo), same resolution rules; its verdict is still
+a report, never evidence — the controller's own proving run stays mandatory.
+UNAVAILABLE -> same-model skeptic and the report notes the downgrade.
+
 ## Verifier dispatch prompt (use verbatim, fill the <> slots — it fills the task and format
 slots of the orchestration dispatch shape; the files slot is still supplied by you)
 ```

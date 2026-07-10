@@ -23,15 +23,20 @@ function Ensure-GitGate([string]$repoCwd) {
     try {
         $pre = git -C $repoCwd rev-parse --path-format=absolute --git-path hooks/pre-commit 2>$null
         if (-not $pre) { return $false }
-        $post = git -C $repoCwd rev-parse --path-format=absolute --git-path hooks/post-commit 2>$null
-        if ($post -and (Test-Path $pre) -and (Test-Path $post) -and
-            ((Get-Content $pre -Raw) -match 'conductor gate') -and ((Get-Content $post -Raw) -match 'conductor gate')) { return $true }
+        # Fast path checks ALL FOUR sentinels explicitly - a subset invariant was refuted
+        # by a measured counter-probe (partial deletions/aborted heals break clever orders).
+        $complete = $true
+        foreach ($n in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
+            $p = git -C $repoCwd rev-parse --path-format=absolute --git-path "hooks/$n" 2>$null
+            if (-not ($p -and (Test-Path $p) -and ((Get-Content $p -Raw) -match 'conductor gate'))) { $complete = $false; break }
+        }
+        if ($complete) { return $true }
         if (git -C $repoCwd config --get core.hooksPath 2>$null) {
             [Console]::Error.WriteLine('conductor gate: core.hooksPath is set, auto-install skipped')
             return $false
         }
         $srcDir = Join-Path $env:USERPROFILE '.claude\conductor\git-hooks'
-        foreach ($name in @('post-commit', 'pre-commit')) {
+        foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
             $src = Join-Path $srcDir $name
             if (-not (Test-Path $src)) { return $false }
             $content = ([IO.File]::ReadAllText($src)) -replace "`r`n", "`n"
@@ -78,8 +83,8 @@ try {
     $deny = $null
     $realCommit = $false
     foreach ($seg in [regex]::Split($scan, '[;&|\r\n]')) {
-        if ($seg -notmatch '(^|[\s(\\/])git(\.exe)?(\s+\S+)*?\s+commit(\s|$|\))') { continue }
-        if ($seg -match '(^|\s)--dry-run(\s|$|\))') { continue }   # runs no hooks, commits nothing
+        if ($seg -notmatch '(^|[\s(\\/])git(\.exe)?(\s+\S+)*?\s+(commit|merge|revert|cherry-pick)(\s|$|\))') { continue }
+        if ($seg -match '(^|\s)--(dry-run|abort|quit|continue)(\s|$|\))') { continue }   # inert, or finishing an operation the gate already admitted
         $realCommit = $true
         if ($seg -match '(^|\s)(--no-ver\w*|-[a-zA-Z]*n[a-zA-Z]*)(\s|$|\))') {
             $deny = 'Conductor commit gate: --no-verify (in any spelling, including bundled short flags like -nm) is forbidden - it bypasses the git-native gate. Commit without the flag; a failing pre-commit hook is a signal to fix, not to skip. User override in the current conversation lifts this rule.'

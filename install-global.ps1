@@ -92,7 +92,7 @@ Write-Output "[4/5] Antigravity global rules -> $agentsPath (GEMINI.md untouched
 $tplRoot = Join-Path $env:USERPROFILE '.claude\conductor\git-template'
 $tplHooks = Join-Path $tplRoot 'hooks'
 New-Item -ItemType Directory -Force $tplHooks | Out-Null
-foreach ($name in @('post-commit', 'pre-commit')) {
+foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
     $content = ([IO.File]::ReadAllText((Join-Path $PSScriptRoot "runtime\git-hooks\$name"))) -replace "`r`n", "`n"
     [IO.File]::WriteAllText((Join-Path $tplHooks $name), $content, (New-Object System.Text.UTF8Encoding($false)))
 }
@@ -105,7 +105,7 @@ if (-not $existingTpl) {
 } else {
     $foreignHooks = Join-Path $existingTpl 'hooks'
     New-Item -ItemType Directory -Force $foreignHooks | Out-Null
-    foreach ($name in @('post-commit', 'pre-commit')) {
+    foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
         $dest = Join-Path $foreignHooks $name
         if ((Test-Path $dest) -and ((Get-Content $dest -Raw) -notmatch 'conductor gate')) {
             Copy-Item $dest "$dest.pre-conductor" -Force   # the gate chains to this name at runtime

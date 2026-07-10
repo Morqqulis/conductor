@@ -16,7 +16,7 @@ $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 
 $sources = @{}
-foreach ($name in @('post-commit', 'pre-commit')) {
+foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
     $src = Join-Path $PSScriptRoot "runtime\git-hooks\$name"
     if (-not (Test-Path $src)) { throw "hook source not found: $src - run this script from the conductor repo root" }
     $content = ([IO.File]::ReadAllText($src)) -replace "`r`n", "`n"   # sh requires LF endings
@@ -37,7 +37,7 @@ function Install-GateInto([string]$target) {
     $hooksDir = Join-Path $commonDir 'hooks'
     New-Item -ItemType Directory -Force $hooksDir | Out-Null
     # post-commit first: a partial install must never enable the check without its consumer
-    foreach ($name in @('post-commit', 'pre-commit')) {
+    foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
         $dest = Join-Path $hooksDir $name
         if (Test-Path $dest) {
             $existing = [IO.File]::ReadAllText($dest)

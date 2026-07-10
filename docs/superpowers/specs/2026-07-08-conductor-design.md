@@ -530,6 +530,21 @@ A/B benchmark completed (measurement isolation).
   hook payload (distill.md is wired via the DISTILL DUE line — paying core rent for a
   rarely-needed pointer would be worse). Battery: 8-line ledger -> no flag; synthetic
   25-line ledger -> flag with correct count; ledger restored byte-clean.
+- **2026-07-10 (v1.9, merge gate — phase 1.1 closed)**: `git merge` was a documented
+  bypass verb; now gated. NEW git hooks: pre-merge-commit (marker check before a merge
+  commit, MERGE_HEAD recovery hint in the deny text) + post-merge (consumer — added
+  after a live falsification: post-commit NEVER fires on merges, the first battery left
+  the marker alive; ledger line recorded). Four-hook set in every install vector
+  (installer, template, auto-install in all three shell gates). Shell-gate verb detector
+  extended to commit|merge|revert|cherry-pick with --dry-run/--abort/--quit/--continue
+  exempt as inert/continuation. Skeptic round: X CONFIRMED on my subset fast-path
+  invariant (counter-probe: pre-commit+post-merge present, two hooks deleted -> "healthy"
+  forever) — fixed to check ALL FOUR sentinels explicitly, counter-probe re-run PASS;
+  ledger lesson "counter-probe beats elegance". Two battery test-defects (stale marker
+  precondition; unaborted MERGE_HEAD) fixed — both already-known lesson classes. Sweep
+  over D:\ roots: harness classifier denied ME twice (its boundary respected) — one-paste
+  command handed to the user. Remaining documented bypass at git layer: rebase/amend
+  paths (no pre-hook exists); harness text layer covers the verbs.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

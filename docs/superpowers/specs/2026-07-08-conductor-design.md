@@ -519,6 +519,17 @@ A/B benchmark completed (measurement isolation).
   processes). Skeptic round: DONE, same-model, downgrade documented; try/catch +
   temp-file cleanup added per its advisories. Weekly self-test (item 5 of the mentor
   list) explicitly declined by the user — twice.
+- **2026-07-10 (v1.8.1, native distill trigger)**: distillation became a NATIVE mechanism
+  instead of a skill (user's call — a skill waits to be invoked, a hook notices by
+  itself). lessons-inject.ps1 counts non-comment ledger lines; >20 -> prepends "DISTILL
+  DUE (<n> lessons)" demanding the procedure BEFORE new feature work. The procedure is
+  the new runtime/playbooks/distill.md (1769/3000 own lint budget): read full ledger ->
+  group -> one general rule per group -> place by audience with budgets MEASURED first ->
+  repo cycle deploy -> verify deployed copies -> trim to <=12 lines -> marker commit.
+  Lint's dead-wiring check extended: "wired" now means referenced from core.md OR any
+  hook payload (distill.md is wired via the DISTILL DUE line — paying core rent for a
+  rarely-needed pointer would be worse). Battery: 8-line ledger -> no flag; synthetic
+  25-line ledger -> flag with correct count; ledger restored byte-clean.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

@@ -8,10 +8,14 @@ $ErrorActionPreference = 'Stop'
 try {
     $ledger = Join-Path $env:USERPROFILE '.claude\conductor\lessons.md'
     if (-not (Test-Path -LiteralPath $ledger)) { exit 0 }
-    $lines = @([IO.File]::ReadAllLines($ledger, [System.Text.Encoding]::UTF8) |
-        Where-Object { $_.Trim() -and $_ -notmatch '^#' } | Select-Object -First 10)
-    if ($lines.Count -eq 0) { exit 0 }
-    $head = 'CONDUCTOR LESSONS (top of ~/.claude/conductor/lessons.md). Capture rule: a falsified hypothesis, a refuted skeptic claim, or a gate-caught real bug -> append ONE line "date | trigger | rule". Over 20 lines -> distill: generalize, graduate stable rules into playbooks via the repo cycle, trim here.'
+    $all = @([IO.File]::ReadAllLines($ledger, [System.Text.Encoding]::UTF8) |
+        Where-Object { $_.Trim() -and $_ -notmatch '^\s*#' })
+    if ($all.Count -eq 0) { exit 0 }
+    $lines = @($all | Select-Object -First 10)
+    $head = 'CONDUCTOR LESSONS (top of ~/.claude/conductor/lessons.md). Capture rule: a falsified hypothesis, a refuted skeptic claim, or a gate-caught real bug -> append ONE line "date | trigger | rule".'
+    if ($all.Count -gt 20) {
+        $head = "DISTILL DUE: the ledger holds $($all.Count) lessons (>20) - lines past the injection cap are silently invisible. Run the distillation procedure (playbooks/distill.md, deployed at ~/.claude/conductor/playbooks/distill.md) as a maintenance unit BEFORE new feature work.`n" + $head
+    }
     $block = $head + "`n" + ($lines -join "`n")
     if ($block.Length -gt 3000) { $block = $block.Substring(0, 3000) }
     $payload = @{ hookSpecificOutput = @{ hookEventName = 'SessionStart'; additionalContext = $block } } | ConvertTo-Json -Depth 3 -Compress

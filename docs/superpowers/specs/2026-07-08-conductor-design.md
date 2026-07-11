@@ -578,6 +578,18 @@ A/B benchmark completed (measurement isolation).
   mechanics verified fresh, content adjudicated row-by-row (no wrong or hollow rows);
   6 advisories -> 4 applied. Cursor note: the global UI paste the user makes will carry
   the dispatcher; project-level .mdc copies update via installers.
+- **2026-07-11 (v1.10.1, fleet shape + first live distill)**: (1) orchestration.md FLEET
+  section — size = angles x verification votes, one-skeptic default, loop-until-dry stop
+  rule, judge panel pointer, and the explicit DO-NOT-parallelize list (sequential
+  evidence chains, shared live mutable state, experiments measuring the session's own
+  pipeline) — grounded in measured data: S5 baseline (Opus under-dispatches without
+  rules) vs this week's fleets. (2) FIRST live run of the distill procedure, ahead of
+  the >20 trigger by design: four "measure, never assume" lessons (battery
+  preconditions, lint budgets, subset invariants, partial env fakes) graduated into ONE
+  rule in implementing.md Step 4; ledger trimmed 13 -> 9 with a distill note in its
+  header; backup lessons.md.bak-distill1 kept. (3) README (RU+AZ): method dispatcher
+  named in the methodology row. Budgets measured before writing (orchestration
+  3175->~3.9k, implementing 3350->~3.8k of 6000).
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

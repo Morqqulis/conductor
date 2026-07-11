@@ -46,6 +46,10 @@ Run probes.md#test-runner-discovery.
   make it pass); FULL run at the completion gate.
 - No runner -> an inline execution proof of the changed path replaces it; the gate still
   requires a fresh proving run, claimed narrowly.
+A check is only as trustworthy as its controlled preconditions — MEASURED, never assumed:
+create test state explicitly (markers, fixtures), measure a target's budget before writing
+into it, verify invariants across ALL members (never a clever subset), and fake
+environments COMPLETELY — a partial fake leaks actions onto real state.
 
 ## Library/API claims
 A claim about how a library, framework, or API behaves requires verification against CURRENT

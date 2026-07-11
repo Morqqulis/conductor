@@ -12,7 +12,7 @@ qaydaya çevrilir və bütün gələcək sessiyalara yüklənir.
 
 | Qat | Nə edir |
 |---|---|
-| **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi |
+| **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi + metod dispetçeri: tapşırığın mahiyyəti yanaşmanı seçir (nəzarət qrupu, instrumentasiya, variantlar münsifləri…) |
 | **Kilidlər** | Üçqatlı commit-qapısı: mühit hook-u (Claude Code / Cursor / Antigravity) + repozitorinin öz git hook-ları. Commit yalnız sübut prosesindən sonra yaradılmış təzə, birdəfəlik marker olduqda keçir |
 | **Öyrənmə** | Dərslər jurnalı (`~/.claude/conductor/lessons.md`): bütün AI-lər bir fayla yazır, təzə dərslər hər sessiyanın əvvəlində yüklənir, jurnal dolduqda sistem özü onların daimi qaydalara çevrilməsini tələb edir |
 

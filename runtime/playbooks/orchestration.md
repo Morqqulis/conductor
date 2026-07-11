@@ -16,6 +16,17 @@ those 20 files again.
 - Parallel file mutation -> each agent works in worktree isolation. The controller creates the
   worktrees (run probes.md#dirty-tree first) and names each agent's worktree path in slot 2.
 
+## FLEET (size and shape — structure decides, never a favorite number)
+- Size = independent angles x verification votes. Research: one agent per angle, blind
+  to each other. Review: one per lens. Skeptic: exactly ONE (skeptic.md).
+- Unknown-size discovery -> loop until dry: stop only when a FULL extra round finds
+  nothing new — fixed counters undercount the tail.
+- Wide design choice -> judge panel: independent candidates from different angles,
+  explicit criteria written BEFORE comparing (methods.md).
+- DO NOT parallelize: sequential evidence chains (debugging), shared live mutable state
+  (worktrees isolate files, not configs or services), and any experiment that measures
+  the session's own pipeline — parallel agents change the thing being measured.
+
 ## HOW — constructed context (closed slot whitelist)
 A dispatch prompt contains EXACTLY these slots — never inherited history:
 1. task — one paragraph, written for a zero-context reader

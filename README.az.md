@@ -91,13 +91,27 @@ işə salın. Özü köçməyən yeganə şey — toplanmış dərslər jurnalı
 bu faylı əl ilə kopyalayın. Həzm olunmuş dərslər artıq playbook-lardadır və
 repozitori ilə birlikdə köçəcək.
 
-## Geri qaytarma
+## Silinmə
 
-- Konfiqlər: yanlarında `*.bak-<vaxt möhürü>` ehtiyat nüsxələri var.
-- Repozitoridən kilidi çıxarmaq: `.git/hooks/` içindəki dörd faylı silin
-  (`pre-commit`, `post-commit`, `pre-merge-commit`, `post-merge`);
-  `*.pre-conductor` kimi saxlanmış yad hook-ları adlarını dəyişərək qaytarın.
-- Yeni repozitorilər şablonu: `git config --global --unset init.templateDir`.
+Bir əmrlə, əvvəlcədən baxışla:
+
+```powershell
+# əvvəlcə nəyin silinəcəyinə baxın (heç nəyi dəyişmir)
+pwsh -File uninstall.ps1 -WhatIf -KeepLessons -SweepRoots "D:\projects,D:\top"
+
+# sonra həqiqətən silin
+pwsh -File uninstall.ps1 -KeepLessons -SweepRoots "D:\projects,D:\top"
+```
+
+`-KeepLessons` dərslər jurnalını İş masasına saxlayır; `-SweepRoots` göstərilən köklər
+altındakı repozitorilərdən git-kilidləri və adapterləri də təmizləyir. Dəyişdirilən hər
+konfiq ehtiyata alınır; yad hook-lar və qeydlər qorunur (özümüzünkülər sentinellərlə
+tanınır); köhnə `*.pre-conductor` hook-larınız yerinə qaytarılır; qlobal `CLAUDE.md`
+heç vaxt silinmir. Təkrar işə salmaq təhlükəsizdir.
+
+Hissə-hissə əl ilə geri qaytarma: hər konfiqin yanında `*.bak-<vaxt möhürü>` nüsxələri
+var; bir repozitoridən kilid — `.git/hooks/` içindəki dörd fayl; yeni repozitorilər
+şablonu — `git config --global --unset init.templateDir`.
 
 ## Repozitorinin strukturu
 

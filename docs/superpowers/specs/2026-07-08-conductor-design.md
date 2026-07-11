@@ -545,6 +545,21 @@ A/B benchmark completed (measurement isolation).
   over D:\ roots: harness classifier denied ME twice (its boundary respected) — one-paste
   command handed to the user. Remaining documented bypass at git layer: rebase/amend
   paths (no pre-hook exists); harness text layer covers the verbs.
+- **2026-07-11 (uninstall.ps1 + README removal sections)**: symmetric uninstaller,
+  user-requested. Conservative: -WhatIf dry run, timestamped backups before every config
+  edit, artifacts removed only by ANCHORED sentinels, foreign entries/hooks preserved,
+  *.pre-conductor restored by rename, global CLAUDE.md never deleted (report-only),
+  -KeepLessons rescues the ledger, -SweepRoots (comma-safe) cleans repos incl. project
+  adapters, idempotent. Tested exclusively against fake profiles via USERPROFILE +
+  GIT_CONFIG_GLOBAL env overrides — the real install verified byte-intact after every
+  run. Skeptic round CONFIRMED five real defects (substring filter deleted a foreign
+  'semiconductor-lint' entry; two null-crashes; OneDrive-redirected Desktop crash;
+  non-idempotent reruns) — all fixed, refix battery 8/8; a slash-direction bug in the
+  templateDir comparison was caught by the first battery (12/13 -> fixed). Ledger
+  lesson: anchored sentinels beat bare substrings. Also this day: the lessons hook
+  FIRED LIVE at a session boundary (block visible in context) — the v1.7 cannot-verify
+  item is closed; and the author was denied by his own gate for combining marker+commit
+  in one command, same as the field agent.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

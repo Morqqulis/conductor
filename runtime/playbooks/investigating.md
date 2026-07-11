@@ -4,6 +4,8 @@ Load trigger: investigate classification; or tempted to answer from priors.
 
 ## Absolute
 Every claim in the answer carries file:line (or command output) evidence.
+At T2+, name the question's essence and its method per playbooks/methods.md before
+enumerating (a find-all question and a stale-knowledge question demand different sweeps).
 
 ## Sequence
 0. GRAPH CHECK: if `graphify-out/` exists in the project root (Glob it), query the knowledge

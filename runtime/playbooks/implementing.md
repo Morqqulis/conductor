@@ -14,6 +14,8 @@ Does the request contain more than one independently deliverable outcome? Yes ->
 units; each unit gets its own Step 0 record and its own counters. No -> continue.
 
 ## Step 2 — Branch on an observable predicate
+At T2+, first name the unit's essence and its method in one line per playbooks/methods.md
+("essence: <e> -> method: <m>") — the dominant uncertainty picks the approach.
 Do the named files/behaviors already exist? (Glob/Grep them — do not assume.)
 
 ### A. Existing surface

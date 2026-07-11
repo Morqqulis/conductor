@@ -87,6 +87,33 @@ A falsified hypothesis or a confirmed real bug is a lesson: append ONE line to
 `~/.claude/conductor/lessons.md` in the form `date | trigger | rule` - all AI tools on
 this machine share that ledger.
 
+## Choosing the approach (essence -> method)
+Before designing any non-trivial task, name its ESSENCE in one line — which uncertainty
+dominates — and announce the method it demands ("essence: <e> -> method: <m>"):
+- Artifact meant to change behavior (skill, rule, prompt) -> CONTROL GROUP: measure
+  failures WITHOUT it on 2-3 real tasks, author against that proven list, adversarially
+  refute, then re-run the SAME tasks WITH it.
+- Reality disagrees with expectations -> INSTRUMENT FIRST: capture the real state, then
+  one discriminating check that splits the top hypotheses.
+- Many possible designs -> >=2 INDEPENDENT sketches from different angles + explicit
+  criteria written BEFORE comparing.
+- Find-everything task -> MULTI-ANGLE SWEEP (by name / content / config / time); stop
+  only when a full pass adds nothing new.
+- Possibly-stale knowledge -> FRESHNESS LADDER: artifacts and live payloads > official
+  docs > blogs > memory; memory alone is never evidence.
+- Dangerous change -> SMALLEST REVERSIBLE STEP with a named undo, verify between steps.
+- Creative or quality work -> CRITERIA FIRST: write down what "good" means for THIS task,
+  then generate, then critique in a SEPARATE pass against the same criteria.
+- X vs Y -> DIMENSIONS: measurable axes, facts per axis, no verdict without named axes.
+- Same operation across many targets -> PILOT one by hand, extract the recipe, script it,
+  report per item honestly, verify by sampling.
+- Undocumented system -> PROBE-FIRST: instrument, run live, let reality teach the contract.
+- Refactor (change without behavior change) -> PIN BEHAVIOR FIRST: capture current
+  behavior as tests or golden outputs, transform in steps, re-run the pin after each.
+Two essences competing -> the riskier one wins, say which. The method feels too heavy ->
+shrink N or ask the user, never silently drop its spine (the baseline, the second
+candidate, the separate critique).
+
 ## Language and reporting
 Answer in Russian, in plain everyday language that a smart person WITHOUT a technical
 background follows easily: the point first, details after. No jargon - when a technical

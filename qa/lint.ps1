@@ -11,18 +11,26 @@ $contract = [System.IO.File]::ReadAllText("$root\subagent-contract.md", [System.
 Check ($contract.Length -le 2500) "contract over budget: $($contract.Length)/2500"
 Check ($contract -match 'CONDUCTOR-SUB-v1') "contract missing sentinel"
 
-$budgets = @{ 'debugging.md'=6000; 'implementing.md'=6000; 'investigating.md'=6000; 'orchestration.md'=6000; 'skeptic.md'=6000; 'distill.md'=3000 }
+$budgets = @{ 'debugging.md'=6000; 'implementing.md'=6000; 'investigating.md'=6000; 'orchestration.md'=6000; 'skeptic.md'=6000; 'distill.md'=3000; 'methods.md'=6000 }
 foreach ($name in $budgets.Keys) {
     $p = "$root\playbooks\$name"
     Check (Test-Path $p) "missing playbook $name"
     if (Test-Path $p) {
         $len = ([System.IO.File]::ReadAllText($p)).Length
         Check ($len -le $budgets[$name]) "$name over budget: $len/$($budgets[$name])"
-        # wired = reachable from an injected surface: core.md (always in context) or a
-        # session hook payload (injected when its trigger fires, e.g. distill.md via the
-        # lessons hook's DISTILL DUE line)
+        # wired = reachable from an injected surface: core.md (always in context), a
+        # session hook payload (e.g. distill.md via DISTILL DUE), or another playbook
+        # (e.g. methods.md via implementing/investigating) - playbooks load transitively
         $hookTexts = (Get-ChildItem "$root\hooks\*.ps1" | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }) -join "`n"
-        Check (($core -match [regex]::Escape($name)) -or ($hookTexts -match [regex]::Escape($name))) "dead wiring: $name not referenced from core.md or any hook payload"
+        $peerTexts = (Get-ChildItem "$root\playbooks\*.md" | Where-Object { $_.Name -ne $name } | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName) }) -join "`n"
+        Check (($core -match [regex]::Escape($name)) -or ($hookTexts -match [regex]::Escape($name)) -or ($peerTexts -match [regex]::Escape($name))) "dead wiring: $name not referenced from core.md, any hook payload, or a peer playbook"
+    }
+}
+# adapter digests feed Antigravity's 12000-chars-per-rule-file cap (silent truncation past it)
+foreach ($digest in @("$PSScriptRoot\..\adapters\cursor\conductor-core.mdc", "$PSScriptRoot\..\adapters\antigravity\conductor-core.md")) {
+    if (Test-Path $digest) {
+        $dlen = ([System.IO.File]::ReadAllText($digest)).Length
+        Check ($dlen -le 12000) "digest over Antigravity cap: $(Split-Path $digest -Leaf) $dlen/12000"
     }
 }
 $probes = [System.IO.File]::ReadAllText("$root\snippets\probes.md")

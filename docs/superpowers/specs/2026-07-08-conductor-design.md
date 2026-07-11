@@ -560,6 +560,24 @@ A/B benchmark completed (measurement isolation).
   FIRED LIVE at a session boundary (block visible in context) — the v1.7 cannot-verify
   item is closed; and the author was denied by his own gate for combining marker+commit
   in one command, same as the field agent.
+- **2026-07-11 (v1.10, method dispatcher)**: the user's insight — the gap is not any one
+  method but METHOD SELECTION: Fable picks the approach from the task's essence; other
+  models (and rule-less sessions) default to "the usual way". New
+  runtime/playbooks/methods.md: a dispatch table "dominant uncertainty -> method",
+  11 rows distilled from the author-model's own observed patterns (control group for
+  behavior-changing artifacts; instrument-first; independent candidates + criteria-first
+  comparison; multi-angle sweep with a dry-pass stop rule; freshness ladder
+  artifacts>docs>blogs>memory; smallest reversible step; criteria-first for creative
+  work; dimensions for X-vs-Y; pilot->recipe->mechanize; probe-first for undocumented
+  systems; pin-behavior-first for refactors — the last row added by the skeptic).
+  Announce rule: "essence: <e> -> method: <m>", T2+ scoped (no T1 spam). Wired from
+  implementing.md Step 2 and investigating.md Absolute; lint wiring definition extended
+  to peer-playbook references (accepted limit: the check is not transitive — mutually
+  referencing orphans would pass). Compact 11-row version in both adapter digests;
+  digest sizes now lint-enforced against Antigravity's 12000 cap. Skeptic round: DONE,
+  mechanics verified fresh, content adjudicated row-by-row (no wrong or hollow rows);
+  6 advisories -> 4 applied. Cursor note: the global UI paste the user makes will carry
+  the dispatcher; project-level .mdc copies update via installers.
 
 ## 11. Decisions log
 - Name: **Conductor** (user-approved).

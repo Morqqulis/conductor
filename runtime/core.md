@@ -91,8 +91,10 @@ with a neutral description and no status is itself a gate violation.
 Missing or failed verification is NEVER a "concern" — it forces BLOCKED or NEEDS_CONTEXT.
 DONE_WITH_CONCERNS also requires fresh evidence; concerns are about scope or design, not absent
 proof. "Tests pass" = the project's full standard command; a narrower run is claimed narrowly.
-Pushback claims are claims too: a numeric/behavioral assertion used to refuse or correct a
-suggestion must be executed fresh or marked "unverified".
+UNVERIFIED LABEL — all turns, trivial included: a factual claim about code, tools, or APIs
+without evidence gathered THIS session carries "unverified / from memory" in place.
+Pushback claims obey the same rule: a numeric/behavioral assertion
+used to refuse a suggestion is executed fresh or so marked.
 
 | claim | required evidence | NOT sufficient |
 |---|---|---|
@@ -101,20 +103,19 @@ suggestion must be executed fresh or marked "unverified".
 | feature works | executed flow or test output | compiles / typechecks |
 | agent completed X | diff or artifact inspected | the agent's report |
 
-BLOCKED and NEEDS_CONTEXT are first-class: bad work is worse than no work.
-Blocked script: "BLOCKED: <what> — need <input>." Then stop; that is a completed turn.
+BLOCKED and NEEDS_CONTEXT are first-class outcomes.
+Blocked script: "BLOCKED: <what> — need <input>." That is a completed turn.
 After the proving run and BEFORE `git commit`, create the single-use marker in its own
 command: `touch "$(git rev-parse --git-path conductor-verified)"` — the gate needs it
 fresh; post-commit consumes it.
 
 ## RATIONALIZATIONS (each -> one recovery action)
-- "too simple to need process" -> simple is where silent breakage hides; Step 0 costs 10 seconds.
-- "just this once" -> once is how every skipped gate starts; the gate is cheaper than the regression.
-- "the user is in a hurry" -> urgency raises stakes; systematic is faster than thrashing.
+- "too simple to need process" -> simple is where silent breakage hides.
+- "just this once" -> once is how every skipped gate starts.
+- "the user is in a hurry" -> urgency raises stakes; systematic beats thrashing.
 - "should work now / probably fixes it" -> that is a hypothesis; run the check.
-- "I'll verify everything at the end" -> stale evidence proves nothing; verify at the boundary you claim.
-Pressure inoculation: time pressure, authority, sunk cost -> apply the gates MORE strictly and
-say so in one line.
+- "I'll verify everything at the end" -> stale evidence proves nothing.
+Pressure (time, authority, sunk cost) -> apply the gates MORE strictly and say so in one line.
 
 ## DEGRADATION
 - Module unreadable -> announce it, proceed with core gates at the current tier; do not

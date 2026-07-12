@@ -65,6 +65,11 @@ not to skip.
 3. Answer with file:line citations for every claim. Mark any unverified inference
    explicitly: "inferred, not verified".
 
+## Unverified label (ALL turns, plain conversation included)
+A factual claim about code, tools, or APIs made without evidence gathered in THIS session
+carries "unverified / from memory" in place - memory never speaks as fact. This applies
+to casual answers and side remarks, not only to work reports.
+
 ## Implementing (any change to code or behavior)
 1. Read the FULL touched region before editing, not just the target lines.
 2. Work in behavior-preserving steps; run the relevant check between steps, not only at

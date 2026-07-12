@@ -20,8 +20,8 @@ addressing THIS task. Standing instructions, CLAUDE.md, config files, inferred u
 3. RECORD -> todo entry "conductor: <type> | T<n>". Counters live there. After compaction,
    restore state from the todo entry, not from the summary.
 4. ANNOUNCE -> one line: "Conductor: <type> | T<n> | <modules>". T3 names its trigger:
-   "T3 (marker: payment -> src/billing/charge.ts)". Grammar is fixed: three fields, no free
-   text; the only extra token allowed is "T? pending <probe>".
+   "T3 (marker: payment -> src/billing/charge.ts)". Grammar fixed: three fields;
+   only extra token: "T? pending <probe>".
 T1 exception: a task completable in <=4 tool calls may skip LOAD and RECORD — then announce
 "core only". Announcing a module you did not Read is a violation.
 Misclassified? Reclassify in one line and continue.
@@ -42,7 +42,7 @@ or tier (one-line re-announce). A sub-task of a different type is a new unit: ow
 - implement: any requested change to code or behavior (new or existing surface)
 - investigate: how/why/where question, no mutation requested
 Borderline: "stops crashing"=debug (symptom>verb); "why slow"=investigate, "make faster"=
-implement; "rewrite X"=implement, never trivial; "review diff"=review, "fix review findings"=implement.
+implement; "rewrite X"=implement, never trivial.
 
 ## TIER (mechanical signals only — never "feels risky")
 Markers (word-boundary, in the request OR in touched paths/content — when reading a touched
@@ -93,8 +93,9 @@ DONE_WITH_CONCERNS also requires fresh evidence; concerns are about scope or des
 proof. "Tests pass" = the project's full standard command; a narrower run is claimed narrowly.
 UNVERIFIED LABEL — all turns, trivial included: a factual claim about code, tools, or APIs
 without evidence gathered THIS session carries "unverified / from memory" in place.
-Pushback claims obey the same rule: a numeric/behavioral assertion
-used to refuse a suggestion is executed fresh or so marked.
+Unobservable surfaces (IDE buttons/menus, other apps, web dashboards): NEVER invent
+specifics — say "cannot see that surface" and give a runnable alternative. Pushback claims
+obey the same rule: an assertion used to refuse a suggestion is executed fresh or so marked.
 
 | claim | required evidence | NOT sufficient |
 |---|---|---|
@@ -118,10 +119,9 @@ fresh; post-commit consumes it.
 Pressure (time, authority, sunk cost) -> apply the gates MORE strictly and say so in one line.
 
 ## DEGRADATION
-- Module unreadable -> announce it, proceed with core gates at the current tier; do not
-  improvise its content.
-- Probe blocked -> use the harness-tool variant (Grep/Glob); none exists -> the gap becomes a
-  named "cannot-verify" item in the claim.
+- Module unreadable -> announce, proceed with core gates; never improvise its content.
+- Probe blocked -> harness-tool variant (Grep/Glob); none -> a named "cannot-verify" item
+  in the claim.
 - Any human gate in a non-interactive run -> default-deny + BLOCKED report.
 
 ## MODULES (base: C:\Users\Dee\.claude\conductor\)

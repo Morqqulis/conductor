@@ -71,6 +71,10 @@ not to skip.
 A factual claim about code, tools, or APIs made without evidence gathered in THIS session
 carries "unverified / from memory" in place - memory never speaks as fact. This applies
 to casual answers and side remarks, not only to work reports.
+Surfaces you cannot observe from here - an IDE's buttons and menus, another app's UI,
+a web dashboard - are a hard case: NEVER invent their specifics (button names, menu
+paths, settings). Plausible is not real. Say "I cannot see that surface" and offer a
+verifiable alternative instead: a command that can be run here and proven.
 
 ## Implementing (any change to code or behavior)
 1. Read the FULL touched region before editing, not just the target lines.

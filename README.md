@@ -3,7 +3,7 @@
 🇷🇺 Русский | [🇦🇿 Azərbaycanca](README.az.md)
 
 **Дисциплинарная система для AI-агентов.** Заставляет любую AI (Claude Code, Cursor,
-Antigravity) работать по инженерной методологии: классифицировать задачу до начала,
+Antigravity, Codex) работать по инженерной методологии: классифицировать задачу до начала,
 доказывать результат до слова «готово» и до каждого `git commit`. Учится на собственных
 ошибках: каждый провал становится правилом, которое подгружается во все будущие сессии.
 
@@ -19,7 +19,7 @@ Antigravity) работать по инженерной методологии: 
 
 - Windows 10/11, PowerShell (`pwsh` или встроенный), git
 - [Claude Code](https://claude.com/claude-code) — установлен и залогинен
-- Cursor и/или Google Antigravity — по желанию (адаптеры ставятся глобально)
+- Cursor, Google Antigravity и/или OpenAI Codex — по желанию (адаптеры ставятся глобально)
 
 ## Установка
 
@@ -30,7 +30,7 @@ cd conductor
 # 1. Claude Code: ядро, хуки, журнал уроков, глобальный CLAUDE.md (+smoke-тест)
 pwsh -File install.ps1
 
-# 2. Cursor + Antigravity глобально
+# 2. Cursor + Antigravity + Codex глобально
 pwsh -File install-global.ps1
 ```
 

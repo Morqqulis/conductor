@@ -2,8 +2,8 @@
 
 [🇷🇺 Русский](README.md) | 🇦🇿 Azərbaycanca
 
-**AI-agentlər üçün intizam sistemi.** İstənilən AI-ni (Claude Code, Cursor, Antigravity)
-mühəndis metodologiyası ilə işləməyə məcbur edir: işə başlamazdan əvvəl tapşırığı
+**AI-agentlər üçün intizam sistemi.** İstənilən AI-ni (Claude Code, Cursor, Antigravity,
+Codex) mühəndis metodologiyası ilə işləməyə məcbur edir: işə başlamazdan əvvəl tapşırığı
 təsnif etmək, «hazırdır» deməzdən əvvəl və hər `git commit`-dən əvvəl nəticəni sübut
 etmək. Öz səhvlərindən öyrənir: hər uğursuzluq qaydaya çevrilir və bütün gələcək
 sessiyalara yüklənir.
@@ -20,7 +20,7 @@ sessiyalara yüklənir.
 
 - Windows 10/11, PowerShell (`pwsh` və ya daxili), git
 - [Claude Code](https://claude.com/claude-code) — quraşdırılıb və daxil olunub
-- Cursor və/və ya Google Antigravity — istəyə görə (adapterlər qlobal quraşdırılır)
+- Cursor, Google Antigravity və/və ya OpenAI Codex — istəyə görə (adapterlər qlobal quraşdırılır)
 
 ## Quraşdırma
 
@@ -31,7 +31,7 @@ cd conductor
 # 1. Claude Code: nüvə, hook-lar, dərslər jurnalı, qlobal CLAUDE.md (+smoke-test)
 pwsh -File install.ps1
 
-# 2. Cursor + Antigravity qlobal
+# 2. Cursor + Antigravity + Codex qlobal
 pwsh -File install-global.ps1
 ```
 

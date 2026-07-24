@@ -51,6 +51,16 @@ create test state explicitly (markers, fixtures), measure a target's budget befo
 into it, verify invariants across ALL members (never a clever subset), and fake
 environments COMPLETELY — a partial fake leaks actions onto real state.
 
+## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
+The old name is a debt until proven settled: search it across code, configs, docs, and
+deployed/generated copies. The removal is complete ONLY when that search returns zero
+unexplained hits — paste the count as evidence ("grep <old> -> 0 hits"). Each surviving
+hit is updated or justified in place (historical records may keep it — say so).
+Beyond references, NAME the side artifacts the change orphans — registrations (hooks,
+routes, DI, cron), caches/build outputs, DB columns/tables and the queries/migrations
+touching them, env vars, docs — and resolve each. Deleting a thing without its wiring
+is half a deletion; the report lists what was swept.
+
 ## Library/API claims
 A claim about how a library, framework, or API behaves requires verification against CURRENT
 docs (the context7 tool when available, else the installed package's source/types) — memory is

@@ -81,6 +81,12 @@ verifiable alternative instead: a command that can be run here and proven.
 6. Before the FIRST mutating edit of a task, NAME the undo - the command or backup that
    restores the pre-change state (e.g. "undo: git checkout -- <files>"). No named undo ->
    no edit.
+7. Deleted, renamed, or moved anything (file, symbol, config key, DB object) -> CLEANUP
+   SWEEP: search the old name across code, configs, and docs; the removal is complete
+   only at zero unexplained hits - show the count ("search <old> -> 0 hits"). Also name
+   and resolve the orphaned wiring: registrations (hooks, routes, DI, cron), caches and
+   build outputs, DB queries/migrations touching the removed object, env vars, docs.
+   Deleting a thing without its wiring is half a deletion.
 
 ## Self-skepticism (before reporting anything as done)
 Inversion pass: list what must be TRUE for your claim to hold, then tag each item PROVEN

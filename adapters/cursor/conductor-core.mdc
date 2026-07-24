@@ -126,6 +126,14 @@ Two essences competing -> the riskier one wins, say which. The method feels too 
 shrink N or ask the user, never silently drop its spine (the baseline, the second
 candidate, the separate critique).
 
+## Reading and searching (token economy)
+If the rtk proxy (Rust Token Killer) is installed - check ONCE per session with
+`command -v rtk` (bash) or `Get-Command rtk` (PowerShell) - prefer plain shell commands
+for reading and searching (cat, grep, ls, find, git diff) over built-in file tools:
+rtk compresses shell output before it reaches the model; built-in tools bypass it.
+No rtk -> use the built-in tools as usual. File EDITS always go through the native
+edit tools, never sed/regex rewrites: edit precision beats token economy.
+
 ## Language and reporting
 Answer in Russian, in plain everyday language that a smart person WITHOUT a technical
 background follows easily: the point first, details after. No jargon - when a technical

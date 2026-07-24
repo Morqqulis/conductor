@@ -15,16 +15,60 @@
 # The commit discipline is textual now: "prove before commit" lives in the core and the
 # digests, not in an enforcement hook (agents satisfied the marker ritually - see lessons).
 # Idempotent; every modified config is backed up with a timestamp first.
+# -Language <name> sets the assistants' reply language without the interactive prompt
+# (English name, e.g. 'Russian', 'Azerbaijani', 'English').
+param(
+    [string]$Language
+)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+
+# 0. Reply language - asked once for convenience; silent/non-interactive runs default to Russian.
+$langMap = @{ '1' = 'Russian'; '2' = 'Azerbaijani'; '3' = 'English' }
+if (-not $Language) {
+    Write-Output 'Reply language / Язык ответов / Cavab dili:'
+    Write-Output '  1 - Русский (default)'
+    Write-Output '  2 - Azərbaycanca'
+    Write-Output '  3 - English'
+    Write-Output '  or type a language name in English (e.g. Azerbaijani)'
+    $answer = ''
+    try { $answer = Read-Host 'Choice [1]' } catch { $answer = '' }
+    if ([string]::IsNullOrWhiteSpace($answer)) { $Language = 'Russian' }
+    elseif ($langMap.ContainsKey($answer.Trim())) { $Language = $langMap[$answer.Trim()] }
+    else { $Language = $answer.Trim() }
+}
+if ($Language -notmatch '^[\p{L}][\p{L} \-]{1,29}$') { throw "invalid language name: '$Language' (use an English language name, e.g. 'Russian')" }
+Write-Output "[0/5] reply language: $Language"
+
+# Claude Code reads the language rule from the global CLAUDE.md - patch it in place.
+$claudeMd = Join-Path $env:USERPROFILE '.claude\CLAUDE.md'
+if ($Language -ne 'Russian' -and (Test-Path $claudeMd)) {
+    $ruName = @{ 'Azerbaijani' = 'азербайджанском'; 'English' = 'английском' }[$Language]
+    $txt = Get-Content $claudeMd -Raw
+    $patched = if ($ruName) { $txt -replace 'на русском', "на $ruName" }
+               else { $txt -replace 'Отвечай на русском', "Отвечай на языке: $Language" }
+    if ($patched -ne $txt) {
+        Copy-Item $claudeMd "$claudeMd.bak-$stamp" -Force
+        [IO.File]::WriteAllText($claudeMd, $patched, (New-Object System.Text.UTF8Encoding($false)))
+        Write-Output "      global CLAUDE.md language switched to $Language (backup: CLAUDE.md.bak-$stamp)"
+    } else {
+        Write-Output "      NOTE: global CLAUDE.md has no Russian language line to patch - re-run install.ps1 first, then this script"
+    }
+}
 
 foreach ($f in @('adapters\antigravity\conductor-core.md', 'adapters\cursor\conductor-core.mdc')) {
     if (-not (Test-Path (Join-Path $PSScriptRoot $f))) { throw "adapter source not found: $f - run from the conductor repo root" }
 }
 
-# 1. Cursor: rule pointer + retired-gate cleanup in global hooks.json
-Write-Output "[1/5] Cursor global RULE: paste the body of adapters\cursor\conductor-core.mdc"
+# 1. Cursor: ready-to-paste rule copy (language applied) + retired-gate cleanup
+$cursorSrc = Get-Content (Join-Path $PSScriptRoot 'adapters\cursor\conductor-core.mdc') -Raw
+$cursorOutDir = Join-Path $env:USERPROFILE '.claude\conductor\adapters\cursor'
+New-Item -ItemType Directory -Force $cursorOutDir | Out-Null
+$cursorOut = Join-Path $cursorOutDir 'conductor-core.mdc'
+[IO.File]::WriteAllText($cursorOut, ($cursorSrc -replace 'Answer in Russian', "Answer in $Language"), (New-Object System.Text.UTF8Encoding($false)))
+Write-Output "[1/5] Cursor global RULE: paste the body of this ready file (your language applied)"
+Write-Output "      $cursorOut"
 Write-Output "      once into Cursor Settings -> Rules (no global rules file exists in Cursor)."
 $cursorHooks = Join-Path $env:USERPROFILE '.cursor\hooks.json'
 if (Test-Path $cursorHooks) {
@@ -60,11 +104,12 @@ if (Test-Path $agHooks) {
 }
 
 # 3. Antigravity: global AGENTS.md digest
-$digestSrc = Get-Content (Join-Path $PSScriptRoot 'adapters\antigravity\conductor-core.md') -Raw
+$digestSrc = (Get-Content (Join-Path $PSScriptRoot 'adapters\antigravity\conductor-core.md') -Raw) -replace 'Answer in Russian', "Answer in $Language"
 $bodyStart = $digestSrc.IndexOf('## Iron laws')
 if ($bodyStart -lt 0) { throw 'digest body marker "## Iron laws" not found in adapters\antigravity\conductor-core.md' }
 $agentsMd = "# Conductor Core (global rules)`n`n" + $digestSrc.Substring($bodyStart)
 $agentsPath = Join-Path $env:USERPROFILE '.gemini\AGENTS.md'
+New-Item -ItemType Directory -Force (Split-Path $agentsPath) | Out-Null
 if (Test-Path $agentsPath) { Copy-Item $agentsPath "$agentsPath.bak-$stamp" -Force }
 [IO.File]::WriteAllText($agentsPath, $agentsMd, (New-Object System.Text.UTF8Encoding($false)))
 Write-Output "[3/5] Antigravity global rules -> $agentsPath (GEMINI.md untouched)"

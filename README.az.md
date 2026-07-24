@@ -60,8 +60,13 @@ Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir
 
-«Rus dilində, sadə dildə cavab ver» qaydası üç yerdə yerləşir — lazım olanı
-redaktə edin və uyğun quraşdırıcını yenidən işə salın:
+Sadə yol: `install-global.ps1`-i yenidən işə salın — dili soruşacaq (və ya birbaşa:
+`pwsh -File install-global.ps1 -Language Azerbaijani`) və onu bütün mühitlərin qlobal
+qaydalarına, o cümlədən Cursor üçün hazır qayda faylına tətbiq edəcək. Rus dilinə
+qayıtmaq üçün əvvəlcə `install.ps1` (etalonu bərpa edir), sonra `install-global.ps1`.
+
+Əl ilə yol — qayda üç yerdə yerləşir, lazım olanı redaktə edin və uyğun
+quraşdırıcını yenidən işə salın:
 
 | Mühit | Fayl və bölmə | Redaktədən sonra |
 |---|---|---|

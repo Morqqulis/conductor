@@ -1,81 +1,62 @@
 # Installs Conductor GLOBALLY for Cursor and Antigravity (Claude Code is already global
 # via install.ps1). What it does:
-#   1. Deploys the adapter gate scripts to ~/.claude/conductor/adapters/<tool>/gate.ps1
-#      (stable absolute paths for global hook configs).
-#   2. Cursor:      merges a beforeShellExecution entry into ~/.cursor/hooks.json.
-#                   The global RULE cannot be a file - paste the digest once into
+#   1. Cursor:      the global RULE cannot be a file - paste the digest once into
 #                   Cursor Settings -> Rules (this script prints the source path).
-#   3. Antigravity: merges the conductor-commit-gate block into ~/.gemini/config/hooks.json
-#                   and installs the digest as ~/.gemini/AGENTS.md (global rules file;
-#                   your personal ~/.gemini/GEMINI.md is NOT touched).
-# The git-native layer stays per-repository BY DESIGN (a global core.hooksPath would
-# silently disable repos' own hooks): run install-git-gate.ps1 -Repo <path> per project.
+#                   Any conductor commit-gate entry left in ~/.cursor/hooks.json by older
+#                   versions is removed (the marker gate is retired).
+#   2. Antigravity: installs the digest as ~/.gemini/AGENTS.md (global rules file;
+#                   your personal ~/.gemini/GEMINI.md is NOT touched). Any conductor
+#                   commit-gate entry left in ~/.gemini/config/hooks.json is removed.
+#   3. Retires the git-template commit gate of older versions: unsets init.templateDir
+#                   if it points at the conductor template.
+# The commit discipline is textual now: "prove before commit" lives in the core and the
+# digests, not in an enforcement hook (agents satisfied the marker ritually - see lessons).
 # Idempotent; every modified config is backed up with a timestamp first.
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$shell = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
 
-foreach ($f in @('adapters\cursor\gate.ps1', 'adapters\antigravity\gate.ps1', 'adapters\antigravity\conductor-core.md', 'adapters\cursor\conductor-core.mdc')) {
+foreach ($f in @('adapters\antigravity\conductor-core.md', 'adapters\cursor\conductor-core.mdc')) {
     if (-not (Test-Path (Join-Path $PSScriptRoot $f))) { throw "adapter source not found: $f - run from the conductor repo root" }
 }
 
-# 1. Deploy gate scripts to stable locations
-$deployRoot = Join-Path $env:USERPROFILE '.claude\conductor\adapters'
-foreach ($tool in @('cursor', 'antigravity')) {
-    $dir = Join-Path $deployRoot $tool
-    New-Item -ItemType Directory -Force $dir | Out-Null
-    Copy-Item (Join-Path $PSScriptRoot "adapters\$tool\gate.ps1") (Join-Path $dir 'gate.ps1') -Force
-}
-Write-Output "[1/5] gate scripts deployed -> $deployRoot\{cursor,antigravity}\gate.ps1"
-
-# 2. Cursor: global hooks.json
-$cursorGate = Join-Path $deployRoot 'cursor\gate.ps1'
-$cursorEntry = [pscustomobject]@{ command = "$shell -NoProfile -ExecutionPolicy Bypass -File `"$cursorGate`""; timeout = 10 }
-$cursorHooks = Join-Path $env:USERPROFILE '.cursor\hooks.json'
-New-Item -ItemType Directory -Force (Split-Path $cursorHooks) | Out-Null
-if (Test-Path $cursorHooks) {
-    Copy-Item $cursorHooks "$cursorHooks.bak-$stamp" -Force
-    $cfg = Get-Content $cursorHooks -Raw | ConvertFrom-Json
-    if (-not ($cfg.PSObject.Properties.Name -contains 'hooks')) { $cfg | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{}) }
-    $kept = @()
-    if ($cfg.hooks.PSObject.Properties.Name -contains 'beforeShellExecution') {
-        $kept = @($cfg.hooks.beforeShellExecution) | Where-Object { ($_ | ConvertTo-Json -Depth 10) -notmatch 'conductor' }
-        $cfg.hooks.PSObject.Properties.Remove('beforeShellExecution')
-    }
-    $cfg.hooks | Add-Member -NotePropertyName beforeShellExecution -NotePropertyValue (@($kept) + $cursorEntry)
-    if (-not ($cfg.PSObject.Properties.Name -contains 'version')) { $cfg | Add-Member -NotePropertyName version -NotePropertyValue 1 }
-} else {
-    $cfg = [pscustomobject]@{ version = 1; hooks = [pscustomobject]@{ beforeShellExecution = @($cursorEntry) } }
-}
-$cfg | ConvertTo-Json -Depth 20 | Set-Content $cursorHooks -Encoding utf8
-Write-Output "[2/5] Cursor global hook -> $cursorHooks"
-Write-Output "      Cursor global RULE: paste the body of adapters\cursor\conductor-core.mdc"
+# 1. Cursor: rule pointer + retired-gate cleanup in global hooks.json
+Write-Output "[1/4] Cursor global RULE: paste the body of adapters\cursor\conductor-core.mdc"
 Write-Output "      once into Cursor Settings -> Rules (no global rules file exists in Cursor)."
-
-# 3. Antigravity: global hooks.json + global AGENTS.md digest
-$agGate = Join-Path $deployRoot 'antigravity\gate.ps1'
-$agBlock = [pscustomobject]@{
-    PreToolUse = @(
-        [pscustomobject]@{
-            matcher = 'run_command'
-            hooks = @([pscustomobject]@{ type = 'command'; command = "$shell -NoProfile -ExecutionPolicy Bypass -File `"$agGate`""; timeout = 30 })
+$cursorHooks = Join-Path $env:USERPROFILE '.cursor\hooks.json'
+if (Test-Path $cursorHooks) {
+    $cfg = Get-Content $cursorHooks -Raw | ConvertFrom-Json
+    if (($cfg.PSObject.Properties.Name -contains 'hooks') -and
+        ($cfg.hooks.PSObject.Properties.Name -contains 'beforeShellExecution')) {
+        $all = @($cfg.hooks.beforeShellExecution)
+        $kept = @($all | Where-Object { ($_ | ConvertTo-Json -Depth 10) -notmatch 'conductor' })
+        if ($kept.Count -ne $all.Count) {
+            Copy-Item $cursorHooks "$cursorHooks.bak-$stamp" -Force
+            $cfg.hooks.PSObject.Properties.Remove('beforeShellExecution')
+            if ($kept.Count -gt 0) { $cfg.hooks | Add-Member -NotePropertyName beforeShellExecution -NotePropertyValue $kept }
+            $cfg | ConvertTo-Json -Depth 20 | Set-Content $cursorHooks -Encoding utf8
+            Write-Output "      retired conductor gate removed from $cursorHooks (backup: hooks.json.bak-$stamp)"
         }
-    )
+    }
 }
-$agHooks = Join-Path $env:USERPROFILE '.gemini\config\hooks.json'
-New-Item -ItemType Directory -Force (Split-Path $agHooks) | Out-Null
-if (Test-Path $agHooks) {
-    Copy-Item $agHooks "$agHooks.bak-$stamp" -Force
-    $cfg = Get-Content $agHooks -Raw | ConvertFrom-Json
-    if ($cfg.PSObject.Properties.Name -contains 'conductor-commit-gate') { $cfg.PSObject.Properties.Remove('conductor-commit-gate') }
-    $cfg | Add-Member -NotePropertyName 'conductor-commit-gate' -NotePropertyValue $agBlock
-} else {
-    $cfg = [pscustomobject]@{ 'conductor-commit-gate' = $agBlock }
-}
-$cfg | ConvertTo-Json -Depth 20 | Set-Content $agHooks -Encoding utf8
-Write-Output "[3/5] Antigravity global hook -> $agHooks"
 
+# 2. Antigravity: retired-gate cleanup in global hooks.json
+$agHooks = Join-Path $env:USERPROFILE '.gemini\config\hooks.json'
+if (Test-Path $agHooks) {
+    $cfg = Get-Content $agHooks -Raw | ConvertFrom-Json
+    if ($cfg.PSObject.Properties.Name -contains 'conductor-commit-gate') {
+        Copy-Item $agHooks "$agHooks.bak-$stamp" -Force
+        $cfg.PSObject.Properties.Remove('conductor-commit-gate')
+        $cfg | ConvertTo-Json -Depth 20 | Set-Content $agHooks -Encoding utf8
+        Write-Output "[2/4] retired conductor gate removed from $agHooks (backup: hooks.json.bak-$stamp)"
+    } else {
+        Write-Output "[2/4] Antigravity hooks.json clean (no conductor gate entry)"
+    }
+} else {
+    Write-Output "[2/4] Antigravity hooks.json absent - nothing to clean"
+}
+
+# 3. Antigravity: global AGENTS.md digest
 $digestSrc = Get-Content (Join-Path $PSScriptRoot 'adapters\antigravity\conductor-core.md') -Raw
 $bodyStart = $digestSrc.IndexOf('## Iron laws')
 if ($bodyStart -lt 0) { throw 'digest body marker "## Iron laws" not found in adapters\antigravity\conductor-core.md' }
@@ -83,39 +64,19 @@ $agentsMd = "# Conductor Core (global rules)`n`n" + $digestSrc.Substring($bodySt
 $agentsPath = Join-Path $env:USERPROFILE '.gemini\AGENTS.md'
 if (Test-Path $agentsPath) { Copy-Item $agentsPath "$agentsPath.bak-$stamp" -Force }
 [IO.File]::WriteAllText($agentsPath, $agentsMd, (New-Object System.Text.UTF8Encoding($false)))
-Write-Output "[4/5] Antigravity global rules -> $agentsPath (GEMINI.md untouched)"
+Write-Output "[3/4] Antigravity global rules -> $agentsPath (GEMINI.md untouched)"
 
-# 5. Git template: every NEW repo (git init / clone) is born with the gate. Existing
-# repos are covered by auto-install inside the shell gates (first commit contact) or by
-# install-git-gate.ps1. An existing foreign templateDir is respected: our hooks are
-# copied into it instead of repointing the config.
+# 4. Retire the git-template gate of older versions
 $tplRoot = Join-Path $env:USERPROFILE '.claude\conductor\git-template'
-$tplHooks = Join-Path $tplRoot 'hooks'
-New-Item -ItemType Directory -Force $tplHooks | Out-Null
-foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
-    $content = ([IO.File]::ReadAllText((Join-Path $PSScriptRoot "runtime\git-hooks\$name"))) -replace "`r`n", "`n"
-    [IO.File]::WriteAllText((Join-Path $tplHooks $name), $content, (New-Object System.Text.UTF8Encoding($false)))
-}
 $existingTpl = git config --global --get init.templateDir
-if (-not $existingTpl) {
-    git config --global init.templateDir $tplRoot
-    Write-Output "[5/5] init.templateDir -> $tplRoot (new repos get the gate at init/clone)"
-} elseif ($existingTpl -eq $tplRoot) {
-    Write-Output "[5/5] init.templateDir already points at the conductor template (hooks refreshed)"
+if ($existingTpl -and (($existingTpl -replace '/', '\') -eq $tplRoot)) {
+    git config --global --unset init.templateDir
+    Write-Output "[4/4] init.templateDir unset (was the conductor template - marker gate retired)"
 } else {
-    $foreignHooks = Join-Path $existingTpl 'hooks'
-    New-Item -ItemType Directory -Force $foreignHooks | Out-Null
-    foreach ($name in @('post-commit', 'post-merge', 'pre-merge-commit', 'pre-commit')) {
-        $dest = Join-Path $foreignHooks $name
-        if ((Test-Path $dest) -and ((Get-Content $dest -Raw) -notmatch 'conductor gate')) {
-            Copy-Item $dest "$dest.pre-conductor" -Force   # the gate chains to this name at runtime
-        }
-        Copy-Item (Join-Path $tplHooks $name) $dest -Force
-    }
-    Write-Output "[5/5] existing init.templateDir '$existingTpl' kept - conductor hooks copied into it (same-name hooks backed up to *.pre-conductor)"
+    Write-Output "[4/4] init.templateDir untouched (not pointing at the conductor template)"
 }
+if (Test-Path $tplRoot) { Remove-Item $tplRoot -Recurse -Force }
 
 Write-Output ''
-Write-Output 'Done. Restart Cursor and Antigravity to pick up global hooks.'
-Write-Output 'Existing repos get the git gate automatically on first agent commit (auto-install),'
-Write-Output 'or explicitly via install-git-gate.ps1 -Repo <path> / -Sweep <projects root>.'
+Write-Output 'Done. Restart Cursor and Antigravity to pick up rule changes.'
+Write-Output 'Commit discipline is textual: prove before commit (core + digests), no marker file.'

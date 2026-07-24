@@ -81,8 +81,8 @@ stop retrying: read the full error output, change the approach.
    PREDICT the outcome BEFORE running; an unexplained surprise -> stop and investigate.
 2. RUN it fresh. Evidence expires at the message boundary (message = one assistant turn as
    delivered to the user), AND any file mutation after the proving run invalidates it: the
-   proving run must be the LAST mutating-or-verifying action before the claim. At T3, re-run
-   the proving command after the skeptic round returns — skeptic runs never substitute for it.
+   proving run must be the LAST mutating-or-verifying action before the claim. A skeptic
+   round that ran the SAME proving command, with no mutation after it, counts — don't duplicate.
 3. READ the full output and exit code.
 4. PASTE the proving lines (T1: one line is enough).
 5. STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT.
@@ -106,9 +106,8 @@ obey the same rule: an assertion used to refuse a suggestion is executed fresh o
 
 BLOCKED and NEEDS_CONTEXT are first-class outcomes.
 Blocked script: "BLOCKED: <what> — need <input>." That is a completed turn.
-After the proving run and BEFORE `git commit`, create the single-use marker in its own
-command: `touch "$(git rev-parse --git-path conductor-verified)"` — the gate needs it
-fresh; post-commit consumes it.
+A `git commit` is a completion claim: the fresh proving run comes BEFORE it, and its
+lines are shown. No proof -> no commit. A failing hook is a signal to fix, never to bypass.
 
 ## RATIONALIZATIONS (each -> one recovery action)
 - "too simple to need process" -> simple is where silent breakage hides.

@@ -40,9 +40,9 @@ four-token default: end with exactly one of DONE (verified) | BLOCKED (refuted o
   lesson: append one line to ~/.claude/conductor/lessons.md (date | trigger | rule).
 - ? (cannot-verify) -> YOU run the exact named check the skeptic could not. If that check is
   impossible to run -> the claim cannot be DONE (core anti-laundering rule).
-- After the skeptic returns DONE: re-run the proving command yourself in the claiming message —
-  it must be the last mutating-or-verifying action before your DONE (core gate step 2).
-  Skeptic runs never substitute for the controller's proving run.
+- After the skeptic returns DONE: if the skeptic ran the SAME proving command fresh and
+  nothing mutated after it, that run counts as the proving run (core gate step 2) — do not
+  duplicate it. Otherwise run it yourself in the claiming message.
 - Failed rounds: per core counter — 2 failed skeptic rounds -> STOP + BLOCKED with both
   rounds' findings.
 

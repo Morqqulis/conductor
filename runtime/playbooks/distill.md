@@ -19,7 +19,7 @@ new feature work — an undigested ledger silently evicts old lessons past the i
    installers) -> verify the deployed copies actually carry the rule (grep, not faith).
 5. TRIM the ledger: delete graduated lines, keep the newest ungraduated ones; the file
    must come out at <= 12 non-comment lines.
-6. Commit through the marker protocol; the spec Deployment record gets one line naming
-   what graduated where.
+6. Commit with the proving lines (lint PASS + deploy grep) shown in the same message;
+   the spec Deployment record gets one line naming what graduated where.
 Predict each step's outcome before running it (core gate rule); an unexplained surprise
 here means a budget or deploy assumption broke — stop and investigate.

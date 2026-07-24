@@ -35,15 +35,10 @@ no stubs, no `// TODO`, no "rest unchanged" — only complete, compiling code.
 Statuses: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT. Missing verification is
 never a "concern" — it forces BLOCKED. Bad work is worse than no work.
 
-## Commit gate (enforced by git and by a tool hook, not by convention)
-Repositories on this machine may run the Conductor git gate: `git commit` requires a
-fresh (<=30 min) single-use marker file, created ONLY after a proving run, in a SEPARATE
-command before the commit:
-- PowerShell: `New-Item -Force -ItemType File (git rev-parse --path-format=absolute --git-path conductor-verified) | Out-Null`
-- bash: `touch "$(git rev-parse --path-format=absolute --git-path conductor-verified)"`
-Never use `--no-verify` (any spelling, including bundled `-n`) or `core.hooksPath`
-overrides — the hook layer denies them. A failing pre-commit hook is a signal to fix,
-not to skip.
+## Before any commit
+A `git commit` is a completion claim: run the proving command fresh BEFORE committing and
+show its lines in your answer. No proof -> no commit. A failing pre-commit hook is a
+signal to fix, never to bypass (`--no-verify` in any spelling is a violation).
 
 ## Debugging (any bug, test failure, regression)
 1. REPRODUCE first: run the failing thing, capture the exact command and output. Cannot

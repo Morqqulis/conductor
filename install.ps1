@@ -15,7 +15,13 @@ Write-Output '=== Conductor installer ==='
 if (-not (Test-Path (Join-Path $repo 'runtime\core.md'))) { throw "run this script from the conductor repo root (runtime\core.md not found next to install.ps1)" }
 New-Item -ItemType Directory -Force $conductorDir | Out-Null
 Copy-Item (Join-Path $repo 'runtime\*') $conductorDir -Recurse -Force
-Write-Output "[1/5] runtime tree -> $conductorDir"
+# Retired marker-gate artifacts from older versions: remove from the live tree if present.
+foreach ($stale in @('hooks\pre-commit-gate.ps1', 'git-hooks', 'git-template',
+                     'adapters\cursor\gate.ps1', 'adapters\antigravity\gate.ps1')) {
+    $p = Join-Path $conductorDir $stale
+    if (Test-Path $p) { Remove-Item $p -Recurse -Force }
+}
+Write-Output "[1/5] runtime tree -> $conductorDir (retired gate artifacts cleaned)"
 
 # 2. Hooks -> settings.json (backup, REPLACE any prior conductor entries, add fresh)
 # Hook commands use FORWARD slashes: Claude Code runs hook commands through bash on Windows,
@@ -32,7 +38,6 @@ $sessionCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/ho
 $lessonsCmd  = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/lessons-inject.ps1"
 $subagentCmd = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/subagent-start.ps1"
 $promptCmd   = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/user-prompt.ps1"
-$commitCmd   = "$shell -NoProfile -ExecutionPolicy Bypass -File $conductorFwd/hooks/pre-commit-gate.ps1"
 if (-not ($settings.PSObject.Properties.Name -contains 'hooks')) {
     $settings | Add-Member -NotePropertyName hooks -NotePropertyValue ([pscustomobject]@{})
 }
@@ -42,8 +47,7 @@ $sessionEntry  = [pscustomobject]@{ matcher = 'startup|resume|clear|compact'; ho
 ) }
 $subagentEntry = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $subagentCmd; timeout = 10 }) }
 $promptEntry   = [pscustomobject]@{ hooks = @([pscustomobject]@{ type = 'command'; command = $promptCmd; timeout = 10 }) }
-$commitEntry   = [pscustomobject]@{ matcher = 'Bash|PowerShell'; hooks = @([pscustomobject]@{ type = 'command'; command = $commitCmd; timeout = 10 }) }
-foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry), @('UserPromptSubmit', $promptEntry), @('PreToolUse', $commitEntry))) {
+foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subagentEntry), @('UserPromptSubmit', $promptEntry))) {
     $name = $pair[0]; $entry = $pair[1]
     $kept = @()
     if ($settings.hooks.PSObject.Properties.Name -contains $name) {
@@ -51,6 +55,14 @@ foreach ($pair in @(@('SessionStart', $sessionEntry), @('SubagentStart', $subage
         $settings.hooks.PSObject.Properties.Remove($name)
     }
     $settings.hooks | Add-Member -NotePropertyName $name -NotePropertyValue (@($kept) + $entry)
+}
+# Retired commit-gate cleanup: strip any conductor PreToolUse entry left by older versions.
+if ($settings.hooks.PSObject.Properties.Name -contains 'PreToolUse') {
+    $keptPre = @($settings.hooks.PreToolUse) | Where-Object { ($_ | ConvertTo-Json -Depth 20) -notmatch 'conductor' }
+    $settings.hooks.PSObject.Properties.Remove('PreToolUse')
+    if (@($keptPre).Count -gt 0) {
+        $settings.hooks | Add-Member -NotePropertyName PreToolUse -NotePropertyValue @($keptPre)
+    }
 }
 $settings | ConvertTo-Json -Depth 20 | Set-Content $settingsPath -Encoding utf8
 Write-Output "[2/5] hooks registered (forward-slash paths; backup: settings.json.bak-$stamp)"

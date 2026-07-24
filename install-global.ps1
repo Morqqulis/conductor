@@ -1,4 +1,4 @@
-# Installs Conductor GLOBALLY for Cursor, Antigravity and Codex (Claude Code is already
+﻿# Installs Conductor GLOBALLY for Cursor, Antigravity and Codex (Claude Code is already
 # global via install.ps1). What it does:
 #   1. Cursor:      the global RULE cannot be a file - paste the digest once into
 #                   Cursor Settings -> Rules (this script prints the source path).

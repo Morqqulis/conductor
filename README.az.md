@@ -32,7 +32,7 @@ Belə deyil. Həmin prosesdə Conductor yox idi, **amma dəyərlər faylı yerin
 məhz yoxlanılan şeylər yazılıb: «останови и сообщи (статус BLOCKED), а не выдавай черновик
 под видом готового», «Проверено: команда + результат», statusların siyahısı və «Факт важнее
 настроения: несогласие, давление или похвала — не данные». Davranışı bu mətn göstərdi, boş
-model yox. İlkin şərtləri [`qa/home-baseline/CLAUDE.md`](qa/home-baseline/CLAUDE.md),
+model yox. İlkin şərtləri [`qa/reports/baseline-values-file.md`](qa/reports/baseline-values-file.md),
 nəticələri isə [`qa/reports/baseline.md`](qa/reports/baseline.md) faylında yoxlamaq olar —
 9–11-ci sətirlər (yekun cədvəl) və 36–48 (sətirbəsətir sübutlar).
 
@@ -149,7 +149,8 @@ adapters/         core-body.md — qaydaların ümumi mətni; Cursor/Antigravity
 deploy/           qlobal CLAUDE.md
 tools/            digest yığımı, JSON konfiqlərin redaktəsi, dərslərin miqrasiyası,
                   köhnə versiyaların git-hook-larının təmizlənməsi
-qa/               büdcə/naqillənmə linteri, benchmark ssenariləri, tələlər
+qa/               lint.sh — büdcə, naqillənmə və ifadə linteri;
+                  reports/ — nəzarət qrupunun ölçmələri və onunla müqayisə
 docs/             deploy jurnalı ilə spesifikasiya, daşınabilirlik planı
 install*.sh       quraşdırıcılar, uninstall.sh — silinmə
 ```

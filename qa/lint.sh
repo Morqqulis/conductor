@@ -106,26 +106,6 @@ while IFS= read -r f; do
     [ -n "$hits" ] && check 1 "redundant self-verification phrasing in ${f#$ROOT/}: $(printf '%s' "$hits" | head -1)"
 done < <(find "$RUNTIME" "$ADAPTERS" "$ROOT/deploy" -name '*.md' -o -name '*.mdc' 2>/dev/null)
 
-# --- benchmark arms: a hook command must point at a file that exists -------------------
-# install.sh already sweeps retired scripts out of the LIVE tree, because configs written
-# before an install keep executing them. The benchmark arms were outside that sweep, and a
-# stale reference there does not raise an error: the arm simply runs without the rules and
-# produces a transcript that reads like a result. This closes the same hole for the fixtures.
-# A path carrying a __PLACEHOLDER__ is a template rendered at run time and is skipped.
-for cfg in "$ROOT"/qa/home-*/settings.json; do
-    [ -f "$cfg" ] || continue
-    while IFS= read -r ref; do
-        case "$ref" in *__*__*) continue ;; esac
-        case "$ref" in
-            *.ps1) check 1 "${cfg#$ROOT/} references a PowerShell hook ($ref); the runtime is bash-only" ;;
-        esac
-        [ -e "$ref" ] || check 1 "${cfg#$ROOT/} references a file that does not exist: $ref"
-    # Backslashes are stripped first: inside a JSON string the quote around a path is escaped
-    # (\"), and that backslash sits between the extension and the closing quote, so a naive
-    # pattern matches nothing and the rule silently never fires. Found by a negative test.
-    done < <(sed 's/\\//g' "$cfg" | grep -oE '"[^"]+\.(sh|ps1)"' | tr -d '"')
-done
-
 # --- shell layer: a hook that cannot parse takes the whole discipline down -------------
 while IFS= read -r s; do
     bash -n "$s" 2>/dev/null || check 1 "shell syntax error: ${s#$ROOT/}"

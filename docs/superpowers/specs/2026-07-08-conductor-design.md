@@ -354,6 +354,18 @@ is disabled at deployment (its SessionStart hook would double-inject competing m
    completion gate).
 
 ## 9. QA plan (right-sized — panel advisory accepted)
+
+> **Note added 2026-07-28, after this spec was approved.** The benchmark described below no
+> longer exists: `qa/run-benchmark.sh`, the scenarios and the trap fixtures were removed, and
+> the project holds no credentials. Two reasons. It needed copied API credentials, and an OAuth
+> refresh during one run revoked the token for every other copy, so each measurement cost the
+> owner their working session. And §9's own baseline capture recorded that these traps do not
+> reproduce the long-session class the rules exist for (`qa/reports/baseline.md:62-63`).
+> Live-usage evidence now comes from the test-run journal (`runtime/hooks/test-run-journal.sh`),
+> which needs no credentials and accumulates unattended. What survives from the QA plan and is
+> still enforced: the budget lint and the sentinel smoke test (S6), run on every change.
+> The measurements themselves are kept in `qa/reports/`.
+
 - Baseline capture BEFORE authoring final wording: the 3 trap scenarios (S2/S3/S4) run against
   bare Opus; a rule is authored only where the baseline actually fails.
 - Benchmark: 3 traps + classification borderline pairs (S1) + orchestration trigger (S5) +

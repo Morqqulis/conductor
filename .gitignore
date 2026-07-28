@@ -1,7 +1,4 @@
-qa/transcripts/
-qa/work/
-qa/home-*/*
-!qa/home-*/settings.json
-!qa/home-*/CLAUDE.md
+# Project adapters installed into this repository by install-project.sh - they are generated
+# from adapters/, so a committed copy would be a second source of truth for the same rules.
 .cursor/
 .agents/

@@ -1,17 +1,25 @@
 # Skeptic Playbook
 
-Load trigger: every T3 completion; every orchestration integration; or tempted to trust a report.
+Load trigger: a claim you cannot verify by your own fresh run must survive an adversary —
+integration of delegated work; a checkpoint in a long autonomous run; a review with no
+/code-review skill; or tempted to trust a report.
 
 ## Invocation
-Default: exactly ONE skeptic agent — more only if the user explicitly asks. At T3, dispatch
-after the implementer's completion gate passes and BEFORE reporting DONE to the user.
+Default: exactly ONE skeptic agent — more only if the user explicitly asks. Dispatch after the
+implementer's completion gate passes and BEFORE reporting DONE to the user.
 No subagent capability available -> inline mode (below).
+
+NOT a skeptic's job: re-checking an edit you made yourself and proved with a fresh run in this
+session. That verifier can only re-derive evidence you already hold, and pays a full context to
+do it. The skeptic exists for the gap between a REPORT and the artifact behind it — the one place
+your own gate cannot reach. At T1/T2, a passing gate on your own work is the verification.
 
 ## Cross-model variant (depth move)
 A verifier from a DIFFERENT model family does not share this model's blind spots. At T3,
-probe availability first — HARD external timeout, agy hangs past its own flag when
-unauthenticated:
-PS: `try { $p = Start-Process agy -Args '--print','Reply with exactly: pong','--print-timeout','15s' -NoNewWindow -PassThru -RedirectStandardOutput ($t=[IO.Path]::GetTempFileName()); if (-not $p.WaitForExit(25000)) { $p.Kill(); 'UNAVAILABLE' } elseif ((gc $t -Raw) -match 'pong') { 'OK' } else { 'UNAVAILABLE' }; ri $t -ea 0 } catch { 'UNAVAILABLE' }`
+probe availability first — the outer `timeout` is not redundant: agy hangs past its own
+`--print-timeout` when unauthenticated, so only an external kill bounds the wait.
+bash: `timeout 25 agy --print 'Reply with exactly: pong' --print-timeout 15s 2>/dev/null |
+grep -q pong && echo OK || echo UNAVAILABLE`
 OK -> dispatch the SAME verbatim verifier prompt through that CLI (`agy --print "<prompt>"
 --print-timeout 240s`, cwd = the target repo), same resolution rules; its verdict is still
 a report, never evidence — the controller's own proving run stays mandatory.

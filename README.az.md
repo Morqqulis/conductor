@@ -14,32 +14,33 @@ sessiyalara yüklənir.
 |---|---|
 | **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi + metod dispetçeri: tapşırığın mahiyyəti yanaşmanı seçir (nəzarət qrupu, instrumentasiya, variantlar münsifləri…) |
 | **Commit intizamı** | Commit — hazırlıq bəyanatıdır: hər `git commit`-dən əvvəl təzə sübut prosesi işlədilir və sətirləri cavabda göstərilir. Qayda üç mühitin nüvəsində və digest-lərində yaşayır |
-| **Öyrənmə** | Dərslər jurnalı (`~/.claude/conductor/lessons.md`): bütün AI-lər bir fayla yazır, təzə dərslər hər sessiyanın əvvəlində yüklənir, jurnal dolduqda sistem özü onların daimi qaydalara çevrilməsini tələb edir |
+| **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və birsətirlik indeks. Sessiya başlayanda gələnlər və indeksin yolu yüklənir; tam indeks lazım olduqda oxunur, ona görə yaddaş böyüdükcə itmir |
 
 ## Tələblər
 
-- Windows 10/11, PowerShell (`pwsh` və ya daxili), git
+- `bash`, `git`, `python3` (sonuncu yalnız quraşdırıcılara lazımdır — onlar başqa
+  alətlərə məxsus JSON konfiqlərini redaktə edir, bunu mətn vasitələri ilə etmək olmaz)
+- Windows: git ilə gələn Git Bash kifayətdir. Linux və macOS heç bir qeyd-şərtsiz işləyir
 - [Claude Code](https://claude.com/claude-code) — quraşdırılıb və daxil olunub
 - Cursor, Google Antigravity və/və ya OpenAI Codex — istəyə görə (adapterlər qlobal quraşdırılır)
 
 ## Quraşdırma
 
-```powershell
+```bash
 git clone https://github.com/Morqqulis/conductor.git
 cd conductor
 
-# 1. Claude Code: nüvə, hook-lar, dərslər jurnalı, qlobal CLAUDE.md (+smoke-test)
-pwsh -File install.ps1
+# 1. Claude Code: nüvə, hook-lar, qlobal CLAUDE.md (+smoke-test)
+bash install.sh
 
-# 2. Cursor + Antigravity + Codex qlobal
-pwsh -File install-global.ps1
+# 2. Cursor + Antigravity + Codex qlobal (cavab dilini soruşacaq)
+bash install-global.sh
 ```
 
 Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyalanacaq):
 
-```powershell
-pwsh -File install-cursor.ps1      -Repo "D:\layihə\yolu"
-pwsh -File install-antigravity.ps1 -Repo "D:\layihə\yolu"
+```bash
+bash install-project.sh --repo "/d/layihə/yolu"
 ```
 
 Quraşdırmadan sonra Cursor və Antigravity-ni yenidən başladın (hook konfiqurasiyaları
@@ -60,19 +61,19 @@ Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir
 
-Sadə yol: `install-global.ps1`-i yenidən işə salın — dili soruşacaq (və ya birbaşa:
-`pwsh -File install-global.ps1 -Language Azerbaijani`) və onu bütün mühitlərin qlobal
+Sadə yol: `install-global.sh`-i yenidən işə salın — dili soruşacaq (və ya birbaşa:
+`bash install-global.sh --language Azerbaijani`) və onu bütün mühitlərin qlobal
 qaydalarına, o cümlədən Cursor üçün hazır qayda faylına tətbiq edəcək. Rus dilinə
-qayıtmaq üçün əvvəlcə `install.ps1` (etalonu bərpa edir), sonra `install-global.ps1`.
+qayıtmaq üçün əvvəlcə `install.sh` (etalonu bərpa edir), sonra `install-global.sh`.
 
 Əl ilə yol — qayda üç yerdə yerləşir, lazım olanı redaktə edin və uyğun
 quraşdırıcını yenidən işə salın:
 
 | Mühit | Fayl və bölmə | Redaktədən sonra |
 |---|---|---|
-| Claude Code, bütün layihələr | [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) → **«5. Язык и стиль ответа»** bölməsi | `pwsh -File install.ps1` |
+| Claude Code, bütün layihələr | [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) → **«5. Язык и стиль ответа»** bölməsi | `bash install.sh` |
 | Claude Code, bir layihə | layihə kökündəki `CLAUDE.md` → **«5. Язык и отчёт»** bölməsi | heç nə — dərhal oxunur |
-| Cursor və Antigravity | [`adapters/cursor/conductor-core.mdc`](adapters/cursor/conductor-core.mdc) və [`adapters/antigravity/conductor-core.md`](adapters/antigravity/conductor-core.md) → **«Language and reporting»** bölməsi | `pwsh -File install-global.ps1` |
+| Cursor, Antigravity və Codex | [`adapters/core-body.md`](adapters/core-body.md) → **«Language and reporting»** bölməsi, sonra `bash tools/build-digests.sh` | `bash install-global.sh` |
 
 Məsələn, Azərbaycan dili üçün həmin bölmələrdə «Answer in Russian» ifadəsini
 «Answer in Azerbaijani» ilə əvəz edin (CLAUDE.md-də isə «на русском» →
@@ -90,15 +91,15 @@ repozitori ilə birlikdə köçəcək.
 
 Bir əmrlə, əvvəlcədən baxışla:
 
-```powershell
+```bash
 # əvvəlcə nəyin silinəcəyinə baxın (heç nəyi dəyişmir)
-pwsh -File uninstall.ps1 -WhatIf -KeepLessons -SweepRoots "D:\projects,D:\top"
+bash uninstall.sh --dry-run --keep-lessons --sweep-roots "/d/projects,/d/top"
 
 # sonra həqiqətən silin
-pwsh -File uninstall.ps1 -KeepLessons -SweepRoots "D:\projects,D:\top"
+bash uninstall.sh --keep-lessons --sweep-roots "/d/projects,/d/top"
 ```
 
-`-KeepLessons` dərslər jurnalını İş masasına saxlayır; `-SweepRoots` göstərilən köklər
+`--keep-lessons` dərslər jurnalını İş masasına saxlayır; `--sweep-roots` göstərilən köklər
 altındakı repozitorilərdən köhnə versiyaların adapterlərini və git-kilidlərini təmizləyir.
 Dəyişdirilən hər konfiq ehtiyata alınır; yad hook-lar və qeydlər qorunur (özümüzünkülər
 sentinellərlə tanınır); qlobal `CLAUDE.md` heç vaxt silinmir. Təkrar işə salmaq
@@ -108,13 +109,17 @@ təhlükəsizdir. Hissə-hissə əl ilə geri qaytarma: hər konfiqin yanında
 ## Repozitorinin strukturu
 
 ```
-runtime/          həqiqət mənbəyi: nüvə, playbook-lar, mühit hook-ları
-adapters/         Cursor və Antigravity üçün qayda digest-ləri
+runtime/          həqiqət mənbəyi: nüvə, playbook-lar, subagent kontraktı, hook-lar
+adapters/         core-body.md — qaydaların ümumi mətni; Cursor/Antigravity digest-ləri
+                  ondan yığılır, əl ilə redaktə edilmir
 deploy/           qlobal CLAUDE.md
-qa/               büdcə/naqillənmə linteri, benchmark ssenariləri
+tools/            digest yığımı, JSON konfiqlərin redaktəsi, dərslərin miqrasiyası,
+                  köhnə versiyaların git-hook-larının təmizlənməsi
+qa/               büdcə/naqillənmə linteri, benchmark ssenariləri, tələlər
 docs/             deploy jurnalı ilə spesifikasiya, daşınabilirlik planı
-install*.ps1      quraşdırıcılar (yuxarıda)
+install*.sh       quraşdırıcılar, uninstall.sh — silinmə
 ```
 
-Dəyişikliklər yalnız `runtime/` və `adapters/` içində edilir, sonra `qa\lint.ps1`
-və quraşdırıcı: repozitori — həqiqət mənbəyidir, canlı nüsxələr həmişə ondan yığılır.
+Dəyişikliklər yalnız `runtime/` və `adapters/core-body.md` içində edilir, sonra
+`bash tools/build-digests.sh`, `bash qa/lint.sh` və quraşdırıcı: repozitori — həqiqət
+mənbəyidir, canlı nüsxələr həmişə ondan yığılır.

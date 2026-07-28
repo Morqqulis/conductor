@@ -12,9 +12,18 @@ those 20 files again.
 - Investigation: the enumeration artifact exceeds 8 files or 2 angles.
 - Parallel work: >=3 subtasks independent by proxy — they share no write-files AND no
   output->input dependency. Doubt about independence resolves TOWARD dispatch.
-- T3: skeptic verification is always dispatched (skeptic.md).
+- SIZE FLOOR (both directions matter): a subtask you would finish in a handful of tool calls is
+  not delegated — dispatch costs a full context setup and buys nothing back. Delegation pays on
+  wide, genuinely independent work; it multiplies cost and latency on small work.
 - Parallel file mutation -> each agent works in worktree isolation. The controller creates the
   worktrees (run probes.md#dirty-tree first) and names each agent's worktree path in slot 2.
+
+## ASYNC (the controller does not idle)
+Dispatch, then keep working on what does not depend on the returns — a controller blocked on the
+slowest agent has converted parallel work back into serial work. Where the harness supports it,
+keep a long-lived agent across related subtasks: it reads from a warm context instead of paying
+the setup again. Intervene the moment a returned report shows drift or missing context; do not
+wait for the whole fleet to land.
 
 ## FLEET (size and shape — structure decides, never a favorite number)
 - Size = independent angles x verification votes. Research: one agent per angle, blind
@@ -61,6 +70,11 @@ conclusion about it. Then run the integration check (full test run / lint) YOURS
 dispatch skeptic.md on the integrated result, and after the skeptic passes, the core T3
 checkpoint applies: get explicit user approval BEFORE merging/integrating. Rigor peaks here —
 at integration, not dispatch.
+
+What integration verification is FOR: work you did not watch being done. A fresh-context verifier
+catches what a report conceals. It is not a second opinion on an edit you made and already proved
+with your own fresh run — that agent re-derives what you hold evidence for, and costs a context to
+do it.
 
 ## Degradation
 Agent tool unavailable or denied -> execute the same checklist inline (enumerate, then process

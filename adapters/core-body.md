@@ -1,10 +1,3 @@
----
-description: Conductor discipline core — always-on operating rules
-alwaysApply: true
----
-
-# Conductor Core (Cursor adapter)
-
 ## Iron laws (capability denials, not advice)
 1. NO completion claim without fresh verification evidence.
 2. NO fix without a proven root cause.

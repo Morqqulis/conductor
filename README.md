@@ -13,32 +13,33 @@ Antigravity, Codex) работать по инженерной методоло�
 |---|---|
 | **Методология** | Ядро (железные законы, гейт завершения с предсказанием исхода) + плейбуки: отладка, расследование, реализация, оркестрация, скептик, переваривание уроков + диспетчер методов: сущность задачи выбирает подход (контрольная группа, инструментирование, жюри вариантов…) |
 | **Дисциплина коммита** | Коммит — это заявление о готовности: перед каждым `git commit` — свежий доказательный прогон, его строки показываются в ответе. Правило живёт в ядре и дайджестах всех трёх сред |
-| **Обучение** | Журнал уроков (`~/.claude/conductor/lessons.md`): все AI пишут в один файл, свежие уроки впрыскиваются на старте каждой сессии, при переполнении система сама требует переваривания в постоянные правила |
+| **Память** | Два хранилища: **входящее** (`~/.claude/conductor/lessons.md`) — одна строка на урок, туда пишут все AI на машине; **разобранное** (`~/.claude/conductor/lessons/`) — файл на урок плюс индекс из однострочников. На старте сессии впрыскивается входящее и путь к индексу; полный индекс читается по необходимости, поэтому память не теряется с ростом |
 
 ## Требования
 
-- Windows 10/11, PowerShell (`pwsh` или встроенный), git
+- `bash`, `git`, `python3` (последний нужен только установщикам — они правят JSON-конфиги,
+  принадлежащие другим инструментам, и делать это текстом нельзя)
+- Windows: подойдёт Git Bash, идущий с git. Linux и macOS работают без оговорок
 - [Claude Code](https://claude.com/claude-code) — установлен и залогинен
 - Cursor, Google Antigravity и/или OpenAI Codex — по желанию (адаптеры ставятся глобально)
 
 ## Установка
 
-```powershell
+```bash
 git clone https://github.com/Morqqulis/conductor.git
 cd conductor
 
-# 1. Claude Code: ядро, хуки, журнал уроков, глобальный CLAUDE.md (+smoke-тест)
-pwsh -File install.ps1
+# 1. Claude Code: ядро, хуки, глобальный CLAUDE.md (+smoke-тест)
+bash install.sh
 
-# 2. Cursor + Antigravity + Codex глобально
-pwsh -File install-global.ps1
+# 2. Cursor + Antigravity + Codex глобально (спросит язык ответов)
+bash install-global.sh
 ```
 
 Адаптеры в конкретный проект (правила будут версионироваться вместе с ним):
 
-```powershell
-pwsh -File install-cursor.ps1      -Repo "D:\путь\к\проекту"
-pwsh -File install-antigravity.ps1 -Repo "D:\путь\к\проекту"
+```bash
+bash install-project.sh --repo "/d/путь/к/проекту"
 ```
 
 После установки перезапустите Cursor и Antigravity (конфиги хуков читаются при старте).
@@ -58,19 +59,19 @@ pwsh -File install-antigravity.ps1 -Repo "D:\путь\к\проекту"
 
 ## Где переключается язык ответов
 
-Простой путь: перезапустите `install-global.ps1` — он спросит язык (или задайте сразу:
-`pwsh -File install-global.ps1 -Language Azerbaijani`) и подставит его в глобальные
-правила всех сред, включая готовый для вставки файл правила Cursor. Для смены обратно
-на русский сначала выполните `install.ps1` (восстановит эталон), затем `install-global.ps1`.
+Простой путь: перезапустите `install-global.sh` — он спросит язык (или задайте сразу:
+`bash install-global.sh --language Azerbaijani`) и подставит его в глобальные правила всех
+сред, включая готовый для вставки файл правила Cursor. Для смены обратно на русский
+сначала выполните `install.sh` (восстановит эталон), затем `install-global.sh`.
 
 Ручной путь — правило лежит в трёх местах, правьте нужное и перезапустите
 соответствующий установщик:
 
 | Среда | Файл и раздел | После правки |
 |---|---|---|
-| Claude Code, все проекты | [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) → раздел **«5. Язык и стиль ответа»** | `pwsh -File install.ps1` |
+| Claude Code, все проекты | [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) → раздел **«5. Язык и стиль ответа»** | `bash install.sh` |
 | Claude Code, один проект | `CLAUDE.md` в корне проекта → раздел **«5. Язык и отчёт»** | ничего — читается сразу |
-| Cursor и Antigravity | [`adapters/cursor/conductor-core.mdc`](adapters/cursor/conductor-core.mdc) и [`adapters/antigravity/conductor-core.md`](adapters/antigravity/conductor-core.md) → раздел **«Language and reporting»** | `pwsh -File install-global.ps1` |
+| Cursor, Antigravity и Codex | [`adapters/core-body.md`](adapters/core-body.md) → раздел **«Language and reporting»**, затем `bash tools/build-digests.sh` | `bash install-global.sh` |
 
 Например, для азербайджанского замените в этих разделах «Answer in Russian» на
 «Answer in Azerbaijani» (и «на русском» → «на азербайджанском» в CLAUDE.md).
@@ -87,15 +88,15 @@ pwsh -File install-antigravity.ps1 -Repo "D:\путь\к\проекту"
 
 Одной командой, с предварительным просмотром:
 
-```powershell
+```bash
 # сначала посмотреть, что будет удалено (ничего не меняет)
-pwsh -File uninstall.ps1 -WhatIf -KeepLessons -SweepRoots "D:\projects,D:\top"
+bash uninstall.sh --dry-run --keep-lessons --sweep-roots "/d/projects,/d/top"
 
 # затем удалить по-настоящему
-pwsh -File uninstall.ps1 -KeepLessons -SweepRoots "D:\projects,D:\top"
+bash uninstall.sh --keep-lessons --sweep-roots "/d/projects,/d/top"
 ```
 
-`-KeepLessons` сохраняет журнал уроков на Рабочий стол; `-SweepRoots` дополнительно
+`--keep-lessons` сохраняет журнал уроков на Рабочий стол; `--sweep-roots` дополнительно
 вычищает адаптеры и git-замки старых версий из репозиториев под указанными корнями.
 Каждый изменяемый конфиг бэкапится; чужие хуки и записи сохраняются (свои узнаются по
 сентинелям); глобальный `CLAUDE.md` не удаляется никогда. Повторный запуск безопасен.
@@ -105,13 +106,17 @@ pwsh -File uninstall.ps1 -KeepLessons -SweepRoots "D:\projects,D:\top"
 ## Структура репозитория
 
 ```
-runtime/          источник правды: ядро, плейбуки, хуки сред
-adapters/         дайджесты правил для Cursor и Antigravity
+runtime/          источник правды: ядро, плейбуки, контракт субагента, хуки
+adapters/         core-body.md — общий текст правил; дайджесты Cursor/Antigravity
+                  собираются из него, руками их не правят
 deploy/           глобальный CLAUDE.md
-qa/               линтер бюджетов и проводки, бенчмарк-сценарии
+tools/            сборка дайджестов, правка JSON-конфигов, миграция уроков,
+                  съёмник git-хуков старых версий
+qa/               линтер бюджетов и проводки, бенчмарк-сценарии, ловушки
 docs/             спецификация с журналом деплоя, план переносимости
-install*.ps1      установщики (см. выше)
+install*.sh       установщики, uninstall.sh — удаление
 ```
 
-Правки — только в `runtime/` и `adapters/`, затем `qa\lint.ps1` и установщик:
-репозиторий — источник правды, живые копии всегда собираются из него.
+Правки — только в `runtime/` и `adapters/core-body.md`, затем `bash tools/build-digests.sh`,
+`bash qa/lint.sh` и установщик: репозиторий — источник правды, живые копии всегда
+собираются из него.

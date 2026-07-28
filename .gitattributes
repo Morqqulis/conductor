@@ -1,0 +1,17 @@
+# Line endings are load-bearing here: this project ships shell scripts.
+#
+# git's Windows default is core.autocrlf=true, which converts text files to CRLF on
+# checkout. bash treats the carriage return as part of the shebang and refuses the file
+# with "/usr/bin/env bash^M: bad interpreter" - so a fresh `git clone` on a Windows
+# machine would produce a repository whose installers cannot run, while every file looks
+# correct in an editor. The README's clone-then-install path depends on this file.
+#
+# eol=lf pins the WORKING COPY, not just the stored blob, on every platform.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.mdc  text eol=lf
+*.tsv  text eol=lf
+*.json text eol=lf

@@ -1,25 +1,55 @@
 {
+  "_comment": [
+    "Template, not a working config. qa/run-benchmark.sh renders it into a throwaway copy of",
+    "this directory under qa/work/ before every run, substituting __CONDUCTOR_DIR__ with the",
+    "conductor tree actually installed on the machine and __JOURNAL__ with a path inside that",
+    "throwaway copy. Nothing here is machine-specific, and a run never writes into the file",
+    "you are reading.",
+    "",
+    "The hook set mirrors what tools/settings-json.py installs for real - deliberately,",
+    "including the test-run journal. A benchmark arm that differs from the deployed",
+    "configuration measures something nobody runs; that mistake has already been made twice",
+    "in this project. The journal writes no stdout and always exits 0, so it cannot change",
+    "measured behaviour; __JOURNAL__ keeps fixture runs out of the live journal, whose whole",
+    "purpose is evidence from real work."
+  ],
   "hooks": {
     "SessionStart": [
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
-          { "type": "command", "command": "bash \"C:/Users/Dee/.claude/conductor/hooks/session-start.sh\"", "timeout": 10 },
-          { "type": "command", "command": "bash \"C:/Users/Dee/.claude/conductor/hooks/lessons-inject.sh\"", "timeout": 10 }
+          { "type": "command", "command": "bash \"__CONDUCTOR_DIR__/hooks/session-start.sh\"", "timeout": 10 },
+          { "type": "command", "command": "bash \"__CONDUCTOR_DIR__/hooks/lessons-inject.sh\"", "timeout": 10 }
         ]
       }
     ],
     "SubagentStart": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"C:/Users/Dee/.claude/conductor/hooks/subagent-start.sh\"", "timeout": 10 }
+          { "type": "command", "command": "bash \"__CONDUCTOR_DIR__/hooks/subagent-start.sh\"", "timeout": 10 }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"C:/Users/Dee/.claude/conductor/hooks/user-prompt.sh\"", "timeout": 10 }
+          { "type": "command", "command": "bash \"__CONDUCTOR_DIR__/hooks/user-prompt.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "CONDUCTOR_TEST_JOURNAL=\"__JOURNAL__\" bash \"__CONDUCTOR_DIR__/hooks/test-run-journal.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "CONDUCTOR_TEST_JOURNAL=\"__JOURNAL__\" bash \"__CONDUCTOR_DIR__/hooks/test-run-journal.sh\"", "timeout": 10 }
         ]
       }
     ]

@@ -46,6 +46,48 @@ PROMPT="$(printf '%s' "$row" | cut -f3-)"
 QA_HOME="$QA/home-$MODE"
 [ -f "$QA_HOME/.credentials.json" ] || \
     die "no .credentials.json in qa/home-$MODE - stage credentials there first (they are gitignored)"
+
+# --- render the arm's config -----------------------------------------------------------
+# qa/home-*/settings.json is a TEMPLATE carrying placeholders, never a working config: a
+# committed absolute path works on exactly one machine, and when it rots it does not raise an
+# error - it produces a transcript that merely looks like "the rules did nothing". That is the
+# expensive failure, because it reads as a result. Rendering here keeps the committed file
+# machine-independent, and the check below turns a broken reference into a stop.
+RUN_HOME="$QA/work/home-$MODE"
+CONDUCTOR_DIR="${CONDUCTOR_HOME:-$HOME/.claude/conductor}"
+if command -v cygpath >/dev/null 2>&1; then CONDUCTOR_DIR="$(cygpath -m "$CONDUCTOR_DIR")"; fi
+
+rm -rf "$RUN_HOME"
+mkdir -p "$RUN_HOME"
+cp -R "$QA_HOME/." "$RUN_HOME/"
+JOURNAL_PATH="$RUN_HOME/test-runs.log"
+if command -v cygpath >/dev/null 2>&1; then JOURNAL_PATH="$(cygpath -m "$JOURNAL_PATH")"; fi
+
+if [ -f "$RUN_HOME/settings.json" ]; then
+    # python here is native on Windows and reads /c/Users/... as C:\c\Users\..., so every path
+    # handed to it is converted first - the same trap the journal hook fell into.
+    SETTINGS_ARG="$RUN_HOME/settings.json"
+    if command -v cygpath >/dev/null 2>&1; then SETTINGS_ARG="$(cygpath -m "$SETTINGS_ARG")"; fi
+    python3 - "$SETTINGS_ARG" "$CONDUCTOR_DIR" "$JOURNAL_PATH" <<'PY' || die "could not render the arm config"
+import json, re, sys
+path, conductor, journal = sys.argv[1], sys.argv[2], sys.argv[3]
+text = open(path, encoding="utf-8").read()
+text = text.replace("__CONDUCTOR_DIR__", conductor).replace("__JOURNAL__", journal)
+data = json.loads(text)
+data.pop("_comment", None)
+missing = []
+for entries in data.get("hooks", {}).values():
+    for entry in entries:
+        for hook in entry.get("hooks", []):
+            for candidate in re.findall(r'"([^"]+\.sh)"', hook.get("command", "")):
+                if not __import__("os").path.exists(candidate):
+                    missing.append(candidate)
+if missing:
+    sys.exit("hook script(s) referenced by the arm do not exist:\n  " + "\n  ".join(missing))
+open(path, "w", encoding="utf-8").write(json.dumps(data, indent=2) + "\n")
+PY
+fi
+QA_HOME="$RUN_HOME"
 FIXTURE="$QA/fixtures/$FIXTURE_NAME"
 [ -d "$FIXTURE" ] || die "fixture missing: qa/fixtures/$FIXTURE_NAME"
 command -v claude >/dev/null 2>&1 || die "the 'claude' CLI is not on PATH"

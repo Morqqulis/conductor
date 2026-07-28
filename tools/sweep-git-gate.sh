@@ -2,10 +2,11 @@
 # Removes the retired Conductor marker commit gate from git repositories.
 #
 # The gate (v1.4-v1.11) installed four hooks per repository that refused any commit
-# without a fresh `.git/conductor-verified` marker. v1.12 retired the mechanism: field
-# data showed agents satisfying it ritually, so the discipline is textual now. The hooks
-# themselves outlive the decision and keep rejecting commits, because nothing creates the
-# marker any more. This script removes them.
+# without a fresh `.git/conductor-verified` marker. v1.12 retired it as unnecessary rather
+# than as ineffective: agents were running the proving runs anyway, and the marker was an
+# extra artifact on top of work already done - it certified nothing beyond that work, and
+# blocked the commit whenever it was forgotten. The hooks outlive that decision and keep
+# rejecting commits, because nothing creates the marker any more. This script removes them.
 #
 # Conservative by construction:
 #   - only files whose content carries the 'conductor gate' sentinel are removed;

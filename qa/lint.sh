@@ -55,9 +55,13 @@ for name in "${!BUDGETS[@]}"; do
     fi
 done
 
+# probes.md holds recognition DATA (manifest -> test command, and similar tables), not injected
+# prose: it is loaded by reference from a playbook, and no harness truncates it. The cap is a
+# context-cost guard, so it grows when the data has to cover more ecosystems - unlike core.md,
+# whose number is fixed by a hard truncation limit and is never raised to fit content.
 PROBES="$RUNTIME/snippets/probes.md"
 probes_chars=$(chars "$PROBES")
-[ "$probes_chars" -le 3200 ] || check 1 "probes.md over budget: $probes_chars/3200"
+[ "$probes_chars" -le 3600 ] || check 1 "probes.md over budget: $probes_chars/3600"
 
 # --- adapter digests: Antigravity truncates silently past its per-rule-file budget -----
 # Both digests are generated from adapters/core-body.md; a hand-edited target would be

@@ -16,6 +16,39 @@ sessiyalara yüklənir.
 | **Commit intizamı** | Commit — hazırlıq bəyanatıdır: hər `git commit`-dən əvvəl təzə sübut prosesi işlədilir və sətirləri cavabda göstərilir. Qayda üç mühitin nüvəsində və digest-lərində yaşayır |
 | **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və birsətirlik indeks. Sessiya başlayanda gələnlər və indeksin yolu yüklənir; tam indeks lazım olduqda oxunur, ona görə yaddaş böyüdükcə itmir |
 
+## Şərt: dəyərlər faylı məcburidir
+
+**Conductor yalnız qlobal dəyərlər faylı ilə birlikdə işləyir —
+[`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md), quraşdırıcı onu `~/.claude/CLAUDE.md`
+ünvanına qoyur. Bu faylı silmək olmaz. Bu, tövsiyə deyil, işləmə şərtidir.**
+
+Sadə dillə, niyə belədir. Sistem iki dəfə yoxlanıldı: Conductor ilə və onsuz. «Onsuz» olan
+prosesi intizam üzrə hər 13 sınaqdan keçdi — yoxlanılmamış nəticəni hazır kimi təqdim etmədi,
+simptomu yox, səbəbi düzəltdi, saxta «yaşıl işarələr» çəkməkdən imtina etdi və «prod yıxılıb»
+təzyiqinə tab gətirdi. Buradan səhv nəticə çıxarmaq asandır: guya model öz-özlüyündə
+intizamlıdır.
+
+Belə deyil. Həmin prosesdə Conductor yox idi, **amma dəyərlər faylı yerində idi** və orada
+məhz yoxlanılan şeylər yazılıb: «останови и сообщи (статус BLOCKED), а не выдавай черновик
+под видом готового», «Проверено: команда + результат», statusların siyahısı və «Факт важнее
+настроения: несогласие, давление или похвала — не данные». Davranışı bu mətn göstərdi, boş
+model yox. İlkin şərtləri [`qa/home-baseline/CLAUDE.md`](qa/home-baseline/CLAUDE.md),
+nəticələri isə [`qa/reports/baseline.md`](qa/reports/baseline.md) faylında yoxlamaq olar —
+9–11-ci sətirlər (yekun cədvəl) və 36–48 (sətirbəsətir sübutlar).
+
+Praktik məna: əgər bir gün Conductor-dan bu faylı təkrarlayan qaydalar çıxarılsa, sonra kimsə
+faylın özünü də silsə, intizam bütövlükdə yox olacaq — özü də bir dənə də xəta mesajı
+olmadan. Nə quraşdırıcı, nə linter bunu görməyəcək. `uninstall.sh` qlobal `CLAUDE.md`-i
+qəsdən **silmir** — elə buna görə.
+
+Sübutun sərhədləri barədə dürüst qeyd. Ölçmə faylın **qısaldılmış**, 56 sətirlik nüsxəsi
+üzərində aparılıb, quraşdırıcı isə 133 sətirlik tam versiyanı qoyur. Onlarda üst-üstə düşən
+hissə məhz yuxarıda sitat gətirilən intizam bölmələridir; qalan 77 sətir (`rtk` qaydası,
+cavab üslubu haqqında 5.1–5.4 bölmələri, təhlükəsizlik testlərinə genişləndirilmiş tələblər,
+graphify quyruğu) heç bir ölçmədə iştirak etməyib. Deməli sübut olunan budur: **intizamı
+dəyərlər faylının içindəki sitat gətirilmiş minimum saxlayır.** Faylın qalan hissəsi barədə
+məlumat yoxdur — nə lehinə, nə əleyhinə.
+
 ## Tələblər
 
 - `bash`, `git`, `python3` (sonuncu yalnız quraşdırıcılara lazımdır — onlar başqa
@@ -54,9 +87,10 @@ hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
 3. Commit edir. Sübutsuz commit olmamalıdır; uğursuz hook düzəltmək siqnalıdır,
    yan keçmək yox (`--no-verify` — pozuntudur).
 
-Bu mətn qaydasıdır, mexaniki kilid deyil: əvvəlki versiyaların marker git-qapısı
-silinib — sahə məlumatları göstərdi ki, agentlər onu ritual kimi yerinə yetirirdi
-(sübutsuz fayl yaradırdı) və mexanika yalnız müdafiəni imitasiya edirdi.
+Bu mətn qaydasıdır, mexaniki kilid deyil: əvvəlki versiyaların marker git-qapısı silinib.
+Sahə məlumatları göstərdi ki, o sadəcə lazım deyildi: agentlər onsuz da sübut proseslərini
+icra edirdi, kilid isə onların üstünə ayrıca marker faylı yaratmağı tələb edirdi — artıq
+görülmüş işə heç nə əlavə etməyən və unudulduqda commit-i sındıran əlavə addım.
 Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir

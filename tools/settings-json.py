@@ -115,6 +115,12 @@ def install(data: dict, conductor_dir: str, shell: str) -> None:
     add("SubagentStart", {"hooks": [cmd("subagent-start.sh")]})
     add("UserPromptSubmit", {"hooks": [cmd("user-prompt.sh")]})
 
+    # The test-run journal observes; it never blocks. Both outcomes are registered because the
+    # two events carry opposite results and a journal that only sees successes proves nothing.
+    # The Bash matcher keeps it off every Read/Edit call - the cheapest optimisation available.
+    for event in ("PostToolUse", "PostToolUseFailure"):
+        add(event, {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]})
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)

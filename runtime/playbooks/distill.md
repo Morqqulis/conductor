@@ -1,25 +1,37 @@
-# Distillation Procedure (lessons ledger -> permanent rules)
+# Distillation Procedure (inbox -> curated memory -> permanent rules)
 
-Trigger: the session-start lessons block says "DISTILL DUE" (ledger > 20 lines), or the
-user asks. Run as its own Conductor unit: implement | T2, named undo first. Do it BEFORE
-new feature work — an undigested ledger silently evicts old lessons past the injection cap.
+Trigger: the session-start block says "DISTILL DUE", or the user asks. Run as its own
+Conductor unit: implement | T2, named undo first.
 
-1. READ the full ledger (~/.claude/conductor/lessons.md), not just the injected top.
-2. GROUP related lessons; each group becomes ONE candidate rule stated generally — the
-   incident is the example, never the rule.
-3. PLACE each rule where its audience lives, and MEASURE the target's lint budget BEFORE
-   writing (core payload 9500 escaped; playbooks 6000 each; probes 3200; digests
-   12000/file — Antigravity truncates silently past its customization budget):
+Memory has two stores. The INBOX (`~/.claude/conductor/lessons.md`) is where a lesson gets
+captured in one cheap line. The CURATED store (`~/.claude/conductor/lessons/`, one file per
+lesson plus `INDEX.md`) is what later sessions read from. Distillation is the move between
+them, and the moment to ask which lessons have stopped being facts and become rules.
+
+1. READ the full inbox, and `lessons/INDEX.md` for what is already known — a "new" lesson
+   that restates a filed one is an update to that file, not a second entry.
+2. GROUP related lessons. Each group becomes ONE candidate rule stated generally: the
+   incident is the example, never the rule itself.
+3. DECIDE per group:
+   - recurring across projects, changes how work is done -> graduate into a playbook, core,
+     or the digests, and drop the inbox lines it came from
+   - true but specific (a library quirk, a platform path rule) -> file it into the curated
+     store; it stays retrievable without costing session context
+   - superseded or proven wrong -> delete it and say so in the report. A memory kept past
+     the point it stopped being true is worse than no memory.
+4. PLACE a graduated rule where its audience lives, and MEASURE the target's budget BEFORE
+   writing (`qa/lint.sh` prints core and contract usage; playbooks 6000; probes 3200;
+   digests 12000):
    - all-session behavior -> core.md (tightest budget: usually requires freeing space first)
    - task-type behavior -> the matching playbook
-   - other-AI behavior -> BOTH adapter digests (adapters/cursor + adapters/antigravity)
-   - machine facts (paths, tool quirks) -> stay as ledger lines, just generalized
-4. Repo cycle: edit runtime/ and adapters/ sources ONLY -> qa\lint.ps1 must PASS ->
-   deploy (Copy-Item runtime\* to ~/.claude/conductor + install-global.ps1 + project
-   installers) -> verify the deployed copies actually carry the rule (grep, not faith).
-5. TRIM the ledger: delete graduated lines, keep the newest ungraduated ones; the file
-   must come out at <= 12 non-comment lines.
-6. Commit with the proving lines (lint PASS + deploy grep) shown in the same message;
-   the spec Deployment record gets one line naming what graduated where.
-Predict each step's outcome before running it (core gate rule); an unexplained surprise
-here means a budget or deploy assumption broke — stop and investigate.
+   - subagent behavior -> subagent-contract.md
+   - other-AI behavior -> adapters/core-body.md, then `tools/build-digests.sh`
+5. FILE the rest: `tools/migrate-lessons.sh` moves every remaining inbox line into the
+   curated store and rebuilds the index. Run it after step 3, so it files what survived.
+6. Repo cycle: edit `runtime/` and `adapters/` sources ONLY -> `qa/lint.sh` must PASS ->
+   deploy (`install.sh`, `install-global.sh`) -> verify the deployed copies carry the rule
+   by grep, not by faith.
+7. Commit with the proving lines (lint PASS + deploy grep) shown in the same message.
+
+Predict each step's outcome before running it (core gate). An unexplained surprise here
+means a budget or deploy assumption broke — stop and investigate.

@@ -9,6 +9,19 @@ command or backup that restores the pre-edit state ("undo: git checkout -- <file
 "undo: restore <path>.bak-<stamp>"). No named undo -> no edit. Iron Law 3 gates the truly
 irreversible; this makes the reversible provably reversible.
 
+## Restraint (scope is a contract, not a starting point)
+Deliver what was asked, at the scope intended, and finish it whole. Do not add features,
+refactor surrounding code, or introduce abstractions the task does not require: a bug fix does
+not need a cleanup pass, a one-shot operation does not need a helper, and a hypothetical future
+requirement is not a requirement. Validate at system boundaries — user input, external APIs,
+untrusted data — and trust internal code and framework guarantees inside them; error handling
+for a case that cannot occur is dead code that reads as diligence. Prefer changing the code to
+adding a flag or a compatibility shim when nothing depends on the old path.
+This is a floor on invention, never on quality: the production bar (error paths that CAN happen,
+edge cases, structured logs) is part of "done", not an extra you are being asked to skip.
+If the request looks mistaken or a better approach exists, say so in a sentence and continue with
+the task as asked — do not quietly narrow, widen, or transform it.
+
 ## Step 1 — Decomposition triage (before any detail work)
 Does the request contain more than one independently deliverable outcome? Yes -> split into
 units; each unit gets its own Step 0 record and its own counters. No -> continue.

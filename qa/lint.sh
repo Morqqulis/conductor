@@ -53,7 +53,11 @@ for name in "${!BUDGETS[@]}"; do
     n=$(chars "$p")
     [ "$n" -le "${BUDGETS[$name]}" ] || check 1 "$name over budget: $n/${BUDGETS[$name]}"
     peer_texts="$(cat $(find "$RUNTIME/playbooks" -name '*.md' -not -name "$name") 2>/dev/null)"
-    if ! printf '%s%s%s' "$core_text" "$hook_texts" "$peer_texts" | grep -qF "$name"; then
+    # grep WITHOUT -q on purpose: -q exits at the first match and the abandoned printf
+    # takes an EPIPE, which under pipefail fails the whole pipeline on fast readers
+    # (ubuntu CI) while passing on buffered ones (Git Bash) - a false "dead wiring" FAIL
+    # for every playbook. Plain grep consumes all input; EPIPE cannot happen.
+    if ! printf '%s%s%s' "$core_text" "$hook_texts" "$peer_texts" | grep -F "$name" >/dev/null; then
         check 1 "dead wiring: $name not referenced from core.md, any hook, or a peer playbook"
     fi
 done
@@ -89,7 +93,7 @@ cyr_bytes="$(printf '[\320-\323]')"
 for f in "$DEPLOY_MD" "$ADAPTERS/core-body.md"; do
     grep -qF 'Answer in Russian' "$f" || \
         check 1 "language token 'Answer in Russian' missing in ${f#$ROOT/} (the installers' substitution would silently no-op)"
-    tr '\n' ' ' < "$f" | grep -qiE 'internal reasoning[^.]{0,80}reply language' || \
+    tr '\n' ' ' < "$f" | grep -iE 'internal reasoning[^.]{0,80}reply language' >/dev/null || \
         check 1 "thinking-language rule (internal reasoning in the reply language) missing in ${f#$ROOT/}"
     if LC_ALL=C grep -q "$cyr_bytes" "$f"; then
         check 1 "Cyrillic text in ${f#$ROOT/} (first hit: line $(LC_ALL=C grep -n "$cyr_bytes" "$f" | head -1 | cut -d: -f1)) - the corpus must stay English so reasoning follows the instructions' language"

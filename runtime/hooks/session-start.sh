@@ -23,10 +23,10 @@ core="$(cat "$CORE")" || fail "cannot read $CORE"
 
 len="$(payload_length SessionStart "$core")"
 if [ "$len" -gt 10000 ]; then
-    fail "escaped payload is $len chars (>10000) - the harness would silently truncate the core; refusing to emit a gutted core"
+    fail "escaped payload is $len bytes (>10000) - the harness would silently truncate the core; refusing to emit a gutted core"
 fi
 if [ "$len" -gt 9500 ]; then
-    printf 'conductor: escaped payload %s/10000 chars - approaching truncation limit\n' "$len" >&2
+    printf 'conductor: escaped payload %s/10000 bytes - approaching truncation limit\n' "$len" >&2
 fi
 
 emit_payload SessionStart "$core"

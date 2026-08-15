@@ -27,9 +27,12 @@ emit_payload() {
         "$event" "$body"
 }
 
-# payload_length <hookEventName> <text>: character count of the emitted payload.
-# The harness truncates at 10000 characters, so the budget is measured on the escaped
-# form, which is what actually crosses the boundary.
+# payload_length <hookEventName> <text>: BYTE count of the emitted payload.
+# The harness truncates around 10000; whether it counts characters or bytes is not
+# documented, and `wc -m` flips between the two with the locale (chars under UTF-8,
+# bytes under C) - the exact class of silent divergence this budget exists to prevent.
+# Bytes are the conservative, locale-independent measure: byte count >= char count,
+# so a budget that passes in bytes passes under any truncation semantics.
 payload_length() {
-    emit_payload "$1" "$2" | wc -m | tr -d '[:space:]'
+    emit_payload "$1" "$2" | wc -c | tr -d '[:space:]'
 }

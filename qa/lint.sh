@@ -16,14 +16,17 @@ ADAPTERS="$ROOT/adapters"
 
 fails=()
 check() { [ "$1" = "0" ] || fails+=("$2"); }
-chars() { wc -m < "$1" | tr -d '[:space:]'; }
+# Bytes, not wc -m: wc -m flips between chars and bytes with the locale, which made the
+# same file pass on one machine and fail on another. Bytes are the larger count, so a
+# budget that passes in bytes passes under any truncation semantics.
+chars() { LC_ALL=C wc -c < "$1" | tr -d '[:space:]'; }
 
 # --- core: the payload the harness actually receives, measured by the shipping code ----
 CORE="$RUNTIME/core.md"
 [ -f "$CORE" ] || { echo "lint: core.md missing" >&2; exit 2; }
 core_payload=$(payload_length SessionStart "$(cat "$CORE")")
 [ "$core_payload" -le 9500 ] && check 0 '' || \
-    check 1 "core.md escaped payload over budget: $core_payload/9500 chars (harness truncates at 10000)"
+    check 1 "core.md escaped payload over budget: $core_payload/9500 bytes (harness truncates at 10000)"
 grep -q 'CONDUCTOR-CORE-v1-7f3a' "$CORE" || check 1 "core.md missing sentinel"
 
 CONTRACT="$RUNTIME/subagent-contract.md"

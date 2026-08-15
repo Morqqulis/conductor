@@ -13,7 +13,8 @@ Two operations, both atomic (write to a temp file in the same directory, then re
 
 "Conductor entry" is decided by an anchored sentinel, never a bare substring: an early
 version matched "conductor" anywhere and deleted a user's unrelated "semiconductor-lint"
-hook. The sentinel is a path segment (/conductor/) or one of our own config keys.
+hook. The sentinel is a path segment (/conductor/) or one of our own config keys, each
+anchored on a word boundary so "semiconductor-core-lint" and the like never match.
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ import re
 import sys
 import tempfile
 
-SENTINEL = re.compile(r"[\\/]conductor[\\/]|conductor-commit-gate|conductor-core")
+SENTINEL = re.compile(r"[\\/]conductor[\\/]|\bconductor-commit-gate|\bconductor-core")
 
 # SessionStart fires on these lifecycle events. "compact" matters most: after a context
 # compaction the core would otherwise be gone from the model's context while the session
@@ -78,14 +79,20 @@ def strip(data: dict) -> int:
         if not isinstance(entries, list):
             continue
         kept = [e for e in entries if not is_ours(e)]
-        removed += len(entries) - len(kept)
+        removed_here = len(entries) - len(kept)
+        removed += removed_here
+        if removed_here == 0:
+            # Nothing of ours here - a foreign event, even an empty one, is left exactly
+            # as found: we did not create it, so "as if never installed" means not ours
+            # to delete.
+            continue
         if kept:
             hooks[event] = kept
         else:
             # An empty event array is not equivalent to an absent one for every reader;
             # leave the file the way it would look if we had never been installed.
             del hooks[event]
-    if not hooks:
+    if not hooks and removed:
         del data["hooks"]
     return removed
 
@@ -97,9 +104,18 @@ def command(shell: str, script: str) -> str:
 def install(data: dict, conductor_dir: str, shell: str) -> None:
     strip(data)
     hooks = data.setdefault("hooks", {})
+    # A "hooks" that is not an object is a broken settings file; refuse in one line, the
+    # way load() does for broken JSON, instead of surfacing a traceback.
+    if not isinstance(hooks, dict):
+        sys.exit(f"settings-json: 'hooks' is not a JSON object ({type(hooks).__name__}); refusing to touch it")
 
     def add(event: str, entry: dict) -> None:
-        hooks.setdefault(event, []).append(entry)
+        entries = hooks.setdefault(event, [])
+        # Same refusal as above, one level down: a target event whose value is not a list
+        # is a broken settings file, and a traceback is not a refusal.
+        if not isinstance(entries, list):
+            sys.exit(f"settings-json: hooks.{event} is not a JSON array ({type(entries).__name__}); refusing to touch it")
+        entries.append(entry)
 
     def cmd(name: str) -> dict:
         return {
@@ -147,7 +163,8 @@ def main() -> int:
     if args.cmd == "install-hooks":
         install(data, args.conductor_dir.rstrip("/"), args.shell)
         save(args.file, data)
-        print("hooks registered: SessionStart (core + lessons), SubagentStart, UserPromptSubmit")
+        print("hooks registered: SessionStart (core + lessons), SubagentStart, UserPromptSubmit, "
+              "PostToolUse + PostToolUseFailure (test-run journal)")
         return 0
 
     if args.cmd == "strip-key":

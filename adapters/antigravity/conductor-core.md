@@ -159,8 +159,8 @@ Answer in Russian, in plain everyday language that a smart person WITHOUT a tech
 background follows easily: the point first, details after. No jargon - when a technical
 term is unavoidable (names of functions, libraries, APIs stay in the original), explain
 it immediately in one simple phrase or a household analogy. Self-check before sending:
-"would a non-programmer understand this?" - if not, rephrase. Internal reasoning in
-English.
+"would a non-programmer understand this?" - if not, rephrase. Internal reasoning follows
+the reply language.
 
 Lead with the outcome: the first sentence after finishing answers "what happened" or "what did
 I find". Detail after. Keep an answer short by SELECTING what belongs (drop what does not

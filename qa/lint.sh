@@ -86,8 +86,8 @@ cyr_bytes="$(printf '[\320-\323]')"
 for f in "$DEPLOY_MD" "$ADAPTERS/core-body.md"; do
     grep -qF 'Answer in Russian' "$f" || \
         check 1 "language token 'Answer in Russian' missing in ${f#$ROOT/} (the installers' substitution would silently no-op)"
-    tr '\n' ' ' < "$f" | grep -qiE 'internal reasoning[^.]{0,60}English' || \
-        check 1 "thinking-language rule (internal reasoning in English) missing in ${f#$ROOT/}"
+    tr '\n' ' ' < "$f" | grep -qiE 'internal reasoning[^.]{0,80}reply language' || \
+        check 1 "thinking-language rule (internal reasoning in the reply language) missing in ${f#$ROOT/}"
     if LC_ALL=C grep -q "$cyr_bytes" "$f"; then
         check 1 "Cyrillic text in ${f#$ROOT/} (first hit: line $(LC_ALL=C grep -n "$cyr_bytes" "$f" | head -1 | cut -d: -f1)) - the corpus must stay English so reasoning follows the instructions' language"
     fi

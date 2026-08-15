@@ -109,11 +109,11 @@ ikisi yeniləyir, Cursor, Antigravity və Codex qaydalarını `install-global.sh
 Layihə adapterləri (`install-project.sh`) quraşdırılarkən həmin yadda saxlanmış
 seçimi tətbiq edir.
 
-Qaydaların özü qəsdən bütövlükdə ingiliscə yazılıb; seçilmiş dildə yalnız istifadəçiyə
-verilən cavablardır. Səbəb: model təlimatlarının yazıldığı dildə düşünür və rusca
-qaydalar korpusu, cavab dili başqa seçiləndə belə, görünən düşünməni rus dilinə
-çəkirdi. Düşünmə həmişə ingiliscə aparılır — bu, qaydalarda ayrıca açıq sətirdir və
-lint onun mövcudluğunu yoxlayır.
+Qaydaların özü qəsdən bütövlükdə ingiliscə yazılıb. Səbəb: model təlimatlarının
+yazıldığı dildə düşünür və rusca qaydalar korpusu, cavab dili başqa seçiləndə belə,
+görünən düşünməni rus dilinə çəkirdi. Seçilmiş dildə həm cavablar, həm də görünən
+düşünmə («thinking» bloku) aparılır — düşünmə dilini qaydalardakı ayrıca açıq sətir
+təyin edir və lint onun mövcudluğunu yoxlayır.
 
 Qayda fayllarında dil bir ifadədir: «Answer in Russian» — quraşdırıcılar kopyalayarkən
 orada dilin adını əvəz edir. Repozitoridəki etalonlarda bu ifadəni əl ilə dəyişmək

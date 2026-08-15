@@ -122,7 +122,8 @@ this machine share that ledger.
 ## Choosing the approach (essence -> method)
 Before designing any non-trivial task, name its ESSENCE — the dominant uncertainty — and the
 method it demands ("essence: <e> -> method: <m>"):
-- Artifact meant to change behavior (skill, rule, prompt) -> CONTROL GROUP: measure
+- Discipline artifact of an agent-rule system itself (rule, playbook, injected prompt,
+  lint; ordinary project docs are NOT this) -> CONTROL GROUP: measure
   failures WITHOUT it on 2-3 real tasks, author against that proven list, adversarially
   refute, then re-run the SAME tasks WITH it.
 - Reality disagrees with expectations -> INSTRUMENT FIRST: capture the real state, then

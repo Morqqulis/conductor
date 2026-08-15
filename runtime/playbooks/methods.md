@@ -13,7 +13,7 @@ EXPLICITLY; a named improvisation is reviewable, a silent one is not.
 ## Dispatch table
 | Dominant uncertainty (essence) | Method |
 |---|---|
-| Will this artifact change behavior? (skill, rule, prompt, lint, doc-for-agents) | CONTROL GROUP: measure failures WITHOUT it on real tasks -> author every line against that proven failure list -> adversarial refutation -> re-run the SAME tasks WITH it. No subagents: same cycle sequentially, 2-3 tasks minimum. |
+| Will this DISCIPLINE artifact change agent behavior? (a rule, playbook, injected prompt or lint of an agent-discipline system itself — ordinary project docs, comments and READMEs are NOT this essence) | CONTROL GROUP: measure failures WITHOUT it on real tasks -> author every line against that proven failure list -> adversarial refutation -> re-run the SAME tasks WITH it. No subagents: same cycle sequentially, 2-3 tasks minimum. |
 | Why does reality disagree with expectations? (bug, mystery) | INSTRUMENT FIRST: capture the real payload/state before reasoning, then ONE discriminating experiment that splits the top hypotheses. debugging.md IS this method. |
 | Which of many possible designs? | INDEPENDENT CANDIDATES: >=2 sketches from genuinely different angles, explicit criteria written BEFORE comparing; the winner takes grafts from the losers. Solo: write both sketches before judging either. |
 | What exists out there? (audit, find-all, inventory) | MULTI-ANGLE SWEEP: separate passes by name / content / caller / config / time (investigating.md's angles + co-change); stop only when a FULL pass adds nothing new; verify findings adversarially. Solo: same angles sequentially, same stop rule. |

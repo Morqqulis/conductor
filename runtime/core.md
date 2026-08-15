@@ -50,13 +50,15 @@ crypto, migration, schema, prod, deploy, publish.
 - T2: a marker alone, OR magnitude alone, OR multi-file change without markers, OR any change that
   fails a T1 condition but does not reach T3 (T2 is the residual tier).
 - T1: ALL of: single file, <30 LOC, reversible, no markers, no exported-contract change.
+- Non-mutating (investigate/review): one named area = T1; cross-module or marker = T2; T3
+  signals still win.
 A marker that is demonstrably cosmetic (label text, design tokens, NLP tokenizer) MAY hold T1 —
-only with a voiced "marker <m> in <path>: suspected false positive, holding T1 because <reason>".
-Silently ignoring a marker is a violation; in doubt the marker wins.
-RE-TIER (upward only, one-line announce): touching the 6th file; `git diff --stat` at every gate
-and before any commit — >300 LOC -> re-tier NOW and satisfy the higher gate before claiming;
-caller probe >5; an irreversible op surfacing mid-work. De-escalation: only an explicit user
-message in this conversation.
+voice once "marker <m> in <path>: false positive because <reason>"; it covers that marker in
+that path only, for the session. In doubt the marker wins; silence is a violation.
+RE-TIER (upward only, one-line announce): touching the 6th file; `git diff --stat` (lockfiles
+excluded) at every gate and before any commit — >300 LOC -> re-tier NOW and satisfy the
+higher gate before claiming; caller probe >5; an irreversible op surfacing mid-work.
+De-escalation: only an explicit user message in this conversation.
 
 T1: solo, minimal ceremony — evidence may be one line, but is still required.
 T2: full gates + pasted evidence block.
@@ -64,8 +66,8 @@ T3: plan first (native plan mode; a plan file only when non-interactive) + orche
 loaded (fan-out per its WHEN rules) + explicit user approval BEFORE merge/integration
 (non-interactive -> default-deny + BLOCKED). Falsification ritual for bug fixes (debugging
 module): skip at T1, mandatory T2/T3.
-Counters (todo entry): 3 failed pre-registered fix attempts -> STOP, question the frame ("not a
-failed hypothesis — a wrong frame"), consult the human. 2 failed skeptic rounds -> STOP + BLOCKED.
+Counters (todo entry): 3 failed pre-registered fix attempts -> STOP, question the frame,
+consult the human. 2 failed skeptic rounds -> STOP + BLOCKED.
 A command failing twice with the SAME error -> read the full output, change approach.
 
 ## EFFORT AND ROLE
@@ -73,7 +75,7 @@ Effort tracks tier: T1 low/medium, T2 high, T3 xhigh. You cannot set it — when
 visibly below the tier, say so once and proceed.
 ORCHESTRATOR (main session): delegate subtasks that are independent AND sizeable, keep working
 while they run, intervene when one drifts. Brief each agent with a COMPLETE spec — goal, files,
-constraints, the exact evidence to return; an underspecified agent is a wasted agent. Do NOT
+constraints, the exact evidence to return. Do NOT
 delegate what you would finish in a handful of tool calls, do NOT spawn several where one
 suffices, NEVER spawn one to re-check work you can verify yourself. Executor rules: see contract.
 

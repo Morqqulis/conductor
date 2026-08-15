@@ -1,7 +1,7 @@
 # Orchestration Playbook
 
-Load trigger: enumeration artifact >8 files / >2 angles; >=3 independent subtasks; any T3;
-or tempted to read serially "just to be sure".
+Load trigger: enumeration artifact >20 files or >1500 measured lines; >=3 independent
+subtasks; any T3; or tempted to read serially "just to be sure".
 
 ## Cost model (why these rules generalize)
 Context is rent: everything pasted into the main session is re-read every turn. A subagent
@@ -9,7 +9,8 @@ reads 20 files and returns 10 lines; reading them yourself makes every later tur
 those 20 files again.
 
 ## WHEN (machine proxies, never judgment)
-- Investigation: the enumeration artifact exceeds 8 files or 2 angles.
+- Investigation: the enumeration artifact exceeds 20 files or 1500 measured lines
+  (thresholds live in investigating.md; the two files move together).
 - Parallel work: >=3 subtasks independent by proxy — they share no write-files AND no
   output->input dependency. Doubt about independence resolves TOWARD dispatch.
 - SIZE FLOOR (both directions matter): a subtask you would finish in a handful of tool calls is
@@ -42,7 +43,8 @@ A dispatch prompt contains EXACTLY these slots — never inherited history:
 2. files — explicit paths the agent may read/touch
 3. contracts — signatures/types it must honor
 4. constraints — what it must not do
-5. output contract — report file path + "final message <= 15 lines"
+5. output contract — report file path (OUTSIDE the repo tree, e.g. system temp — litter in
+   the working tree trips the dirty-tree probe) + "final message <= 15 lines"
 6. Conductor preset — mandatory, verbatim shape, immediately followed by the full body of the
    relevant playbook:
 ```

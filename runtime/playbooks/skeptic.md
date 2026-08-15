@@ -15,18 +15,21 @@ do it. The skeptic exists for the gap between a REPORT and the artifact behind i
 your own gate cannot reach. At T1/T2, a passing gate on your own work is the verification.
 
 ## Cross-model variant (depth move)
-A verifier from a DIFFERENT model family does not share this model's blind spots. At T3,
-probe availability first — the outer `timeout` is not redundant: agy hangs past its own
-`--print-timeout` when unauthenticated, so only an external kill bounds the wait.
-bash: `timeout 25 agy --print 'Reply with exactly: pong' --print-timeout 15s 2>/dev/null |
-grep -q pong && echo OK || echo UNAVAILABLE`
-OK -> dispatch the SAME verbatim verifier prompt through that CLI (`agy --print "<prompt>"
---print-timeout 240s`, cwd = the target repo), same resolution rules; its verdict is still
-a report, never evidence — the controller's own proving run stays mandatory.
-UNAVAILABLE -> same-model skeptic and the report notes the downgrade.
+A verifier from a DIFFERENT model family does not share this model's blind spots. Machine
+config, not playbook knowledge: use it only when `~/.claude/conductor/crossmodel.conf`
+exists. Conf format: lines starting `#` are comments; the first other line is the
+print-style command template with the literal placeholder `<prompt>` (substitute by writing
+the prompt to a temp file and using `"$(cat <file>)"` — never paste a multi-line prompt
+into the shell line raw). At T3, probe first: substitute a trivial prompt ("Reply with
+exactly: pong") and run under an OUTER `timeout 25` — a CLI can hang past its own limits,
+so only an external kill bounds the wait. OK -> dispatch the SAME verbatim verifier prompt
+through it under `timeout 300` (cwd = the target repo), same resolution rules; its verdict
+is still a report, never evidence — the controller's own proving run stays mandatory.
+UNAVAILABLE or no config -> same-model skeptic and the report notes the downgrade.
 
 ## Verifier dispatch prompt (use verbatim, fill the <> slots — it fills the task and format
-slots of the orchestration dispatch shape; the files slot is still supplied by you)
+slots of the orchestration dispatch shape; the files slot is still supplied by you, and the
+<report-file> path you pick lives OUTSIDE the repo tree, per the orchestration output contract)
 ```
 You are a skeptic verifier. Below is a report from an implementer. Treat every statement in it
 as an UNVERIFIED CLAIM — the report is not evidence, and rationales never downgrade severity.

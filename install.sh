@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
         --language=*)       LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
         --skip-global-md)   SKIP_GLOBAL_MD=1; shift ;;
         --keep-superpowers) KEEP_SUPERPOWERS=1; shift ;;
-        -h|--help)          sed -n '2,12p' "$0"; exit 0 ;;
+        -h|--help)          sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -181,8 +181,9 @@ PY
 )" || die "could not read back the registered hook command"
 
 OUT="$(eval "$HOOK_CMD")" || die "the registered SessionStart hook exited non-zero"
+OUT_BYTES="$(printf '%s' "$OUT" | wc -c | tr -d '[:space:]')"
 case "$OUT" in
-    *CONDUCTOR-CORE-v1-7f3a*) echo "[5/5] smoke test PASS (payload ${#OUT} chars, limit 10000)" ;;
+    *CONDUCTOR-CORE-v1-7f3a*) echo "[5/5] smoke test PASS (payload $OUT_BYTES bytes, limit 10000)" ;;
     *) die "smoke test - the hook ran but its payload carries no core sentinel" ;;
 esac
 

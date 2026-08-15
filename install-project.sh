@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
         --tool=*) TOOL="${1#--tool=}"; shift ;;
         --language)   [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }; LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
         --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
-        -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done

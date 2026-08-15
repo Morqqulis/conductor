@@ -29,7 +29,7 @@ while [ $# -gt 0 ]; do
         --language)   [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }
                       LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
         --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
-        -h|--help)    sed -n '2,18p' "$0"; exit 0 ;;
+        -h|--help)    sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -39,6 +39,17 @@ winpath() {
     if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
 }
 backup() { [ -f "$1" ] && cp "$1" "$1.bak-$STAMP"; return 0; }
+
+# A rules file at a target path may be the USER'S OWN global instructions for that tool,
+# not our digest. It is still replaced - installing the digest is this script's job - but
+# never silently: the uninstaller checks this sentinel before deleting, and the installer
+# owes the same care on the way in.
+warn_foreign_rules() {  # warn_foreign_rules <path> (call AFTER backup)
+    [ -f "$1" ] || return 0
+    grep -q 'Conductor Core (global rules)' "$1" 2>/dev/null && return 0
+    printf 'WARNING: %s existed and is NOT a conductor digest - it held your own rules.\n' "${1#$HOME/}" >&2
+    printf '         It is being replaced; your text is preserved in %s.bak-%s\n' "$(basename "$1")" "$STAMP" >&2
+}
 
 PYTHON=''
 for candidate in python3 python; do
@@ -132,12 +143,14 @@ digest_body() { apply_reply_language "$LANGUAGE" "$AG_SRC" | tail -n "+$BODY_STA
 AGENTS_MD="$HOME/.gemini/AGENTS.md"
 mkdir -p "$(dirname "$AGENTS_MD")"
 backup "$AGENTS_MD"
+warn_foreign_rules "$AGENTS_MD"
 { printf '# Conductor Core (global rules)\n\n'; digest_body; } > "$AGENTS_MD"
 echo "[3/5] Antigravity global rules -> ~/.gemini/AGENTS.md (GEMINI.md untouched)"
 
 CODEX_MD="$HOME/.codex/AGENTS.md"
 mkdir -p "$(dirname "$CODEX_MD")"
 backup "$CODEX_MD"
+warn_foreign_rules "$CODEX_MD"
 {
     printf '# Conductor Core (global rules)\n\n'
     printf 'Memory (shared by every AI tool on this machine, Codex has no injection hook so it\n'

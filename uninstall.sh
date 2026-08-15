@@ -7,7 +7,8 @@
 # values, not our machinery, and its backups are listed instead.
 #
 #   ./uninstall.sh --dry-run                     print every planned action, change nothing
-#   ./uninstall.sh --keep-lessons                copy the lessons ledger to the Desktop first
+#   ./uninstall.sh --keep-lessons                copy the lessons inbox AND the curated
+#                                                store to the Desktop first
 #   ./uninstall.sh --sweep-roots "/d/top,/d/x"   also clean project adapters and any leftover
 #                                                marker-gate hooks from repos under those roots
 # The repo folder itself and anything on GitHub are untouched.
@@ -28,7 +29,7 @@ while [ $# -gt 0 ]; do
         --sweep-roots)    [ $# -ge 2 ] || { echo "--sweep-roots needs a value" >&2; exit 2; }
                           SWEEP_ROOTS="$2"; shift 2 ;;
         --sweep-roots=*)  SWEEP_ROOTS="${1#--sweep-roots=}"; shift ;;
-        -h|--help)        sed -n '2,15p' "$0"; exit 0 ;;
+        -h|--help)        sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -65,15 +66,20 @@ fi
 
 if [ -d "$CONDUCTOR_DIR" ]; then
     LEDGER="$CONDUCTOR_DIR/lessons.md"
-    if [ "$KEEP_LESSONS" -eq 1 ] && [ -f "$LEDGER" ]; then
+    STORE="$CONDUCTOR_DIR/lessons"
+    if [ "$KEEP_LESSONS" -eq 1 ]; then
         DESK="$HOME/Desktop"
         [ -d "$DESK" ] || DESK="$HOME"
-        act "lessons ledger -> $DESK/conductor-lessons-backup.md" \
+        # Both halves of the memory: the inbox AND the curated store - the store holds the
+        # distilled lessons, losing it silently would be losing most of what was learned.
+        [ -f "$LEDGER" ] && act "lessons inbox -> $DESK/conductor-lessons-backup.md" \
             cp "$LEDGER" "$DESK/conductor-lessons-backup.md"
-    elif [ -f "$LEDGER" ]; then
-        echo "[NOTE] the lessons ledger will be deleted with the tree - re-run with --keep-lessons to save it"
+        [ -d "$STORE" ] && act "curated lessons store -> $DESK/conductor-lessons-store-backup/" \
+            cp -R "$STORE" "$DESK/conductor-lessons-store-backup"
+    elif [ -f "$LEDGER" ] || [ -d "$STORE" ]; then
+        echo "[NOTE] the lessons inbox AND the curated store will be deleted with the tree - re-run with --keep-lessons to save both"
     fi
-    act "remove $CONDUCTOR_DIR (runtime, adapters, ledger)" rm -rf "$CONDUCTOR_DIR"
+    act "remove $CONDUCTOR_DIR (runtime, adapters, lessons)" rm -rf "$CONDUCTOR_DIR"
 fi
 
 GLOBAL_MD="$CLAUDE_HOME/CLAUDE.md"

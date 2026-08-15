@@ -10,6 +10,12 @@
 #   tools/doctor.sh            checks against ~/.claude (or CLAUDE_CONFIG_DIR)
 set -uo pipefail
 
+case "${1:-}" in
+    -h|--help) sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
+    '') ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+esac
+
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
 SETTINGS="$CLAUDE_HOME/settings.json"

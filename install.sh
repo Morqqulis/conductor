@@ -101,12 +101,14 @@ echo "[1/5] runtime tree -> $CONDUCTOR_DIR (retired artifacts removed: $stale_re
 HOOK_BASE="$(winpath "$CONDUCTOR_DIR")"
 SETTINGS_ARG="$(winpath "$SETTINGS")"
 SCRIPT_ARG="$(winpath "$REPO/tools/settings-json.py")"
+settings_backup_note=''
 if [ -f "$SETTINGS" ]; then
     cp "$SETTINGS" "$SETTINGS.bak-$STAMP"
+    settings_backup_note=" (backup: settings.json.bak-$STAMP)"
 fi
 "$PYTHON" "$SCRIPT_ARG" install-hooks \
     --file "$SETTINGS_ARG" --conductor-dir "$HOOK_BASE" --shell bash >/dev/null
-echo "[2/5] hooks registered in settings.json (backup: settings.json.bak-$STAMP)"
+echo "[2/5] hooks registered in settings.json$settings_backup_note"
 
 # --- 3. Global CLAUDE.md --------------------------------------------------------------
 # The corpus is English by design and the reply language is ONE substituted token: a model

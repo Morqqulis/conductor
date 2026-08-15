@@ -3,10 +3,11 @@
 Trigger: the session-start block says "DISTILL DUE", or the user asks. Run as its own
 Conductor unit: implement | T2, named undo first.
 
-Memory has two stores. The INBOX (`~/.claude/conductor/lessons.md`) is where a lesson gets
-captured in one cheap line. The CURATED store (`~/.claude/conductor/lessons/`, one file per
-lesson plus `INDEX.md`) is what later sessions read from. Distillation is the move between
-them, and the moment to ask which lessons have stopped being facts and become rules.
+Memory has two stores under the conductor home (`$CLAUDE_CONFIG_DIR/conductor/`, default
+`~/.claude/conductor/`). The INBOX (`lessons.md`) is where a lesson gets captured in one
+cheap line. The CURATED store (`lessons/`, one file per lesson plus `INDEX.md`) is what
+later sessions read from. Distillation is the move between them, and the moment to ask
+which lessons have stopped being facts and become rules.
 
 1. READ the full inbox, and `lessons/INDEX.md` for what is already known — a "new" lesson
    that restates a filed one is an update to that file, not a second entry.

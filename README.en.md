@@ -1,5 +1,7 @@
 # Conductor
 
+[![ci](https://github.com/Morqqulis/conductor/actions/workflows/ci.yml/badge.svg)](https://github.com/Morqqulis/conductor/actions/workflows/ci.yml)
+
 [🇷🇺 Русский](README.md) | [🇦🇿 Azərbaycanca](README.az.md) | 🇬🇧 English
 
 **A discipline system for AI agents.** It makes any AI (Claude Code, Cursor,

@@ -58,18 +58,22 @@ fi
 
 block="CONDUCTOR LESSONS. Capture rule: a falsified hypothesis, a refuted skeptic claim, or a gate-caught real bug -> append ONE line \"date | trigger | rule\" to $LEDGER."
 
-if [ "$index_count" -gt 0 ]; then
-    block="$block
-Curated memory: $index_count lessons, one line each, in $INDEX. NOT injected - READ that file when the task touches an area a past lesson could cover (a framework, a tool, a failure mode you are about to trust). Most recent:
-$index_recent"
-fi
-
+# Inbox BEFORE the curated section on purpose: the truncation below drops whole lines
+# from the END of the block, so whatever stands last dies first. The unfiled captures are
+# the lessons this hook itself declares most likely to matter right now - with a full
+# store and a full inbox they used to be exactly what got cut.
 if [ -n "$inbox" ]; then
     # tail, not head: the ledger is append-only, so the NEWEST lessons - the ones most
     # likely to matter right now - live at the bottom.
     block="$block
 Captured since the last distillation ($inbox_count):
 $(printf '%s\n' "$inbox" | tail -n "$INBOX_INJECT")"
+fi
+
+if [ "$index_count" -gt 0 ]; then
+    block="$block
+Curated memory: $index_count lessons, one line each, in $INDEX. NOT injected - READ that file when the task touches an area a past lesson could cover (a framework, a tool, a failure mode you are about to trust). Most recent:
+$index_recent"
 fi
 
 if [ "$inbox_count" -gt "$DISTILL_THRESHOLD" ]; then

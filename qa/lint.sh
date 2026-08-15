@@ -133,6 +133,15 @@ while IFS= read -r f; do
     [ -n "$hits" ] && check 1 "redundant self-verification phrasing in ${f#$ROOT/}: $(printf '%s' "$hits" | head -1)"
 done < <(find "$RUNTIME" "$ADAPTERS" "$ROOT/deploy" -name '*.md' -o -name '*.mdc' 2>/dev/null)
 
+# --- keep-in-sync conventions ----------------------------------------------------------
+# DISTILL_THRESHOLD lives in three files that only a comment kept aligned; a silent
+# divergence would make the per-message reminder and the session-start banner disagree.
+thr_variants="$(grep -h '^DISTILL_THRESHOLD=' \
+        "$RUNTIME/hooks/lessons-inject.sh" "$RUNTIME/hooks/user-prompt.sh" "$ROOT/tools/doctor.sh" \
+    | sed 's/[[:space:]]*#.*$//;s/[[:space:]]*$//' | sort -u)"
+[ "$(printf '%s\n' "$thr_variants" | wc -l | tr -d '[:space:]')" = "1" ] || \
+    check 1 "DISTILL_THRESHOLD diverges across lessons-inject.sh / user-prompt.sh / doctor.sh: $(printf '%s' "$thr_variants" | tr '\n' ' ')"
+
 # --- shell layer: a hook that cannot parse takes the whole discipline down -------------
 while IFS= read -r s; do
     bash -n "$s" 2>/dev/null || check 1 "shell syntax error: ${s#$ROOT/}"

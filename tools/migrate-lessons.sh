@@ -26,7 +26,7 @@
 #   tools/migrate-lessons.sh [--ledger PATH] [--store PATH]
 set -euo pipefail
 
-LEDGER="${CONDUCTOR_LESSONS:-$HOME/.claude/conductor/lessons.md}"
+LEDGER="${CONDUCTOR_LESSONS:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor/lessons.md}"
 STORE=''
 DRY_RUN=0
 STAMP="$(date +%Y%m%d-%H%M%S)"

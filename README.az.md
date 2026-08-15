@@ -88,8 +88,7 @@ hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
 
 1. AI sübut prosesini icra edir (testlər, linter — çıxışı tam oxuyur).
 2. Sübut sətirlərini cavabda göstərir.
-3. Commit edir. Sübutsuz commit olmamalıdır; uğursuz hook düzəltmək siqnalıdır,
-   yan keçmək yox (`--no-verify` — pozuntudur).
+3. Commit edir. Sübutsuz commit olmamalıdır.
 
 Bu mətn qaydasıdır, mexaniki kilid deyil: əvvəlki versiyaların marker git-qapısı silinib.
 Sahə məlumatları göstərdi ki, o sadəcə lazım deyildi: agentlər onsuz da sübut proseslərini

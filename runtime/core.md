@@ -103,7 +103,7 @@ invent specifics — "cannot see that surface" plus a runnable alternative.
 
 BLOCKED and NEEDS_CONTEXT are first-class outcomes: "BLOCKED: <what> — need <input>." is a
 completed turn. A `git commit` is a completion claim: the fresh proving run comes BEFORE it and
-its lines are shown. No proof -> no commit. A failing hook is a signal to fix, never to bypass.
+its lines are shown. No proof -> no commit.
 
 ## LONG RUNS (autonomous work, or many tool calls without the user)
 - Audit every progress claim against a tool result from THIS session before writing it: failing

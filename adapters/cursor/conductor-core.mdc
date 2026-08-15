@@ -38,8 +38,7 @@ never a "concern" — it forces BLOCKED. Bad work is worse than no work.
 
 ## Before any commit
 A `git commit` is a completion claim: run the proving command fresh BEFORE committing and
-show its lines in your answer. No proof -> no commit. A failing pre-commit hook is a
-signal to fix, never to bypass (`--no-verify` in any spelling is a violation).
+show its lines in your answer. No proof -> no commit.
 
 ## Debugging (any bug, test failure, regression)
 1. REPRODUCE first: run the failing thing, capture the exact command and output. Cannot

@@ -19,7 +19,7 @@
 # observed. Tests run by a human in a separate terminal leave no line here.
 set -uo pipefail
 
-JOURNAL="${CONDUCTOR_TEST_JOURNAL:-$HOME/.claude/conductor/test-runs.log}"
+JOURNAL="${CONDUCTOR_TEST_JOURNAL:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor/test-runs.log}"
 
 # Slurped with a builtin, not `cat`: this runs on every Bash tool call, and on Windows each
 # extra process costs more than everything the hook actually does.
@@ -32,7 +32,7 @@ IFS= read -r -d '' payload
 # builtin. Deliberately looser than the real match (it lets "latest" through); precision is
 # the reader's job, speed is this line's job.
 case "$payload" in
-    *test*|*pytest*|*rspec*|*phpunit*|*ctest*) ;;
+    *test*|*pytest*|*rspec*|*phpunit*|*ctest*|*jest*|*mocha*) ;;
     *) exit 0 ;;
 esac
 
@@ -169,18 +169,33 @@ if not expected:
     bail()                     # unknown ecosystem: stay silent rather than guess
 
 normalised = " ".join(command.split())
-if expected not in normalised:
-    bail()                     # some other command that merely mentioned "test"
 
 # A run that only covers part of the suite is recorded as partial: the core gate treats
 # "tests pass" as the project's FULL standard command and a narrower run as a narrower claim.
+matched = expected if expected in normalised else None
 scope = "full" if normalised == expected else "partial"
+
+# JS projects routinely run the suite through a direct runner instead of the package
+# script. Those runs used to be invisible, which skews the journal's data downward. They
+# are recorded - but always as partial: coverage equivalence with the standard command
+# cannot be proven from here, so the claim stays narrow.
+if not matched and expected in ("npm test", "pnpm test", "yarn test", "bun test"):
+    for alt in ("npx vitest", "npx jest", "npx mocha", "node --test",
+                "vitest", "jest", "mocha"):
+        # The lookahead excludes '.' as well: without it `cat jest.config.js` would be
+        # journaled as a PASS test run - config-file reads are everyday commands.
+        if re.search(rf"(?<![\w./-]){re.escape(alt)}(?![\w.-])", normalised):
+            matched, scope = alt, "partial"
+            break
+if not matched:
+    bail()                     # some other command that merely mentioned "test"
+
 outcome = "PASS" if event == "PostToolUse" and ev.get("tool_use_succeeded", True) else "FAIL"
 
 # A pipeline reports the LAST command's status, so `npm test | tail -2` succeeds even when the
 # suite fails. Recording that as PASS would put a false statement in the one place whose whole
 # value is being true, so the outcome is marked unattributable instead.
-tail_of_command = normalised.split(expected, 1)[1] if expected in normalised else ""
+tail_of_command = normalised.split(matched, 1)[1] if matched in normalised else ""
 if re.search(r"(?<!\|)\|(?!\|)", tail_of_command):
     outcome = "PIPED"
 

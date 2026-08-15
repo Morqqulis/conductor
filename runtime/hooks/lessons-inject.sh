@@ -22,7 +22,7 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=payload.sh
 . "$HOOK_DIR/payload.sh" 2>/dev/null || exit 0
 
-CONDUCTOR_HOME="${CONDUCTOR_HOME:-$HOME/.claude/conductor}"
+CONDUCTOR_HOME="${CONDUCTOR_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor}"
 LEDGER="${CONDUCTOR_LESSONS:-$CONDUCTOR_HOME/lessons.md}"
 STORE="$(dirname "$LEDGER")/lessons"
 INDEX="$STORE/INDEX.md"
@@ -44,7 +44,11 @@ index_recent=''
 index_count=0
 if [ -f "$INDEX" ]; then
     index_recent="$(grep '^- ' "$INDEX" 2>/dev/null | head -n "$INDEX_INJECT" || true)"
-    index_count="$(grep -c '^- ' "$INDEX" 2>/dev/null || echo 0)"
+    # `|| true`, not `|| echo 0`: grep -c PRINTS 0 and exits 1 on a header-only index, so
+    # the echo fallback used to produce the two-line string "0\n0" and an integer-compare
+    # error on stderr at every session start.
+    index_count="$(grep -c '^- ' "$INDEX" 2>/dev/null || true)"
+    case "$index_count" in ''|*[!0-9]*) index_count=0 ;; esac
 fi
 
 # Nothing captured and nothing filed: stay silent rather than spend context on an empty block.
@@ -61,9 +65,11 @@ $index_recent"
 fi
 
 if [ -n "$inbox" ]; then
+    # tail, not head: the ledger is append-only, so the NEWEST lessons - the ones most
+    # likely to matter right now - live at the bottom.
     block="$block
 Captured since the last distillation ($inbox_count):
-$(printf '%s\n' "$inbox" | head -n "$INBOX_INJECT")"
+$(printf '%s\n' "$inbox" | tail -n "$INBOX_INJECT")"
 fi
 
 if [ "$inbox_count" -gt "$DISTILL_THRESHOLD" ]; then
@@ -71,10 +77,13 @@ if [ "$inbox_count" -gt "$DISTILL_THRESHOLD" ]; then
 $block"
 fi
 
-# Truncate on characters, not bytes: a byte cut could split a multi-byte character and
-# produce invalid UTF-8 inside the payload.
+# Truncate on WHOLE LINES, dropping from the end until the block fits. cut -c is byte-based
+# on this platform's GNU cut, and a byte cut can split a multi-byte character and produce
+# invalid UTF-8 inside the JSON payload; a whole-line cut can never split a character. awk's
+# length() may count bytes under a C locale - that only truncates earlier, never mid-character.
 if [ "$(printf '%s' "$block" | wc -m | tr -d '[:space:]')" -gt "$MAX_CHARS" ]; then
-    block="$(printf '%s' "$block" | cut -c "1-$MAX_CHARS")"
+    block="$(printf '%s\n' "$block" | awk -v max="$MAX_CHARS" \
+        '{ len = length($0) + 1; if (total + len > max) exit; total += len; print }')"
 fi
 
 emit_payload SessionStart "$block"

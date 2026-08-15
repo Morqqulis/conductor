@@ -35,9 +35,10 @@ Conductor — дисциплинарная система для AI-агенто
 | Дайджест | `adapters/core-body.md` — **единственный источник**; `tools/build-digests.sh` собирает из него файлы Cursor и Antigravity | Cursor, Antigravity, Codex |
 | Память | `~/.claude/conductor/lessons.md` (входящее) + `lessons/` с `INDEX.md` (разобранное) | все |
 
-Установка: `install.sh` (Claude Code; язык ответов — вопрос при первой установке или
-`--language <имя>`), `install-global.sh` (Cursor/AG/Codex + пересборка глобального
-CLAUDE.md, язык спрашивает с сохранённым выбором по умолчанию), `install-project.sh
+Установка: `install.sh` (Claude Code; язык ответов — меню при каждом запуске с
+сохранённым выбором по умолчанию, `--language <имя>` пропускает вопрос),
+`install-global.sh` (Cursor/AG/Codex + пересборка глобального
+CLAUDE.md, язык спрашивает так же), `install-project.sh
 --repo <путь>` (проектные адаптеры; подставляет сохранённый язык, `--language` —
 переопределение только для этого проекта, машинный выбор не трогает), `uninstall.sh`
 (симметричное удаление, есть `--dry-run`). Выбор языка хранится в

@@ -98,15 +98,15 @@ Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir
 
-Seçim bir dəfə edilir: ilk quraşdırmada `install.sh` dili soruşacaq (və ya birbaşa:
-`bash install.sh --language Azerbaijani`), `install-global.sh` isə hər işə salınanda
-soruşur və yadda saxlanmış seçimi standart cavab kimi təklif edir. Seçim
-`~/.claude/conductor/reply-language` faylında saxlanılır, ona görə quraşdırıcıların
-təkrar işə salınması onu sıfırlamır. Dili istənilən istiqamətdə dəyişmək üçün
-istənilən quraşdırıcını `--language <ad>` ilə yenidən işə salın — Claude Code-u hər
-ikisi yeniləyir, Cursor, Antigravity və Codex qaydalarını `install-global.sh` yığır.
-Layihə adapterləri (`install-project.sh`) quraşdırılarkən həmin yadda saxlanmış
-seçimi tətbiq edir.
+Dil birbaşa terminalda seçilir: həm `install.sh`, həm də `install-global.sh` hər işə
+salınanda menyu göstərir və əvvəlki seçim artıq standart cavab kimi təklif olunur —
+Enter basmaq kifayətdir, bayraqlara ehtiyac yoxdur. Dili istənilən istiqamətdə (rus
+dilinə geri qayıtmaq daxil) dəyişmək üçün quraşdırıcını yenidən işə salıb menyudan
+seçin. Seçim `~/.claude/conductor/reply-language` faylında saxlanılır, ona görə
+təkrar işə salınmalar heç nəyi sıfırlamır. Claude Code-u hər iki quraşdırıcı
+yeniləyir, Cursor, Antigravity və Codex qaydalarını `install-global.sh` yığır;
+layihə adapterləri (`install-project.sh`) yadda saxlanmış seçimi səssiz tətbiq edir.
+Skriptlər və qeyri-interaktiv işə salınmalar üçün `--language <ad>` var — sualı ötürür.
 
 Qaydaların özü qəsdən bütövlükdə ingiliscə yazılıb. Səbəb: model təlimatlarının
 yazıldığı dildə düşünür və rusca qaydalar korpusu, cavab dili başqa seçiləndə belə,

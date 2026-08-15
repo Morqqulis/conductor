@@ -2,3 +2,6 @@
 # from adapters/, so a committed copy would be a second source of truth for the same rules.
 .cursor/
 .agents/
+
+# Python bytecode from py_compile / test runs.
+__pycache__/

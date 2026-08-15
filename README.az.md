@@ -1,6 +1,6 @@
 # Conductor
 
-[🇷🇺 Русский](README.md) | 🇦🇿 Azərbaycanca
+[🇷🇺 Русский](README.md) | 🇦🇿 Azərbaycanca | [🇬🇧 English](README.en.md)
 
 **AI-agentlər üçün intizam sistemi.** İstənilən AI-ni (Claude Code, Cursor, Antigravity,
 Codex) mühəndis metodologiyası ilə işləməyə məcbur edir: işə başlamazdan əvvəl tapşırığı
@@ -55,8 +55,9 @@ tərcümə barədə məlumat yoxdur — nə lehinə, nə əleyhinə.
 
 ## Tələblər
 
-- `bash`, `git`, `python3` (sonuncu yalnız quraşdırıcılara lazımdır — onlar başqa
-  alətlərə məxsus JSON konfiqlərini redaktə edir, bunu mətn vasitələri ilə etmək olmaz)
+- `bash`, `git`, `python3` (quraşdırıcılara — onlar başqa alətlərə məxsus JSON
+  konfiqlərini redaktə edir — və icra zamanı test icraları jurnalına lazımdır: python
+  olmadan jurnal səssizcə heç nə yazmır, qalan hook-lar işləyir)
 - Windows: git ilə gələn Git Bash kifayətdir. Linux və macOS heç bir qeyd-şərtsiz işləyir
 - [Claude Code](https://claude.com/claude-code) — quraşdırılıb və daxil olunub
 - Cursor, Google Antigravity və/və ya OpenAI Codex — istəyə görə (adapterlər qlobal quraşdırılır)
@@ -73,6 +74,13 @@ bash install.sh
 # 2. Cursor + Antigravity + Codex qlobal (yadda saxlanmış dili təklif edəcək)
 bash install-global.sh
 ```
+
+Əvvəlcədən bilməyə dəyər iki yan təsir. `install.sh` superpowers plaginini söndürür —
+iki proses sistemi bir-biri ilə ziddiyyət təşkil edir (saxlamaq üçün:
+`--keep-superpowers`). `install-global.sh` `~/.gemini/AGENTS.md` və `~/.codex/AGENTS.md`
+fayllarını yenidən yazır: orada öz mətniniz idisə, o, `*.bak-<vaxt möhürü>` nüsxəsində
+saxlanılır və quraşdırıcı bu barədə ucadan xəbərdarlıq edir. Quraşdırmanın sağlamlığını
+istənilən vaxt yoxlamaq: `bash tools/doctor.sh`.
 
 Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyalanacaq):
 
@@ -128,11 +136,12 @@ hər ikisi lokaldır:
 ## Başqa kompüterə köçürmə
 
 Repozitori elə distributivin özüdür: klonlayın və yuxarıdakı iki quraşdırıcını
-işə salın. Özü köçməyən iki şey var. Toplanmış dərslər jurnalı
-`~/.claude/conductor/lessons.md` — sistemin yaddaşını saxlamaq istəyirsinizsə,
-bu faylı əl ilə kopyalayın (həzm olunmuş dərslər artıq playbook-lardadır və
-repozitori ilə birlikdə köçəcək). Və cavab dili seçimi
-`~/.claude/conductor/reply-language` — təzə quraşdırma onu sadəcə yenidən soruşacaq.
+işə salın. Özü köçməyən sistemin yaddaşıdır — o, maşında, iki yerdə yaşayır:
+gələnlər jurnalı `~/.claude/conductor/lessons.md` və təsnif edilmiş anbar
+`~/.claude/conductor/lessons/` (dərs başına bir fayl və indeks). Toplanmış dərsləri
+saxlamaq istəyirsinizsə, hər ikisini kopyalayın. Cavab dili seçimini
+(`~/.claude/conductor/reply-language`) kopyalamağa ehtiyac yoxdur — təzə quraşdırma
+onu sadəcə yenidən soruşacaq.
 
 ## Silinmə
 
@@ -146,7 +155,8 @@ bash uninstall.sh --dry-run --keep-lessons --sweep-roots "/d/projects,/d/top"
 bash uninstall.sh --keep-lessons --sweep-roots "/d/projects,/d/top"
 ```
 
-`--keep-lessons` dərslər jurnalını İş masasına saxlayır; `--sweep-roots` göstərilən köklər
+`--keep-lessons` yaddaşın hər iki hissəsini — gələnlər jurnalını və təsnif edilmiş
+dərslər anbarını — İş masasına saxlayır; `--sweep-roots` göstərilən köklər
 altındakı repozitorilərdən köhnə versiyaların adapterlərini və git-kilidlərini təmizləyir.
 Dəyişdirilən hər konfiq ehtiyata alınır; yad hook-lar və qeydlər qorunur (özümüzünkülər
 sentinellərlə tanınır); qlobal `CLAUDE.md` heç vaxt silinmir. Təkrar işə salmaq
@@ -161,9 +171,13 @@ adapters/         core-body.md — qaydaların ümumi mətni; Cursor/Antigravity
                   ondan yığılır, əl ilə redaktə edilmir
 deploy/           qlobal CLAUDE.md
 tools/            digest yığımı, JSON konfiqlərin redaktəsi, dərslərin miqrasiyası,
-                  köhnə versiyaların git-hook-larının təmizlənməsi
-qa/               lint.sh — büdcə, naqillənmə və ifadə linteri;
-                  reports/ — nəzarət qrupunun ölçmələri və onunla müqayisə
+                  doctor.sh — quraşdırmanın sağlamlıq yoxlaması, journal-report.sh —
+                  test icraları jurnalının oxunması, köhnə versiyaların
+                  git-hook-larının təmizlənməsi
+qa/               lint.sh — büdcə, naqillənmə və ifadə linteri; lint-selftest.sh —
+                  lintin neqativ özünütesti; settings-json-test.py — konfiq
+                  redaktəsinin testləri; reports/ — nəzarət qrupunun ölçmələri və
+                  onunla müqayisə
 docs/             deploy jurnalı ilə spesifikasiya, daşınabilirlik planı
 install*.sh       quraşdırıcılar, uninstall.sh — silinmə
 ```

@@ -1,0 +1,65 @@
+# Conductor CI: the same checks a careful maintainer runs by hand, so a forgotten manual
+# run can no longer ship a silently truncated core or a broken installer.
+#
+# Both OSes matter: the shipped shell layer targets Git Bash on Windows AND stock bash on
+# Linux/macOS, and this repo has already met one bug (a locale-dependent grep class) that
+# only one of the two environments could catch.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax (bash -n) on every script
+        run: |
+          set -e
+          find . -name '*.sh' -not -path './.git/*' -print0 |
+            while IFS= read -r -d '' f; do
+              bash -n "$f" || { echo "SYNTAX FAIL: $f"; exit 1; }
+            done
+
+      - name: Lint (default locale)
+        run: bash qa/lint.sh
+
+      - name: Lint (C locale - guards locale-dependent regressions)
+        run: LC_ALL=C bash qa/lint.sh
+
+      - name: Lint negative self-test (every guard must actually fire)
+        run: bash qa/lint-selftest.sh
+
+      - name: settings-json compile + tests (highest blast-radius code)
+        run: |
+          python -m py_compile tools/settings-json.py
+          python qa/settings-json-test.py
+
+      - name: Sandbox install smoke test (never touches the runner's real config)
+        run: |
+          SB="$(mktemp -d)"
+          mkdir -p "$SB/bin"
+          printf '#!/usr/bin/env bash\nexit 1\n' > "$SB/bin/claude"
+          chmod +x "$SB/bin/claude"
+          HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" PATH="$SB/bin:$PATH" \
+            bash install.sh --language English </dev/null
+          HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" \
+            bash tools/doctor.sh
+          grep -q 'Answer in English' "$SB/home/.claude/CLAUDE.md"
+
+      - name: Shellcheck (errors only; ubuntu ships it preinstalled)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          find . -name '*.sh' -not -path './.git/*' -print0 |
+            xargs -0 shellcheck --severity=error

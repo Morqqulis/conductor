@@ -5,7 +5,9 @@
 # global CLAUDE.md, and proves the result by running the session hook exactly the way
 # the harness runs it. Safe to re-run; every file it changes is backed up first.
 #
-#   ./install.sh                      full install
+#   ./install.sh                      full install (asks the reply language on first run;
+#                                     a re-run reuses the saved choice)
+#   ./install.sh --language English   set the reply language without the prompt
 #   ./install.sh --skip-global-md     leave ~/.claude/CLAUDE.md alone
 #   ./install.sh --keep-superpowers   do not disable the superpowers plugin
 set -euo pipefail
@@ -17,12 +19,17 @@ SETTINGS="$CLAUDE_HOME/settings.json"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 SKIP_GLOBAL_MD=0
 KEEP_SUPERPOWERS=0
+LANGUAGE=''
+LANGUAGE_SET=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        --language)         [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }
+                            LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
+        --language=*)       LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
         --skip-global-md)   SKIP_GLOBAL_MD=1; shift ;;
         --keep-superpowers) KEEP_SUPERPOWERS=1; shift ;;
-        -h|--help)          sed -n '2,10p' "$0"; exit 0 ;;
+        -h|--help)          sed -n '2,12p' "$0"; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -36,6 +43,17 @@ die() { printf '\nInstall FAILED: %s\n' "$1" >&2; exit 1; }
 winpath() {
     if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
 }
+
+# shellcheck source=tools/reply-language.sh
+. "$REPO/tools/reply-language.sh"
+
+# A bad --language value fails BEFORE any file is touched, like every other argument
+# error - including an explicitly empty one (--language= or --language ''), which must
+# never silently fall back to the saved choice or default.
+if [ "$LANGUAGE_SET" -eq 1 ]; then
+    LANGUAGE="$(normalize_reply_language "$LANGUAGE")"
+    validate_reply_language "$LANGUAGE" || exit 2
+fi
 
 echo '=== Conductor installer (bash) ==='
 
@@ -91,15 +109,45 @@ fi
 echo "[2/5] hooks registered in settings.json (backup: settings.json.bak-$STAMP)"
 
 # --- 3. Global CLAUDE.md --------------------------------------------------------------
+# The corpus is English by design and the reply language is ONE substituted token: a model
+# tends to reason in the language its instructions are written in, so the old Russian corpus
+# pulled the visible reasoning into Russian regardless of the chosen reply language.
+# Resolution order: --language flag > choice saved by a previous run > interactive prompt
+# (a non-interactive run keeps the default) - so a re-run never silently reverts the choice.
 if [ "$SKIP_GLOBAL_MD" -eq 1 ]; then
-    echo '[3/5] global CLAUDE.md skipped (flag)'
+    # --skip-global-md leaves the FILE alone, but an explicit --language is still the
+    # user's machine-wide choice: silently discarding it would recreate the very
+    # silent-revert bug this flag pair fixed.
+    if [ -n "$LANGUAGE" ]; then
+        save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
+        echo "[3/5] global CLAUDE.md skipped (flag); reply language saved for later runs: $LANGUAGE"
+    else
+        echo '[3/5] global CLAUDE.md skipped (flag)'
+    fi
 else
+    if [ -z "$LANGUAGE" ]; then
+        saved="$(saved_reply_language "$CLAUDE_HOME")"
+        if [ -n "$saved" ]; then
+            if validate_reply_language "$saved" 2>/dev/null; then
+                LANGUAGE="$saved"
+            else
+                echo "      NOTE: ignoring invalid saved reply language in $(reply_language_file "$CLAUDE_HOME")" >&2
+            fi
+        fi
+    fi
+    if [ -z "$LANGUAGE" ]; then
+        LANGUAGE="$(normalize_reply_language "$(prompt_reply_language Russian)")"
+        validate_reply_language "$LANGUAGE" || die "unusable reply language"
+    fi
     GLOBAL_MD="$CLAUDE_HOME/CLAUDE.md"
+    backup_note=''
     if [ -f "$GLOBAL_MD" ]; then
         cp "$GLOBAL_MD" "$GLOBAL_MD.bak-$STAMP"
+        backup_note=" (backup: CLAUDE.md.bak-$STAMP)"
     fi
-    cp "$REPO/deploy/global-CLAUDE.md" "$GLOBAL_MD"
-    echo "[3/5] global CLAUDE.md installed (backup: CLAUDE.md.bak-$STAMP)"
+    apply_reply_language "$LANGUAGE" "$REPO/deploy/global-CLAUDE.md" > "$GLOBAL_MD"
+    save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
+    echo "[3/5] global CLAUDE.md installed, reply language: $LANGUAGE$backup_note"
     # The file imports @RTK.md. A missing target is not an error - the rtk rule is written
     # to sleep when rtk is absent - but a silent dangling import is worth one line.
     if [ ! -f "$CLAUDE_HOME/RTK.md" ]; then

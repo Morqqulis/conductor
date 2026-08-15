@@ -41,13 +41,17 @@ faylın özünü də silsə, intizam bütövlükdə yox olacaq — özü də bir
 olmadan. Nə quraşdırıcı, nə linter bunu görməyəcək. `uninstall.sh` qlobal `CLAUDE.md`-i
 qəsdən **silmir** — elə buna görə.
 
-Sübutun sərhədləri barədə dürüst qeyd. Ölçmə faylın **qısaldılmış**, 56 sətirlik nüsxəsi
-üzərində aparılıb, quraşdırıcı isə 133 sətirlik tam versiyanı qoyur. Onlarda üst-üstə düşən
-hissə məhz yuxarıda sitat gətirilən intizam bölmələridir; qalan 77 sətir (`rtk` qaydası,
-cavab üslubu haqqında 5.1–5.4 bölmələri, təhlükəsizlik testlərinə genişləndirilmiş tələblər,
-graphify quyruğu) heç bir ölçmədə iştirak etməyib. Deməli sübut olunan budur: **intizamı
-dəyərlər faylının içindəki sitat gətirilmiş minimum saxlayır.** Faylın qalan hissəsi barədə
-məlumat yoxdur — nə lehinə, nə əleyhinə.
+Sübutun sərhədləri barədə dürüst qeyd. Ölçmə faylın **qısaldılmış rusca**, 56 sətirlik
+nüsxəsi üzərində aparılıb; indi quraşdırıcı 140 sətirlik tam versiyanı qoyur və 2026-08-15
+tarixindən bu versiya ingiliscəyə tərcümə olunub (ölçmə vaxtı həmin sətirlər rusca idi —
+nüsxə `qa/reports/baseline-values-file.md` faylındadır). Yuxarıda sitat gətirilən intizam
+bölmələri quraşdırılan faylda ingiliscə tərcümədə saxlanılıb: ölçülən nüsxə ilə üst-üstə
+düşmə artıq hərfi yox, tərcümə səviyyəsindədir və ingiliscə korpusun davranışı ayrıca
+ölçülməyib. Qalan 84 sətir (`rtk` qaydası, cavab üslubu haqqında 5.1–5.4 bölmələri,
+təhlükəsizlik testlərinə genişləndirilmiş tələblər, graphify quyruğu) heç bir ölçmədə
+iştirak etməyib. Deməli sübut olunan budur: **intizamı dəyərlər faylının içindəki sitat
+gətirilmiş minimum saxlayır — rusca versiyanın ölçməsinə görə.** Faylın qalan hissəsi və
+tərcümə barədə məlumat yoxdur — nə lehinə, nə əleyhinə.
 
 ## Tələblər
 
@@ -63,10 +67,10 @@ məlumat yoxdur — nə lehinə, nə əleyhinə.
 git clone https://github.com/Morqqulis/conductor.git
 cd conductor
 
-# 1. Claude Code: nüvə, hook-lar, qlobal CLAUDE.md (+smoke-test)
+# 1. Claude Code: nüvə, hook-lar, qlobal CLAUDE.md (+smoke-test; cavab dilini soruşacaq)
 bash install.sh
 
-# 2. Cursor + Antigravity + Codex qlobal (cavab dilini soruşacaq)
+# 2. Cursor + Antigravity + Codex qlobal (yadda saxlanmış dili təklif edəcək)
 bash install-global.sh
 ```
 
@@ -95,31 +99,41 @@ Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir
 
-Sadə yol: `install-global.sh`-i yenidən işə salın — dili soruşacaq (və ya birbaşa:
-`bash install-global.sh --language Azerbaijani`) və onu bütün mühitlərin qlobal
-qaydalarına, o cümlədən Cursor üçün hazır qayda faylına tətbiq edəcək. Rus dilinə
-qayıtmaq üçün əvvəlcə `install.sh` (etalonu bərpa edir), sonra `install-global.sh`.
+Seçim bir dəfə edilir: ilk quraşdırmada `install.sh` dili soruşacaq (və ya birbaşa:
+`bash install.sh --language Azerbaijani`), `install-global.sh` isə hər işə salınanda
+soruşur və yadda saxlanmış seçimi standart cavab kimi təklif edir. Seçim
+`~/.claude/conductor/reply-language` faylında saxlanılır, ona görə quraşdırıcıların
+təkrar işə salınması onu sıfırlamır. Dili istənilən istiqamətdə dəyişmək üçün
+istənilən quraşdırıcını `--language <ad>` ilə yenidən işə salın — Claude Code-u hər
+ikisi yeniləyir, Cursor, Antigravity və Codex qaydalarını `install-global.sh` yığır.
+Layihə adapterləri (`install-project.sh`) quraşdırılarkən həmin yadda saxlanmış
+seçimi tətbiq edir.
 
-Əl ilə yol — qayda üç yerdə yerləşir, lazım olanı redaktə edin və uyğun
-quraşdırıcını yenidən işə salın:
+Qaydaların özü qəsdən bütövlükdə ingiliscə yazılıb; seçilmiş dildə yalnız istifadəçiyə
+verilən cavablardır. Səbəb: model təlimatlarının yazıldığı dildə düşünür və rusca
+qaydalar korpusu, cavab dili başqa seçiləndə belə, görünən düşünməni rus dilinə
+çəkirdi. Düşünmə həmişə ingiliscə aparılır — bu, qaydalarda ayrıca açıq sətirdir və
+lint onun mövcudluğunu yoxlayır.
 
-| Mühit | Fayl və bölmə | Redaktədən sonra |
-|---|---|---|
-| Claude Code, bütün layihələr | [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) → **«5. Язык и стиль ответа»** bölməsi | `bash install.sh` |
-| Claude Code, bir layihə | layihə kökündəki `CLAUDE.md` → **«5. Язык и отчёт»** bölməsi | heç nə — dərhal oxunur |
-| Cursor, Antigravity və Codex | [`adapters/core-body.md`](adapters/core-body.md) → **«Language and reporting»** bölməsi, sonra `bash tools/build-digests.sh` | `bash install-global.sh` |
+Qayda fayllarında dil bir ifadədir: «Answer in Russian» — quraşdırıcılar kopyalayarkən
+orada dilin adını əvəz edir. Repozitoridəki etalonlarda bu ifadəni əl ilə dəyişmək
+olmaz: lint tokeni tələb edir (`qa/lint.sh`), belə redaktədən sonra isə ifadə üzrə
+əvəzləmə dəyişəcək yer tapmır və `--language` artıq dili çevirmir. Əl ilə yol ikidir,
+hər ikisi lokaldır:
 
-Məsələn, Azərbaycan dili üçün həmin bölmələrdə «Answer in Russian» ifadəsini
-«Answer in Azerbaijani» ilə əvəz edin (CLAUDE.md-də isə «на русском» →
-«на азербайджанском»).
+| Nə | Necə |
+|---|---|
+| Claude Code-da bir layihənin dili | layihə kökündəki `CLAUDE.md`-i redaktə edin — dil sətri oradadır və dərhal oxunur |
+| Bir layihənin adapterlərinin dili | `bash install-project.sh --repo <yol> --language <ad>` — yalnız bu layihəni dəyişir, maşın seçiminə toxunmur |
 
 ## Başqa kompüterə köçürmə
 
 Repozitori elə distributivin özüdür: klonlayın və yuxarıdakı iki quraşdırıcını
-işə salın. Özü köçməyən yeganə şey — toplanmış dərslər jurnalı
-`~/.claude/conductor/lessons.md`: sistemin yaddaşını saxlamaq istəyirsinizsə,
-bu faylı əl ilə kopyalayın. Həzm olunmuş dərslər artıq playbook-lardadır və
-repozitori ilə birlikdə köçəcək.
+işə salın. Özü köçməyən iki şey var. Toplanmış dərslər jurnalı
+`~/.claude/conductor/lessons.md` — sistemin yaddaşını saxlamaq istəyirsinizsə,
+bu faylı əl ilə kopyalayın (həzm olunmuş dərslər artıq playbook-lardadır və
+repozitori ilə birlikdə köçəcək). Və cavab dili seçimi
+`~/.claude/conductor/reply-language` — təzə quraşdırma onu sadəcə yenidən soruşacaq.
 
 ## Silinmə
 

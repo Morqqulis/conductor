@@ -13,7 +13,8 @@
 #   4. Retired mechanisms of older versions are cleaned out of every config touched:
 #                    the marker commit gate and the git template that installed it.
 #
-#   ./install-global.sh                       ask for the reply language
+#   ./install-global.sh                       ask for the reply language (the choice saved
+#                                             by a previous run is offered as the default)
 #   ./install-global.sh --language Azerbaijani  set it without the prompt
 set -euo pipefail
 
@@ -21,12 +22,13 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 LANGUAGE=''
+LANGUAGE_SET=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --language)   [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }
-                      LANGUAGE="$2"; shift 2 ;;
-        --language=*) LANGUAGE="${1#--language=}"; shift ;;
+                      LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
+        --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
         -h|--help)    sed -n '2,18p' "$0"; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -46,70 +48,58 @@ for candidate in python3 python; do
 done
 SETTINGS_TOOL="$(winpath "$REPO/tools/settings-json.py")"
 
+# shellcheck source=tools/reply-language.sh
+. "$REPO/tools/reply-language.sh"
+
+# A bad --language value fails BEFORE any file is touched, like every other argument
+# error - including an explicitly empty one (--language= or --language ''), which must
+# never silently fall back to the saved choice or default.
+if [ "$LANGUAGE_SET" -eq 1 ]; then
+    LANGUAGE="$(normalize_reply_language "$LANGUAGE")"
+    validate_reply_language "$LANGUAGE" || exit 2
+fi
+
 CURSOR_SRC="$REPO/adapters/cursor/conductor-core.mdc"
 AG_SRC="$REPO/adapters/antigravity/conductor-core.md"
-for f in "$CURSOR_SRC" "$AG_SRC"; do
-    [ -f "$f" ] || die "adapter source not found: ${f#$REPO/} - run this from the conductor repo root"
+DEPLOY_MD="$REPO/deploy/global-CLAUDE.md"
+for f in "$CURSOR_SRC" "$AG_SRC" "$DEPLOY_MD"; do
+    [ -f "$f" ] || die "source not found: ${f#$REPO/} - run this from the conductor repo root"
 done
 
 # --- 0. Reply language ----------------------------------------------------------------
+# Resolution order: --language flag > interactive prompt whose default is the choice saved
+# by a previous run of either installer (a piped or otherwise non-interactive run keeps
+# that default rather than erroring).
 if [ -z "$LANGUAGE" ]; then
-    echo 'Reply language / Язык ответов / Cavab dili:'
-    echo '  1 - Русский (default)'
-    echo '  2 - Azərbaycanca'
-    echo '  3 - English'
-    echo '  or type a language name in English (e.g. Azerbaijani)'
-    answer=''
-    # A piped or otherwise non-interactive run gets the default rather than an error.
-    read -r -p 'Choice [1]: ' answer || answer=''
-    case "$(printf '%s' "$answer" | tr -d '[:space:]')" in
-        ''|1) LANGUAGE='Russian' ;;
-        2)    LANGUAGE='Azerbaijani' ;;
-        3)    LANGUAGE='English' ;;
-        *)    LANGUAGE="$(printf '%s' "$answer" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')" ;;
-    esac
+    saved="$(saved_reply_language "$CLAUDE_HOME")"
+    if [ -n "$saved" ] && ! validate_reply_language "$saved" 2>/dev/null; then
+        echo "NOTE: ignoring invalid saved reply language in $(reply_language_file "$CLAUDE_HOME")" >&2
+        saved=''
+    fi
+    LANGUAGE="$(normalize_reply_language "$(prompt_reply_language "${saved:-Russian}")")"
+    validate_reply_language "$LANGUAGE" || die "unusable reply language"
 fi
-# The name is substituted into rule files, so it is validated as a name, not trusted as input.
-case "$LANGUAGE" in
-    [A-Za-z]*) [ ${#LANGUAGE} -le 30 ] || die "language name too long: '$LANGUAGE'" ;;
-    *) die "invalid language name: '$LANGUAGE' (use an English language name, e.g. 'Russian')" ;;
-esac
-case "$LANGUAGE" in
-    *[!A-Za-z\ -]*) die "invalid language name: '$LANGUAGE' (letters, spaces and hyphens only)" ;;
-esac
+save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
 echo "[0/5] reply language: $LANGUAGE"
 
-# Claude Code reads its language rule from the global CLAUDE.md, which is Russian prose -
-# patch the sentence in place rather than regenerating the file (it holds the user's values).
+# Claude Code reads its language rule from the global CLAUDE.md. The file is regenerated
+# from the repo source: the corpus is English by design and the reply language is ONE
+# substituted token - a mostly-Russian corpus is what used to pull the model's visible
+# reasoning into Russian regardless of the reply line, and an in-place patch of the
+# installed copy could never switch a language back.
 GLOBAL_MD="$CLAUDE_HOME/CLAUDE.md"
-if [ "$LANGUAGE" != 'Russian' ] && [ -f "$GLOBAL_MD" ]; then
-    case "$LANGUAGE" in
-        Azerbaijani) ru_name='азербайджанском' ;;
-        English)     ru_name='английском' ;;
-        *)           ru_name='' ;;
-    esac
-    before="$(cat "$GLOBAL_MD")"
-    if [ -n "$ru_name" ]; then
-        patched="$(printf '%s' "$before" | sed "s/на русском/на $ru_name/g")"
-    else
-        patched="$(printf '%s' "$before" | sed "s/Отвечай на русском/Отвечай на языке: $LANGUAGE/g")"
-    fi
-    if [ "$patched" != "$before" ]; then
-        backup "$GLOBAL_MD"
-        printf '%s\n' "$patched" > "$GLOBAL_MD"
-        echo "      global CLAUDE.md switched to $LANGUAGE (backup: CLAUDE.md.bak-$STAMP)"
-    else
-        echo "      NOTE: global CLAUDE.md has no Russian language line to patch - run install.sh first, then this script"
-    fi
+if [ -f "$GLOBAL_MD" ]; then
+    backup "$GLOBAL_MD"
+    apply_reply_language "$LANGUAGE" "$DEPLOY_MD" > "$GLOBAL_MD"
+    echo "      global CLAUDE.md regenerated for $LANGUAGE (backup: CLAUDE.md.bak-$STAMP)"
+else
+    echo '      NOTE: global CLAUDE.md not installed yet - run install.sh to set up Claude Code'
 fi
-
-# The digests say "Answer in Russian"; everything else in them is English by design.
-apply_language() { sed "s/Answer in Russian/Answer in $LANGUAGE/g" "$1"; }
 
 # --- 1. Cursor: ready-to-paste global rule + retired-gate cleanup ----------------------
 CURSOR_OUT_DIR="$CLAUDE_HOME/conductor/adapters/cursor"
 mkdir -p "$CURSOR_OUT_DIR"
-apply_language "$CURSOR_SRC" > "$CURSOR_OUT_DIR/conductor-core.mdc"
+apply_reply_language "$LANGUAGE" "$CURSOR_SRC" > "$CURSOR_OUT_DIR/conductor-core.mdc"
 echo '[1/5] Cursor global RULE: paste the body of this ready file (your language applied)'
 echo "      $CURSOR_OUT_DIR/conductor-core.mdc"
 echo '      once into Cursor Settings -> Rules (Cursor has no global rules file).'
@@ -137,7 +127,7 @@ fi
 # to activate a rule in that tool and is meaningless inside a global rules file.
 BODY_START="$(grep -n '^## Iron laws' "$AG_SRC" | head -1 | cut -d: -f1)"
 [ -n "$BODY_START" ] || die "digest body marker '## Iron laws' not found in ${AG_SRC#$REPO/}"
-digest_body() { apply_language "$AG_SRC" | tail -n "+$BODY_START"; }
+digest_body() { apply_reply_language "$LANGUAGE" "$AG_SRC" | tail -n "+$BODY_START"; }
 
 AGENTS_MD="$HOME/.gemini/AGENTS.md"
 mkdir -p "$(dirname "$AGENTS_MD")"

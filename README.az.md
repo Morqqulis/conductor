@@ -43,17 +43,16 @@ faylın özünü də silsə, intizam bütövlükdə yox olacaq — özü də bir
 olmadan. Nə quraşdırıcı, nə linter bunu görməyəcək. `uninstall.sh` qlobal `CLAUDE.md`-i
 qəsdən **silmir** — elə buna görə.
 
-Sübutun sərhədləri barədə dürüst qeyd. Ölçmə faylın **qısaldılmış rusca**, 56 sətirlik
-nüsxəsi üzərində aparılıb; indi quraşdırıcı 140 sətirlik tam versiyanı qoyur və 2026-08-15
-tarixindən bu versiya ingiliscəyə tərcümə olunub (ölçmə vaxtı həmin sətirlər rusca idi —
-nüsxə `qa/reports/baseline-values-file.md` faylındadır). Yuxarıda sitat gətirilən intizam
-bölmələri quraşdırılan faylda ingiliscə tərcümədə saxlanılıb: ölçülən nüsxə ilə üst-üstə
-düşmə artıq hərfi yox, tərcümə səviyyəsindədir və ingiliscə korpusun davranışı ayrıca
-ölçülməyib. Qalan 84 sətir (`rtk` qaydası, cavab üslubu haqqında 5.1–5.4 bölmələri,
-təhlükəsizlik testlərinə genişləndirilmiş tələblər, graphify quyruğu) heç bir ölçmədə
-iştirak etməyib. Deməli sübut olunan budur: **intizamı dəyərlər faylının içindəki sitat
-gətirilmiş minimum saxlayır — rusca versiyanın ölçməsinə görə.** Faylın qalan hissəsi və
-tərcümə barədə məlumat yoxdur — nə lehinə, nə əleyhinə.
+Sübutun sərhədləri barədə dürüst qeyd. İlk ölçmə (2026-07) faylın **qısaldılmış rusca**,
+56 sətirlik nüsxəsi üzərində aparılıb (`qa/reports/baseline-values-file.md`). 2026-08-15
+tarixində ölçmə **quraşdırıcının qoyduğu ingiliscə faylın tam mətni üzərində** və modelin
+cari nəsli ilə təkrarlanıb ([`qa/reports/ab-report-v2.md`](qa/reports/ab-report-v2.md)):
+tam n=5 ilə hər iki qolda 27/27 intizam tələsi — tərcümə intizam minimumunu zəiflətməyib,
+Conductor qolu isə 12/12 debug təkrarında baqın düzəlişdən əvvəl reproduksiyasını əlavə
+edib, mexanizmin qiyməti isə mülayim qalıb (medianda +2 gediş). Orada da əhatə olunmayan
+qalır: uzun sessiyalardakı davranış (tələlər qısadır), `rtk`/üslub/graphify bölmələri —
+onlar tələlərdə iştirak etmir — və «3 cəhd» kəsicisi: o, heç bir qolda bir dəfə də işə
+düşməyib (ssenari onu induksiya etmir).
 
 ## Tələblər
 

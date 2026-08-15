@@ -44,18 +44,16 @@ Conductor, and someone then deletes the file itself as well, discipline vanishes
 without a single error message. Neither the installer nor the linter will notice. This is
 exactly why `uninstall.sh` deliberately does **not** delete the global `CLAUDE.md`.
 
-An honest caveat about the limits of this proof. The measurement was taken on a
-**trimmed Russian** copy of the file, 56 lines long; the installer now ships the full
-140-line version, and as of 2026-08-15 it has been translated into English (those lines
-were in Russian at measurement time — see the copy in
-`qa/reports/baseline-values-file.md`). The disciplinary sections quoted above are kept in
-the shipped file in English translation: the match with the measured copy is now at the
-level of a translation, not word-for-word, and the behavior of the English corpus has not
-been measured separately. The remaining 84 lines (the `rtk` rule, sections 5.1–5.4 on
-reply style, the extended security-testing requirements, the graphify tail) never took
-part in any measurement. So what has been proven is this: **discipline is held by the
-quoted minimum inside the values file — as measured on its Russian version.** About the
-rest of the file, and about the translation, there is no data — for or against.
+An honest caveat about the limits of this proof. The first measurement (2026-07) ran on
+a **trimmed Russian** copy of the file, 56 lines long (`qa/reports/baseline-values-file.md`).
+On 2026-08-15 the measurement was **repeated on the shipped English file in full** and on
+the current model generation ([`qa/reports/ab-report-v2.md`](qa/reports/ab-report-v2.md)):
+27/27 disciplinary traps in both arms at the full n=5 — the translation did not weaken
+the disciplinary minimum, and the Conductor arm added reproducing the bug before fixing
+it in 12/12 debug reruns, at a moderate harness cost (+2 turns median). Still uncovered
+even there: behavior in long sessions (the traps are short), the sections on
+`rtk`/style/graphify — they take no part in the traps — and the "3 attempts" breaker,
+which never fired even once in either arm (the scenario does not induce it).
 
 ## Requirements
 

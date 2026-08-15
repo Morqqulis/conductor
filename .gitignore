@@ -5,3 +5,7 @@
 
 # Python bytecode from py_compile / test runs.
 __pycache__/
+
+# A/B bench artifacts - transcripts and scratch, never committed.
+qa/bench/work/
+qa/bench/transcripts/

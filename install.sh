@@ -72,6 +72,13 @@ mkdir -p "$CONDUCTOR_DIR"
 cp -R "$REPO/runtime/." "$CONDUCTOR_DIR/"
 chmod +x "$CONDUCTOR_DIR"/hooks/*.sh 2>/dev/null || true
 
+# core.md ships with a placeholder module base and is RENDERED here: a literal machine
+# path baked into the repo pointed every OTHER machine's playbook loads at a directory
+# that does not exist - silently. (Found by the A/B bench: agents disclosed the failed
+# loads mid-run.)
+CORE_BASE="$(winpath "$CONDUCTOR_DIR")"
+sed -i "s|__CONDUCTOR_DIR__|$CORE_BASE|g" "$CONDUCTOR_DIR/core.md"
+
 # Artifacts of retired mechanisms are removed from the LIVE tree, not just stopped being
 # shipped: the marker commit gate (v1.12) and the PowerShell hook layer both leave files
 # that keep being executed by configs written before this install.

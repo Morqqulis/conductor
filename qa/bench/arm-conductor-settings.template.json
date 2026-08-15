@@ -1,0 +1,55 @@
+{
+  "_comment": [
+    "Template for the conductor ARM of the A/B bench, rendered by run.sh into work/.",
+    "Applied per-run via `claude --settings <rendered>` ON TOP of the live config, so both",
+    "arms share the machine's real authentication - the credential-copy revocation problem",
+    "that killed the v1 instrument cannot occur.",
+    "",
+    "The hook set mirrors what tools/settings-json.py installs for real. CONDUCTOR_LESSONS",
+    "points every lessons consumer at a nonexistent file: the bench must not inject this",
+    "machine's live lessons (a confound) and must not trip DISTILL DUE mid-scenario.",
+    "CONDUCTOR_TEST_JOURNAL keeps fixture runs out of the live journal, whose whole purpose",
+    "is evidence from real work."
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          { "type": "command", "command": "bash \"__TREE__/hooks/session-start.sh\"", "timeout": 10 },
+          { "type": "command", "command": "CONDUCTOR_LESSONS=\"__LESSONS__\" bash \"__TREE__/hooks/lessons-inject.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash \"__TREE__/hooks/subagent-start.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "CONDUCTOR_LESSONS=\"__LESSONS__\" bash \"__TREE__/hooks/user-prompt.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "CONDUCTOR_TEST_JOURNAL=\"__JOURNAL__\" bash \"__TREE__/hooks/test-run-journal.sh\"", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "CONDUCTOR_TEST_JOURNAL=\"__JOURNAL__\" bash \"__TREE__/hooks/test-run-journal.sh\"", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

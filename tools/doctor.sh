@@ -56,6 +56,9 @@ else
     else
         fail "core.md missing or missing its sentinel under $CONDUCTOR_DIR"
     fi
+    if grep -q '__CONDUCTOR_DIR__' "$CONDUCTOR_DIR/core.md" 2>/dev/null; then
+        fail "deployed core.md is UNRENDERED (module base placeholder intact) - playbooks will not load; run install.sh, do not hand-copy runtime/"
+    fi
     for f in payload.sh session-start.sh lessons-inject.sh subagent-start.sh \
              user-prompt.sh test-run-journal.sh; do
         if [ -f "$CONDUCTOR_DIR/hooks/$f" ]; then

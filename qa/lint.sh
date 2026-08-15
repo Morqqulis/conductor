@@ -24,7 +24,15 @@ chars() { LC_ALL=C wc -c < "$1" | tr -d '[:space:]'; }
 # --- core: the payload the harness actually receives, measured by the shipping code ----
 CORE="$RUNTIME/core.md"
 [ -f "$CORE" ] || { echo "lint: core.md missing" >&2; exit 2; }
-core_payload=$(payload_length SessionStart "$(cat "$CORE")")
+# The deployed core is RENDERED (module base substituted for the placeholder), and a real
+# path is longer than the placeholder - so the budget is measured on the rendered form.
+grep -q '__CONDUCTOR_DIR__' "$CORE" || \
+    check 1 "core.md module-base placeholder missing (a literal machine path breaks playbook loading on every other machine)"
+grep -rqE '[A-Za-z]:[\\/]Users[\\/]' "$RUNTIME" && \
+    check 1 "literal Windows user path inside runtime/ - machine-specific state in shipped rules: $(grep -rlE '[A-Za-z]:[\\/]Users[\\/]' "$RUNTIME" | head -1)"
+RENDER_BASE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor"
+command -v cygpath >/dev/null 2>&1 && RENDER_BASE="$(cygpath -m "$RENDER_BASE")"
+core_payload=$(payload_length SessionStart "$(sed "s|__CONDUCTOR_DIR__|$RENDER_BASE|g" "$CORE")")
 [ "$core_payload" -le 9500 ] && check 0 '' || \
     check 1 "core.md escaped payload over budget: $core_payload/9500 bytes (harness truncates at 10000)"
 grep -q 'CONDUCTOR-CORE-v1-7f3a' "$CORE" || check 1 "core.md missing sentinel"

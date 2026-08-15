@@ -124,13 +124,13 @@ four shapes of one skipped gate — each is a hypothesis, so run the check.
 Module unreadable -> announce, proceed with core gates, never improvise its content. Probe blocked
 -> harness-tool variant (Grep/Glob); none -> a named "cannot-verify" item in the claim.
 
-## MODULES (base: C:\Users\Dee\.claude\conductor\)
-- playbooks\debugging.md — on debug; and when tempted to edit before reproducing.
-- playbooks\implementing.md — on implement; and when tempted to code before reading.
-- playbooks\investigating.md — on investigate; and when tempted to answer from priors.
-- playbooks\orchestration.md — at T3 or past its WHEN thresholds; and when tempted to read
+## MODULES (base: __CONDUCTOR_DIR__/)
+- playbooks/debugging.md — on debug; and when tempted to edit before reproducing.
+- playbooks/implementing.md — on implement; and when tempted to code before reading.
+- playbooks/investigating.md — on investigate; and when tempted to answer from priors.
+- playbooks/orchestration.md — at T3 or past its WHEN thresholds; and when tempted to read
   serially "just to be sure".
-- playbooks\skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
+- playbooks/skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
   checkpoint, a review with no /code-review skill.
-- snippets\probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);
+- snippets/probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);
   "probes.md#<anchor>" in any module means this file — never restate it.

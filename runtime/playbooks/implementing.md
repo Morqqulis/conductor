@@ -63,6 +63,10 @@ A check is only as trustworthy as its controlled preconditions — MEASURED, nev
 create test state explicitly (markers, fixtures), measure a target's budget before writing
 into it, verify invariants across ALL members (never a clever subset), and fake
 environments COMPLETELY — a partial fake leaks actions onto real state.
+A green is worth only what it EXERCISED: read the count, the interleaving, the bytes — not
+the exit code. A run that executed no test and a race check whose window cannot open both
+pass. An assertion over SOURCE anchors on a symbol name or on normalized text, never on
+formatting a tool may rewrite.
 
 ## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
 The old name is a debt until proven settled: search it across code, configs, docs, and

@@ -19,6 +19,8 @@ esac
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
 SETTINGS="$CLAUDE_HOME/settings.json"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+SETTINGS_TOOL="$SCRIPT_DIR/settings-json.py"
 DISTILL_THRESHOLD=12   # keep in sync with runtime/hooks/lessons-inject.sh
 
 fails=0
@@ -26,24 +28,40 @@ warns=0
 pass() { printf 'PASS  %s\n' "$1"; }
 warn() { printf 'WARN  %s\n' "$1"; warns=$((warns + 1)); }
 fail() { printf 'FAIL  %s\n' "$1"; fails=$((fails + 1)); }
+winpath() {
+    if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
+}
 
 echo "=== conductor doctor ($CLAUDE_HOME) ==="
 
 # --- 1. hooks registered ---------------------------------------------------------------
+hook_audit_ok=0
 if [ ! -f "$SETTINGS" ]; then
     fail "settings.json missing at $SETTINGS - no hooks can fire; run install.sh"
+elif [ ! -f "$SETTINGS_TOOL" ]; then
+    fail "hook registration audit unavailable: $SETTINGS_TOOL is missing"
 else
-    for h in session-start.sh lessons-inject.sh subagent-start.sh user-prompt.sh; do
-        if grep -q "$h" "$SETTINGS" 2>/dev/null; then
-            pass "hook registered: $h"
-        else
-            fail "hook NOT registered in settings.json: $h - run install.sh"
+    PYTHON=''
+    for candidate in python3 python; do
+        if command -v "$candidate" >/dev/null 2>&1 && \
+                "$candidate" -c 'import json' >/dev/null 2>&1; then
+            PYTHON="$candidate"
+            break
         fi
     done
-    if grep -q 'PostToolUseFailure' "$SETTINGS" 2>/dev/null; then
-        pass "test-run journal registered for both outcomes"
+    if [ -z "$PYTHON" ]; then
+        fail "hook registration audit unavailable: Python with json support was not found"
     else
-        warn "PostToolUseFailure not registered - the journal would only ever see successes"
+        SETTINGS_ARG="$(winpath "$SETTINGS")"
+        TOOL_ARG="$(winpath "$SETTINGS_TOOL")"
+        HOOK_BASE="$(winpath "$CONDUCTOR_DIR")"
+        if audit_out="$("$PYTHON" "$TOOL_ARG" audit-hooks --file "$SETTINGS_ARG" \
+                --conductor-dir "$HOOK_BASE" --shell bash 2>&1)"; then
+            pass "hook registrations structurally exact ($HOOK_BASE/hooks/session-start.sh)"
+            hook_audit_ok=1
+        else
+            fail "hook registration audit: $audit_out - run install.sh"
+        fi
     fi
 fi
 
@@ -74,13 +92,17 @@ else
     fi
 fi
 
-# --- 3. the SessionStart hook actually emits the core ----------------------------------
-if [ -f "$CONDUCTOR_DIR/hooks/session-start.sh" ]; then
-    out="$(bash "$CONDUCTOR_DIR/hooks/session-start.sh" 2>/dev/null)"
-    case "$out" in
-        *CONDUCTOR-CORE-v1-7f3a*) pass "session-start hook runs and emits the core (${#out} chars)" ;;
-        *) fail "session-start hook runs but its payload carries no core sentinel" ;;
-    esac
+# --- 3. the exact registered SessionStart hook actually emits the core -----------------
+if [ "$hook_audit_ok" -eq 1 ] && [ -f "$CONDUCTOR_DIR/hooks/session-start.sh" ]; then
+    if out="$(bash "$CONDUCTOR_DIR/hooks/session-start.sh" 2>/dev/null)"; then
+        case "$out" in
+            *CONDUCTOR-CORE-v1-7f3a*) pass "session-start hook runs and emits the core (${#out} chars)" ;;
+            *) fail "session-start hook runs but its payload carries no core sentinel" ;;
+        esac
+    else
+        hook_status=$?
+        fail "session-start hook exited with status $hook_status"
+    fi
 fi
 
 # --- 4. global CLAUDE.md ---------------------------------------------------------------

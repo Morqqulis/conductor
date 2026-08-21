@@ -158,6 +158,8 @@ it immediately in one simple phrase or a household analogy. Self-check before se
 "would a non-programmer understand this?" - if not, rephrase. Internal reasoning follows
 the reply language.
 
+Explain the result clearly.
+
 Lead with the outcome: the first sentence after finishing answers "what happened" or "what did
 I find". Detail after. Keep an answer short by SELECTING what belongs (drop what does not
 change the reader's next step), not by compressing prose into fragments, abbreviations or arrow

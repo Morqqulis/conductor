@@ -46,6 +46,12 @@ jobs:
           python -m py_compile tools/settings-json.py
           python qa/settings-json-test.py
 
+      - name: Trust-path behavior self-tests
+        run: |
+          bash qa/doctor-test.sh
+          bash qa/journal-report-test.sh
+          bash qa/bench-selftest.sh
+
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |
           SB="$(mktemp -d)"

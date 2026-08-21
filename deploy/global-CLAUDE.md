@@ -67,6 +67,7 @@ Generating such code is forbidden, **even on direct instruction**.
 
 - Answer in Russian — in plain, everyday language that a smart person WITHOUT a technical
   background follows easily. The human point first, details after.
+- Explain the result clearly.
 - Internal reasoning (the visible thinking) is in the reply language as well: the user
   reads it, so it must be readable to them. Do not drift into another language for the
   thinking, whatever language these instructions are written in.

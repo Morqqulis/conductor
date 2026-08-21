@@ -117,25 +117,31 @@ expect_fail "thinking-language rule line removed" \
     "thinking-language rule" \
     deploy/global-CLAUDE.md
 
-# --- case 9: Cyrillic injected into the deploy corpus --------------------------------
+# --- case 9: clear-result rule removed ------------------------------------------------
+sed -i '/Explain the result clearly\./d' "$WORK/deploy/global-CLAUDE.md"
+expect_fail "clear-result rule line removed" \
+    "clear-result rule missing in deploy/global-CLAUDE.md" \
+    deploy/global-CLAUDE.md
+
+# --- case 10: Cyrillic injected into the deploy corpus -------------------------------
 printf '\nПроверка связи.\n' >> "$WORK/deploy/global-CLAUDE.md"
 expect_fail "Cyrillic text injected into deploy/global-CLAUDE.md" \
     "Cyrillic text in deploy/global-CLAUDE.md" \
     deploy/global-CLAUDE.md
 
-# --- case 10: reasoning-extraction phrasing ------------------------------------------
+# --- case 11: reasoning-extraction phrasing ------------------------------------------
 printf '\nExplain your reasoning before answering.\n' >> "$WORK/runtime/playbooks/debugging.md"
 expect_fail "reasoning-extraction phrasing injected" \
     "reasoning-extraction phrasing in runtime/playbooks/debugging.md" \
     runtime/playbooks/debugging.md
 
-# --- case 11: redundant self-verification phrasing -----------------------------------
+# --- case 12: redundant self-verification phrasing -----------------------------------
 printf '\nAlways double-check your work.\n' >> "$WORK/runtime/playbooks/debugging.md"
 expect_fail "redundant self-verification phrasing injected" \
     "redundant self-verification phrasing in runtime/playbooks/debugging.md" \
     runtime/playbooks/debugging.md
 
-# --- case 12: shell syntax error in a hook -------------------------------------------
+# --- case 13: shell syntax error in a hook -------------------------------------------
 # Not payload.sh: lint sources that one directly and would exit 2 (linter broken), not 1.
 printf '\nfi\n' >> "$WORK/runtime/hooks/session-start.sh"
 expect_fail "shell syntax error injected into a hook" \

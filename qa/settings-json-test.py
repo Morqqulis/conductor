@@ -194,11 +194,47 @@ class SettingsJsonTest(unittest.TestCase):
         })
         res = run_tool("strip-hooks", "--file", self.path)
         self.assertEqual(res.returncode, 0, f"strip-hooks failed: {res.stderr}")
+        self.assertIn(
+            "conductor hook commands removed: 2", res.stdout,
+            "strip-hooks reports removed leaf commands, not whole event entries",
+        )
         remaining = read_json(self.path)["hooks"]["PostToolUse"]
         self.assertEqual(
             remaining, [FOREIGN_HOOK_ENTRY],
             "strip-hooks had to remove both conductor path entries (/conductor/ and "
             "\\conductor\\) and keep only the foreign one",
+        )
+
+    def test_mixed_entry_preserves_foreign_hooks_and_wrapper_fields(self):
+        mixed = {
+            "matcher": "Bash",
+            "label": "shared wrapper",
+            "hooks": [
+                {"type": "command", "command": "my-linter --fix", "timeout": 30},
+                {"type": "command",
+                 "command": f'bash "{CONDUCTOR_DIR}/hooks/test-run-journal.sh"',
+                 "timeout": 10},
+                {"type": "command",
+                 "command": 'bash "C:\\claude\\conductor\\hooks\\test-run-journal.sh"',
+                 "timeout": 10},
+            ],
+        }
+        write_json(self.path, {"hooks": {"PostToolUse": [mixed]}})
+
+        res = run_tool("strip-hooks", "--file", self.path)
+
+        self.assertEqual(res.returncode, 0, f"strip-hooks failed: {res.stderr}")
+        self.assertEqual(
+            read_json(self.path),
+            {"hooks": {"PostToolUse": [{
+                "matcher": "Bash",
+                "label": "shared wrapper",
+                "hooks": [
+                    {"type": "command", "command": "my-linter --fix", "timeout": 30}
+                ],
+            }]}},
+            "strip-hooks removed a shared wrapper or its foreign sibling instead of only "
+            "the POSIX and Windows Conductor leaf hooks",
         )
 
     # (5) Broken JSON: refuse loudly, touch nothing.
@@ -330,6 +366,99 @@ class SettingsJsonTest(unittest.TestCase):
             foreign, [FOREIGN_HOOK_ENTRY],
             "the pre-existing foreign SessionStart hook was lost or duplicated by reinstalling",
         )
+
+    def test_audit_accepts_exact_install_with_foreign_entries_without_rewriting(self):
+        self.assertEqual(self.install().returncode, 0, "install-hooks failed")
+        data = read_json(self.path)
+        data["hooks"]["SessionStart"].append(FOREIGN_HOOK_ENTRY)
+        data["foreign-note"] = {
+            "names": ["session-start.sh", "lessons-inject.sh", "PostToolUseFailure"]
+        }
+        data["hooks"]["ForeignObject"] = {"command": "my-linter --fix"}
+        data["hooks"]["ForeignString"] = "foreign malformed event"
+        data["hooks"]["ForeignMixed"] = ["foreign", {"nested": [7, None]}]
+        write_json(self.path, data)
+        before = read_bytes(self.path)
+
+        res = run_tool(
+            "audit-hooks", "--file", self.path,
+            "--conductor-dir", CONDUCTOR_DIR, "--shell", "bash",
+        )
+
+        self.assertEqual(res.returncode, 0, f"audit-hooks rejected a valid install: {res.stderr}")
+        self.assertIn("audit passed", res.stdout)
+        self.assertEqual(read_bytes(self.path), before, "audit-hooks rewrote settings.json")
+
+    def test_audit_rejects_sentinel_in_unexpected_event_regardless_of_shape(self):
+        self.assertEqual(self.install().returncode, 0, "install-hooks failed")
+        baseline = read_json(self.path)
+        registered_command = f'bash "{CONDUCTOR_DIR}/hooks/session-start.sh"'
+        shapes = {
+            "object": {"command": registered_command},
+            "string": registered_command,
+            "list": [{"foreign": True}, registered_command],
+            "mixed": [7, {"nested": [None, {"command": registered_command}]}],
+        }
+
+        for label, shape in shapes.items():
+            with self.subTest(label=label):
+                data = json.loads(json.dumps(baseline))
+                data["hooks"]["UnexpectedEvent"] = shape
+                write_json(self.path, data)
+                before = read_bytes(self.path)
+                res = run_tool(
+                    "audit-hooks", "--file", self.path,
+                    "--conductor-dir", CONDUCTOR_DIR, "--shell", "bash",
+                )
+                self.assertNotEqual(
+                    res.returncode, 0,
+                    f"audit-hooks accepted a Conductor sentinel in {label} event data",
+                )
+                self.assertIn("UnexpectedEvent", res.stderr)
+                self.assertEqual(read_bytes(self.path), before, "audit-hooks rewrote settings.json")
+
+    def test_audit_rejects_duplicate_or_malformed_registrations_with_a_reason(self):
+        self.assertEqual(self.install().returncode, 0, "install-hooks failed")
+        baseline = read_json(self.path)
+
+        cases = []
+
+        duplicate = json.loads(json.dumps(baseline))
+        duplicate["hooks"]["SessionStart"].append(
+            json.loads(json.dumps(duplicate["hooks"]["SessionStart"][0]))
+        )
+        cases.append(("duplicate", duplicate, "exactly one"))
+
+        malformed = json.loads(json.dumps(baseline))
+        malformed["hooks"]["SubagentStart"] = "not-an-array"
+        cases.append(("structure", malformed, "JSON array"))
+
+        matcher = json.loads(json.dumps(baseline))
+        matcher["hooks"]["SessionStart"][0]["matcher"] = "startup|resume"
+        cases.append(("matcher", matcher, "matcher"))
+
+        wrong_path = json.loads(json.dumps(baseline))
+        wrong_path["hooks"]["UserPromptSubmit"][0]["hooks"][0]["command"] = (
+            'bash "/wrong/conductor/hooks/user-prompt.sh"'
+        )
+        cases.append(("path", wrong_path, "command"))
+
+        timeout = json.loads(json.dumps(baseline))
+        timeout["hooks"]["PostToolUse"][0]["hooks"][0]["timeout"] = 9
+        cases.append(("timeout", timeout, "timeout"))
+
+        for label, data, reason in cases:
+            with self.subTest(label=label):
+                write_json(self.path, data)
+                before = read_bytes(self.path)
+                res = run_tool(
+                    "audit-hooks", "--file", self.path,
+                    "--conductor-dir", CONDUCTOR_DIR, "--shell", "bash",
+                )
+                self.assertNotEqual(res.returncode, 0, f"audit-hooks accepted {label}")
+                self.assertIn(reason, res.stderr, f"audit-hooks gave no clear {label} reason")
+                self.assertEqual(read_bytes(self.path), before,
+                                 f"audit-hooks rewrote settings.json for {label}")
 
 
 if __name__ == "__main__":

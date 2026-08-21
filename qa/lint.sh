@@ -101,6 +101,8 @@ cyr_bytes="$(printf '[\320-\323]')"
 for f in "$DEPLOY_MD" "$ADAPTERS/core-body.md"; do
     grep -qF 'Answer in Russian' "$f" || \
         check 1 "language token 'Answer in Russian' missing in ${f#$ROOT/} (the installers' substitution would silently no-op)"
+    grep -qF 'Explain the result clearly.' "$f" || \
+        check 1 "clear-result rule missing in ${f#$ROOT/}"
     tr '\n' ' ' < "$f" | grep -iE 'internal reasoning[^.]{0,80}reply language' >/dev/null || \
         check 1 "thinking-language rule (internal reasoning in the reply language) missing in ${f#$ROOT/}"
     if LC_ALL=C grep -q "$cyr_bytes" "$f"; then

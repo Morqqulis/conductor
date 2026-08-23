@@ -17,6 +17,10 @@ for part in sys.argv[2].split("."):
 print(value)
 PY
 }
+# Same guard as run.sh:winp - the manifest stores paths through it, so the comparison
+# must go through it too; a bare cygpath dies on linux where the command does not exist.
+winp() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
+
 tree_digest() {
     python - "$1" <<'PY'
 import hashlib, os, sys
@@ -228,7 +232,7 @@ FIRST_MANIFEST="${FIRST%.json}.manifest.json"
 FIRST_BASE="${FIRST%.json}"
 expect grep -q 'BENCH-FRESHNESS-V1' "$FIRST"
 expect test -f "$FIRST_BASE.jsonl"
-[ "$(json_field "$FIRST_MANIFEST" artifact_base)" = "$(cygpath -m "$FIRST_BASE")" ] || fail 'manifest artifact base is wrong'
+[ "$(json_field "$FIRST_MANIFEST" artifact_base)" = "$(winp "$FIRST_BASE")" ] || fail 'manifest artifact base is wrong'
 [ -n "$(json_field "$FIRST_MANIFEST" invocation_id)" ] || fail 'manifest invocation id is missing'
 python - "$FIRST" <<'PY'
 import json, sys

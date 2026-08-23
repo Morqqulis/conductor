@@ -8,7 +8,10 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
 ## Sequence (each step's output is the next step's branch input)
 1. REPRODUCE. Run the failing thing; capture the exact command + output. This is your repro
    command — the attempt counter binds to it. Cannot reproduce -> BLOCKED with the attempted
-   repro evidence pasted. Never fix what you cannot see fail.
+   repro evidence pasted. Never fix what you cannot see fail. A failure first seen after
+   your change is not yet yours: reproduce it on the pre-change state (stash the edits, or
+   a worktree at HEAD) — failing there -> pre-existing debt, reported separately, never
+   absorbed into this fix.
 2. HYPOTHESIZE in writing — at least TWO candidate causes, not one (the first cause is where
    diagnosis goes to die). Rank them by likelihood, and for each name the ONE check that best
    discriminates it from the others: "H1 (likely): <cause>, because <evidence>; discriminating

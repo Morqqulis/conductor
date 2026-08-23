@@ -39,8 +39,9 @@ grep -q 'CONDUCTOR-CORE-v1-7f3a' "$CORE" || check 1 "core.md missing sentinel"
 
 CONTRACT="$RUNTIME/subagent-contract.md"
 contract_chars=$(chars "$CONTRACT")
-[ "$contract_chars" -le 2500 ] && check 0 '' || \
-    check 1 "subagent-contract.md over budget: $contract_chars/2500"
+# 3000 pairs with SOFT_CAP in hooks/subagent-start.sh — raise or lower the two together.
+[ "$contract_chars" -le 3000 ] && check 0 '' || \
+    check 1 "subagent-contract.md over budget: $contract_chars/3000"
 grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing sentinel"
 
 # --- playbooks: budget + wiring -------------------------------------------------------
@@ -50,8 +51,8 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 # transitively, so a file referenced by any of the three is live; one referenced by none
 # is dead weight that no session will ever read.
 declare -A BUDGETS=(
-    [debugging.md]=6000 [implementing.md]=6000 [investigating.md]=6000
-    [orchestration.md]=6000 [skeptic.md]=6000 [distill.md]=3000 [methods.md]=6000
+    [debugging.md]=6000 [implementing.md]=6500 [investigating.md]=6000
+    [orchestration.md]=7000 [skeptic.md]=6000 [distill.md]=3000 [methods.md]=6000
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
 core_text="$(cat "$CORE")"
@@ -122,19 +123,19 @@ for f in "$CORE" "$CONTRACT"; do
         check 1 "status tokens incomplete in ${f#$ROOT/}"
 done
 
-# --- model-fit rules (added for the Opus 5 / Fable 5 / Sonnet 5 generation) ------------
+# --- model-fit rules (current reasoning-model generation) -------------------------------
 # 1. Reasoning-extraction: instructions telling the model to restate, transcribe, or
-#    explain its internal reasoning as response text can trigger Fable 5's refusal
-#    classifier, which falls back to an older model. Cheap to forbid, expensive to debug.
+#    explain its internal reasoning as response text can trigger the frontier model's
+#    refusal classifier, which falls back to an older model. Cheap to forbid, expensive to debug.
 reasoning_re='(explain|describe|restate|transcribe|reproduce|show|share|walk through)[^.]{0,40}(your |its )?(internal )?(reasoning|thinking|thought process|chain of thought)'
 while IFS= read -r f; do
     if grep -qEi "$reasoning_re" "$f"; then
-        check 1 "reasoning-extraction phrasing in ${f#$ROOT/} (Fable 5 refusal risk): $(grep -oEi "$reasoning_re" "$f" | head -1)"
+        check 1 "reasoning-extraction phrasing in ${f#$ROOT/} (refusal-classifier risk): $(grep -oEi "$reasoning_re" "$f" | head -1)"
     fi
 done < <(find "$RUNTIME" "$ADAPTERS" "$ROOT/deploy" -name '*.md' -o -name '*.mdc' 2>/dev/null)
 
 # 2. Redundant self-verification: current models already re-check their own work, and
-#    Anthropic's Opus 5 guidance is explicit that instructing it again inflates cost
+#    Anthropic's current-generation guidance is explicit that instructing it again inflates cost
 #    without improving results. The gate keeps the CLAIM discipline; it must not ask for
 #    an extra pass. Evidence-table rows describing what a claim requires are exempt.
 selfcheck_re='(double-check|check (it |your work )?again|verify (it )?(again|twice)|re-verify your)'
@@ -161,5 +162,5 @@ if [ ${#fails[@]} -gt 0 ]; then
     printf 'FAIL: %s\n' "${fails[@]}"
     exit 1
 fi
-printf 'lint: PASS (core payload %s/9500, contract %s/2500)\n' "$core_payload" "$contract_chars"
+printf 'lint: PASS (core payload %s/9500, contract %s/3000)\n' "$core_payload" "$contract_chars"
 exit 0

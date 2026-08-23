@@ -132,7 +132,7 @@ class SettingsJsonTest(unittest.TestCase):
     # (2) install-hooks then strip-hooks is a round trip: foreign data is untouchable.
     def test_strip_after_install_round_trips_foreign_data(self):
         original = {
-            "model": "opus",
+            "model": "user-chosen",
             "theme": "t\u00ebmn\u00e1ja",  # non-ASCII on purpose: ensure_ascii must not mangle it
             "hooks": {
                 "PreToolUse": [
@@ -158,7 +158,7 @@ class SettingsJsonTest(unittest.TestCase):
 
     # (2b) A file that never had hooks must not keep an empty 'hooks' key after the round trip.
     def test_strip_after_install_leaves_no_empty_hooks_key(self):
-        write_json(self.path, {"model": "opus"})
+        write_json(self.path, {"model": "user-chosen"})
         self.assertEqual(self.install().returncode, 0, "install-hooks failed")
         self.assertEqual(run_tool("strip-hooks", "--file", self.path).returncode, 0,
                          "strip-hooks failed")
@@ -239,7 +239,7 @@ class SettingsJsonTest(unittest.TestCase):
 
     # (5) Broken JSON: refuse loudly, touch nothing.
     def test_broken_json_is_refused_and_untouched(self):
-        broken = b'{"model": "opus", THIS IS NOT JSON'
+        broken = b'{"model": "user-chosen", THIS IS NOT JSON'
         with open(self.path, "wb") as fh:
             fh.write(broken)
         for argv in (("strip-hooks", "--file", self.path),
@@ -258,8 +258,8 @@ class SettingsJsonTest(unittest.TestCase):
     # (6) Malformed but valid-JSON shapes: strip must not crash and must not lose data.
     def test_strip_tolerates_nondict_hooks_and_nonlist_events(self):
         for shape in (
-            {"model": "opus", "hooks": "not-a-dict"},
-            {"model": "opus", "hooks": {"SessionStart": "not-a-list", "PreToolUse": 7}},
+            {"model": "user-chosen", "hooks": "not-a-dict"},
+            {"model": "user-chosen", "hooks": {"SessionStart": "not-a-list", "PreToolUse": 7}},
         ):
             write_json(self.path, shape)
             before = read_bytes(self.path)
@@ -277,7 +277,7 @@ class SettingsJsonTest(unittest.TestCase):
     # was present but not a dict (setdefault returned the non-dict value). It must refuse
     # in one clean line, the way load() refuses broken JSON, and leave the file untouched.
     def test_install_with_nondict_hooks_refuses_cleanly(self):
-        write_json(self.path, {"model": "opus", "hooks": "not-a-dict"})
+        write_json(self.path, {"model": "user-chosen", "hooks": "not-a-dict"})
         before = read_bytes(self.path)
         res = self.install()
         self.assertNotEqual(
@@ -331,11 +331,11 @@ class SettingsJsonTest(unittest.TestCase):
 
     # (7) strip-key removes what is there and shrugs at what is not.
     def test_strip_key_present_and_absent(self):
-        write_json(self.path, {"model": "opus", "conductor-commit-gate": {"on": True}})
+        write_json(self.path, {"model": "user-chosen", "conductor-commit-gate": {"on": True}})
         res = run_tool("strip-key", "--file", self.path, "--key", "conductor-commit-gate")
         self.assertEqual(res.returncode, 0, f"strip-key failed on a present key: {res.stderr}")
         self.assertEqual(
-            read_json(self.path), {"model": "opus"},
+            read_json(self.path), {"model": "user-chosen"},
             "strip-key must remove exactly the named key and nothing else",
         )
         before = read_bytes(self.path)

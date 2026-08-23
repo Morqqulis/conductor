@@ -2,23 +2,28 @@
 # Conductor installer for Claude Code.
 #
 # Deploys the runtime tree, registers the four hooks in settings.json, installs the
-# global CLAUDE.md, and proves the result by running the session hook exactly the way
-# the harness runs it. Safe to re-run; every file it changes is backed up first.
+# global CLAUDE.md, installs the companion tools (superpowers, rtk, graphify), and proves
+# the result by running the session hook exactly the way the harness runs it. Safe to
+# re-run; every file it changes is backed up first.
 #
 #   ./install.sh                      full install (terminal menu picks the reply language;
 #                                     the previous choice is the default - just press Enter)
 #   ./install.sh --language English   set the reply language without the prompt (scripts)
 #   ./install.sh --skip-global-md     leave ~/.claude/CLAUDE.md alone
-#   ./install.sh --keep-superpowers   do not disable the superpowers plugin
+#   ./install.sh --skip-companions    install nothing but Conductor itself
+#   ./install.sh --no-superpowers     install rtk and graphify, but not the superpowers plugin
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# A bare environment may lack HOME; default it before set -u trips on the next line.
+HOME="${HOME:-${USERPROFILE:-}}"
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
 SETTINGS="$CLAUDE_HOME/settings.json"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 SKIP_GLOBAL_MD=0
-KEEP_SUPERPOWERS=0
+SKIP_COMPANIONS=0
+NO_SUPERPOWERS=0
 LANGUAGE=''
 LANGUAGE_SET=0
 
@@ -28,7 +33,10 @@ while [ $# -gt 0 ]; do
                             LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
         --language=*)       LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
         --skip-global-md)   SKIP_GLOBAL_MD=1; shift ;;
-        --keep-superpowers) KEEP_SUPERPOWERS=1; shift ;;
+        --skip-companions)  SKIP_COMPANIONS=1; shift ;;
+        --no-superpowers)   NO_SUPERPOWERS=1; shift ;;
+        --keep-superpowers) echo 'NOTE: --keep-superpowers is deprecated - superpowers is now installed by default; use --no-superpowers to opt out' >&2
+                            shift ;;
         -h|--help)          sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -160,17 +168,24 @@ else
     fi
 fi
 
-# --- 4. superpowers: two process systems contradict each other ------------------------
-if [ "$KEEP_SUPERPOWERS" -eq 1 ]; then
-    echo '[4/5] superpowers left enabled (flag) - WARNING: two process systems will conflict'
-elif command -v claude >/dev/null 2>&1; then
-    if claude plugin disable superpowers@claude-plugins-official >/dev/null 2>&1; then
-        echo '[4/5] superpowers disabled'
-    else
-        echo '[4/5] superpowers not enabled (nothing to disable)'
-    fi
+# --- 4. Companion tools ----------------------------------------------------------------
+# Installing Conductor now installs the three tools it expects to work alongside. They are
+# user-level tools, not part of the runtime tree: the companion script reports one outcome
+# line per tool and always exits 0, so an unreachable third-party install can never fail an
+# install that has already deployed the runtime. uninstall.sh leaves all three in place.
+if [ "$SKIP_COMPANIONS" -eq 1 ]; then
+    echo '[4/5] companion tools skipped (--skip-companions)'
+elif [ ! -f "$REPO/install-companions.sh" ]; then
+    # CI runs with --skip-companions, so a checkout missing this file would otherwise
+    # sail through CI and die here for real users (set -e turns the 127 into an abort).
+    echo '[4/5] WARNING: install-companions.sh missing from this checkout - companion tools not installed'
 else
-    echo '[4/5] claude CLI not on PATH - skipped superpowers check'
+    echo '[4/5] companion tools (superpowers, rtk, graphify)'
+    if [ "$NO_SUPERPOWERS" -eq 1 ]; then
+        bash "$REPO/install-companions.sh" --no-superpowers
+    else
+        bash "$REPO/install-companions.sh"
+    fi
 fi
 
 # --- 5. Smoke test: run the hook the way the harness will -----------------------------

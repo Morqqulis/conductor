@@ -76,12 +76,47 @@ bash install.sh
 bash install-global.sh
 ```
 
-Əvvəlcədən bilməyə dəyər iki yan təsir. `install.sh` superpowers plaginini söndürür —
-iki proses sistemi bir-biri ilə ziddiyyət təşkil edir (saxlamaq üçün:
-`--keep-superpowers`). `install-global.sh` `~/.gemini/AGENTS.md` və `~/.codex/AGENTS.md`
-fayllarını yenidən yazır: orada öz mətniniz idisə, o, `*.bak-<vaxt möhürü>` nüsxəsində
-saxlanılır və quraşdırıcı bu barədə ucadan xəbərdarlıq edir. Quraşdırmanın sağlamlığını
-istənilən vaxt yoxlamaq: `bash tools/doctor.sh`.
+Əvvəlcədən bilməyə dəyər iki yan təsir. `install.sh` [4/5] addımında üç əlavə alət də
+quraşdırır (aşağıya baxın) — əvvəllər o, əksinə, superpowers plaginini söndürürdü; indi
+Conductor və superpowers bilərəkdən birlikdə quraşdırılır. `install-global.sh`
+`~/.gemini/AGENTS.md` və `~/.codex/AGENTS.md` fayllarını yenidən yazır: orada öz mətniniz
+idisə, o, `*.bak-<vaxt möhürü>` nüsxəsində saxlanılır və quraşdırıcı bu barədə ucadan
+xəbərdarlıq edir. Quraşdırmanın sağlamlığını istənilən vaxt yoxlamaq:
+`bash tools/doctor.sh`.
+
+### Birlikdə quraşdırılan alətlər
+
+Quraşdırmanın [4/5] addımı — ayrıca kök skripti `install-companions.sh` — standart olaraq
+üç alət qoyur:
+
+- [superpowers](https://github.com/obra/superpowers) — iş prosesi bacarıqları olan Claude
+  Code plagini. Rəsmi plagin marketplace-indən quraşdırılır
+  (`claude plugin install superpowers@claude-plugins-official --scope user -y`), ehtiyat
+  variant — icma marketplace-i `obra/superpowers-marketplace`. Əvvəllər quraşdırıcı onu
+  söndürürdü; indi siyasət əksinədir: Conductor prosesin onurğasıdır, superpowers isə
+  onun üstündə bacarıqlar verir.
+- [rtk](https://github.com/rtk-ai/rtk) — terminal çıxışını sıxaraq token qənaət edən Rust
+  proqramı. Sistemdə cargo varsa,
+  `cargo install --git https://github.com/rtk-ai/rtk` ilə quraşdırılır; yoxdursa,
+  quraşdırıcı ucadan SKIP sətri çap edir və reliz səhifəsindən hazır binar faylı
+  yükləməyi məsləhət görür (doğma Windows dəstəklənir). Bağlantını — Claude Code hook-u və
+  `~/.claude/RTK.md` — rtk özü `rtk init -g` əmri ilə qurur; bağlantı yoxdursa, əmr
+  avtomatik işə düşür.
+- [graphify](https://github.com/Graphify-Labs/graphify) — kod bazası üzrə bilik qrafı
+  quran alət. `uv tool install graphifyy` ilə quraşdırılır (paketin adı `graphifyy`, əmr
+  isə `graphify`), ehtiyat variant — `pip install graphifyy`; sonra `graphify install`
+  `/graphify` bacarığını qeydiyyatdan keçirir, əgər o hələ qeydiyyatda deyilsə.
+
+Bayraqlar: `--skip-companions` bütün addımı atlayır (CI-nin izolyasiya olunmuş
+smoke-testi məhz belə edir); `--no-superpowers` yalnız plagindən imtina edir;
+`--keep-superpowers` uyğunluq üçün qəbul edilir və heç nə etmir — plagin onsuz da
+quraşdırılır.
+
+Hər uğursuzluq ucadan bildirilir və heç vaxt Conductor quraşdırmasını dayandırmır:
+quraşdırıla bilməyən alət səbəbi ilə birlikdə SKIP və ya FAIL sətri çap edir, quraşdırma
+isə davam edir. Təkrar işə salmaq təhlükəsizdir — artıq qoyulmuş alət üçün «OK already»
+yazılır. `uninstall.sh` bu üç aləti silmir: onlar istifadəçi səviyyəsindədir və öz
+həyatlarını yaşayır.
 
 Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyalanacaq):
 

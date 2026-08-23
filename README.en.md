@@ -77,11 +77,44 @@ bash install.sh
 bash install-global.sh
 ```
 
-Two side effects worth knowing about up front. `install.sh` disables the superpowers
-plugin — two process systems conflict with each other (to keep it: `--keep-superpowers`).
+Two side effects worth knowing about up front. In step [4/5] `install.sh` also installs
+three companion tools (see below) — it used to do the opposite and disable the superpowers
+plugin; now Conductor and superpowers are installed together on purpose.
 `install-global.sh` overwrites `~/.gemini/AGENTS.md` and `~/.codex/AGENTS.md`: if your own
 text was there, it is preserved in `*.bak-<stamp>`, and the installer warns about this
 loudly. To check the health of the installation at any time: `bash tools/doctor.sh`.
+
+### Companion tools
+
+Step [4/5] of the install — a separate root script, `install-companions.sh` — installs
+three tools by default:
+
+- [superpowers](https://github.com/obra/superpowers) — a Claude Code plugin with workflow
+  skills. Installed from the official plugin marketplace
+  (`claude plugin install superpowers@claude-plugins-official --scope user -y`), with the
+  community marketplace `obra/superpowers-marketplace` as a fallback. The installer used
+  to disable it; the policy is now the reverse: Conductor is the process spine, while
+  superpowers supplies the skills on top of it.
+- [rtk](https://github.com/rtk-ai/rtk) — a Rust program that compresses terminal output
+  and thereby saves tokens. Installed with
+  `cargo install --git https://github.com/rtk-ai/rtk` when cargo is present; otherwise the
+  installer prints a loud SKIP and points you to a prebuilt binary on the releases page
+  (native Windows is supported). The wiring — the Claude Code hook and `~/.claude/RTK.md`
+  — is done by rtk itself via `rtk init -g`, which runs automatically when the wiring is
+  missing.
+- [graphify](https://github.com/Graphify-Labs/graphify) — a tool that builds a knowledge
+  graph of a codebase. Installed with `uv tool install graphifyy` (the package is called
+  `graphifyy`, the command is `graphify`), falling back to `pip install graphifyy`; then
+  `graphify install` registers the `/graphify` skill if it is not registered yet.
+
+Flags: `--skip-companions` skips the whole step (this is what the CI sandbox does in its
+smoke test); `--no-superpowers` opts out of the plugin only; `--keep-superpowers` is
+accepted for compatibility and does nothing — the plugin is installed anyway now.
+
+Every failure is loud and never aborts the Conductor install: a tool that could not be
+installed prints a SKIP or FAIL line with the reason, and the installation carries on.
+Re-running is safe — whatever is already in place prints "OK already". `uninstall.sh` does
+not remove these three tools: they are user-level tools and live their own life.
 
 Adapters for a specific project (the rules will be versioned along with it):
 

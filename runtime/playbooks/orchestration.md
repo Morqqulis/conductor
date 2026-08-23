@@ -44,7 +44,8 @@ A dispatch prompt contains EXACTLY these slots — never inherited history:
 3. contracts — signatures/types it must honor
 4. constraints — what it must not do
 5. output contract — report file path (OUTSIDE the repo tree, e.g. system temp — litter in
-   the working tree trips the dirty-tree probe) + "final message <= 15 lines"
+   the working tree trips the dirty-tree probe) + "final message <= 15 lines" + the coverage
+   map (contract duty: each dispatch requirement -> where satisfied, or MISSING)
 6. Conductor preset — mandatory, verbatim shape, immediately followed by the full body of the
    relevant playbook:
 ```
@@ -56,9 +57,33 @@ Fresh proving run before any claim; report <= 15 lines to <report-file>; no nest
 The skeptic dispatch uses skeptic.md's verbatim prompt — it is the sanctioned instantiation of
 this whitelist (with its restricted status set DONE | BLOCKED), not an exception.
 
+## MODEL AND EFFORT (per dispatch, where the harness offers it; never name model
+products in rules or prompts — generations rotate)
+- Effort tracks the subtask's OWN tier, not the parent's: bulk mechanical
+  work -> low; scoped work -> inherit; verification, judges, integration -> top offered.
+- Model: inherit the session's; lighter ONLY for a mechanical stage with machine-checkable
+  output; a verifier never runs lighter than the audited work. Cross-family:
+  skeptic.md (crossmodel.conf).
+
+## PARALLEL MUTATION (extra rules when two or more agents write)
+- Whole-tree gates (full build/matrix, cross-config diffs) never go into a parallel
+  dispatch prompt: a neighbour's half-done state fails them outside the agent's control.
+  Each agent proves its OWN modules narrowly; the controller runs the shared gates ONCE,
+  after all mutators return and the tree stops moving — only that run feeds acceptance.
+- Launching a second mutator amends the FIRST dispatch: name the neighbour's files
+  as off-limits and withdraw any whole-tree gate its prompt carries.
+- Slot 4 for every parallel mutator: neighbour files are read-only; needing one -> BLOCKED
+  naming the boundary, never a "careful" shared edit; no project-wide reformatting commands.
+- Acceptance: BEFORE reading a report, diff the agent's changed files against its declared
+  area — the difference must be empty. Any file outside it is a finding, including edits
+  beside a boundary refusal. Then the shared gates, then the skeptic on the frozen tree.
+- Dispatch the longest task first; do not pair two heavy acceptances — the controller's
+  acceptance work does not parallelize.
+
 ## Routing (controller-side, per returned status)
 - DONE -> verify by artifact: inspect the diff / run the check yourself. The report is never
-  the evidence (core claim table). Proportionality: on small scopes spot-check the
+  the evidence (core claim table). Coverage map first: an unmapped dispatch requirement
+  routes back before any artifact reading. Proportionality: on small scopes spot-check the
   load-bearing claims — re-reading everything the agents read defeats the fan-out.
 - DONE_WITH_CONCERNS -> read each named concern; it becomes a follow-up item or an accepted
   risk recorded in your own report.

@@ -59,7 +59,7 @@ jobs:
           printf '#!/usr/bin/env bash\nexit 1\n' > "$SB/bin/claude"
           chmod +x "$SB/bin/claude"
           HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" PATH="$SB/bin:$PATH" \
-            bash install.sh --language English </dev/null
+            bash install.sh --language English --skip-companions </dev/null
           HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" \
             bash tools/doctor.sh
           grep -q 'Answer in English' "$SB/home/.claude/CLAUDE.md"

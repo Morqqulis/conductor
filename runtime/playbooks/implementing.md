@@ -67,6 +67,11 @@ A green is worth only what it EXERCISED: read the count, the interleaving, the b
 the exit code. A run that executed no test and a race check whose window cannot open both
 pass. An assertion over SOURCE anchors on a symbol name or on normalized text, never on
 formatting a tool may rewrite.
+A NEW guard earns trust by remove-only proof (T2+): delete or disarm the protection it
+guards — the guard MUST go red; restore it — green. Paste both outputs; a red-green pair
+told in words is unproven. Split checks by what the answer depends on: a behavior check
+depends on its module — skip it when the module is untouched; an integrity guard reads the
+WHOLE project (registries, naming rules, classifications) and runs on EVERY task.
 
 ## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
 The old name is a debt until proven settled: search it across code, configs, docs, and
@@ -87,7 +92,9 @@ not evidence. Unverifiable right now -> say "from memory, unverified" in place.
 Any plan/spec text you produce is written for a zero-context reader. Before claiming done,
 scan your own diff for deferred-work stubs and vague directives (empty handlers left "for
 later", "handle it properly"-style lines, "same as the other file" references) — each one is
-a defect, not a note.
+a defect, not a note. Judge completeness against the TASK, not the artifact: in a separate
+pass, map each requirement of the request to where the deliverable satisfies it — an
+unmapped requirement is undelivered.
 
 ## Degradation
 A required context file is unreadable or absent -> NEEDS_CONTEXT naming the exact path.

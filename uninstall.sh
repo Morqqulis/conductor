@@ -6,6 +6,9 @@
 # belonging to other tools survive; your global CLAUDE.md is NEVER deleted - it holds your
 # values, not our machinery, and its backups are listed instead.
 #
+# The companion tools the installer adds (the superpowers plugin, rtk, graphify) are
+# user-level tools you may well use outside Conductor, so they are NOT removed here.
+#
 #   ./uninstall.sh --dry-run                     print every planned action, change nothing
 #   ./uninstall.sh --keep-lessons                copy the lessons inbox AND the curated
 #                                                store to the Desktop first

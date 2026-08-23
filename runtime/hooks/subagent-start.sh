@@ -12,7 +12,8 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$HOOK_DIR/payload.sh"
 
 CONTRACT="$HOOK_DIR/../subagent-contract.md"
-SOFT_CAP=2500
+# Pairs with the contract budget in qa/lint.sh — raise or lower the two together.
+SOFT_CAP=3000
 
 fail() {
     printf 'conductor SubagentStart hook FAILED: %s\n' "$1" >&2

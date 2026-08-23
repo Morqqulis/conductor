@@ -8,6 +8,8 @@ integration of delegated work; a checkpoint in a long autonomous run; a review w
 Default: exactly ONE skeptic agent — more only if the user explicitly asks. Dispatch after the
 implementer's completion gate passes and BEFORE reporting DONE to the user.
 No subagent capability available -> inline mode (below).
+A verdict binds only a tree that did not change during the round: with parallel mutators
+still active, serialize first (orchestration.md) — a verdict over a moving tree is void.
 
 NOT a skeptic's job: re-checking an edit you made yourself and proved with a fresh run in this
 session. That verifier can only re-derive evidence you already hold, and pays a full context to
@@ -35,6 +37,8 @@ You are a skeptic verifier. Below is a report from an implementer. Treat every s
 as an UNVERIFIED CLAIM — the report is not evidence, and rationales never downgrade severity.
 Diff/files: <paths>. Claimed: <one-line summary>.
 Verify claim by claim against the actual artifacts, with fresh runs where runnable.
+Coverage map first: a dispatch requirement unmapped or MISSING in the report is a finding
+before any content review.
 Output format — every line must be one of: a verdict line (V verified | X refuted |
 ? cannot-verify) with file:line; a finding with file:line; or a named check you ran with its
 result. Two lanes only: "Issues:" (blocking) and "Recommendations:" (advisory).

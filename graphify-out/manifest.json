@@ -192,16 +192,16 @@
     "semantic_hash": "63a33343c9fac474832b120ab2c1e8af"
   },
   "qa/lint.sh": {
-    "mtime": 1787272620.0735812,
-    "seen": 1787273989.186878,
-    "ast_hash": "c4e7522e2c3a187a066352e83070514e",
-    "semantic_hash": "c4e7522e2c3a187a066352e83070514e"
+    "mtime": 1787516542.0294788,
+    "seen": 1787518740.8817189,
+    "ast_hash": "99b2a8ba956e6f1d319255a3282b1d82",
+    "semantic_hash": "99b2a8ba956e6f1d319255a3282b1d82"
   },
   "qa/settings-json-test.py": {
-    "mtime": 1787265754.5109904,
-    "seen": 1787273989.186878,
-    "ast_hash": "9e7893496cfe2092b1579e49ec1c1f0f",
-    "semantic_hash": "9e7893496cfe2092b1579e49ec1c1f0f"
+    "mtime": 1787516551.8050878,
+    "seen": 1787518740.8817189,
+    "ast_hash": "b9b50e390a70ed001132faba4d1c8de4",
+    "semantic_hash": "b9b50e390a70ed001132faba4d1c8de4"
   },
   "runtime/hooks/lessons-inject.sh": {
     "mtime": 1786818740.412139,
@@ -222,10 +222,10 @@
     "semantic_hash": "e1ddce511fc803cdec22d3b7f88b5655"
   },
   "runtime/hooks/subagent-start.sh": {
-    "mtime": 1786625488.7896214,
-    "seen": 1787273989.186878,
-    "ast_hash": "d374d390cd42fae889aac312f8c97657",
-    "semantic_hash": "d374d390cd42fae889aac312f8c97657"
+    "mtime": 1787514602.1899705,
+    "seen": 1787518740.8817189,
+    "ast_hash": "c96467a8c2085b01cd1dd200be6e6ec4",
+    "semantic_hash": "c96467a8c2085b01cd1dd200be6e6ec4"
   },
   "runtime/hooks/test-run-journal.sh": {
     "mtime": 1786810002.4570088,
@@ -294,28 +294,28 @@
     "semantic_hash": "b88f327ca92a4257f9eb66aeb62828ce"
   },
   "AGENTS.md": {
-    "mtime": 1786810236.6035714,
-    "seen": 1787273989.186878,
-    "ast_hash": "480ee40aea248d07f8290b29d03ecc9b",
-    "semantic_hash": "480ee40aea248d07f8290b29d03ecc9b"
+    "mtime": 1787516517.7519343,
+    "seen": 1787518740.8817189,
+    "ast_hash": "a5e969b1d83e60722cec670704e6185b",
+    "semantic_hash": "a5e969b1d83e60722cec670704e6185b"
   },
   "CHANGELOG.md": {
-    "mtime": 1787266289.4640045,
-    "seen": 1787273989.186878,
-    "ast_hash": "b0d42d62c809db640b611313421dd281",
-    "semantic_hash": "b0d42d62c809db640b611313421dd281"
+    "mtime": 1787517284.6135476,
+    "seen": 1787518740.8817189,
+    "ast_hash": "7257483afa211a9d45fde7305c2715fd",
+    "semantic_hash": "7257483afa211a9d45fde7305c2715fd"
   },
   "CLAUDE.md": {
-    "mtime": 1786810226.950547,
-    "seen": 1787273989.186878,
-    "ast_hash": "b793e202dc43760ca98329eb69892630",
-    "semantic_hash": "b793e202dc43760ca98329eb69892630"
+    "mtime": 1787516516.5058076,
+    "seen": 1787518740.8817189,
+    "ast_hash": "c28fd10f7f38cc87dacb3f63ecc318be",
+    "semantic_hash": "c28fd10f7f38cc87dacb3f63ecc318be"
   },
   "HANDOFF.md": {
-    "mtime": 1787266289.4640045,
-    "seen": 1787273989.186878,
-    "ast_hash": "3ed28dc7ad2a2df3a19a7ae213c5f101",
-    "semantic_hash": "3ed28dc7ad2a2df3a19a7ae213c5f101"
+    "mtime": 1787516931.5465994,
+    "seen": 1787518740.8817189,
+    "ast_hash": "2fce1d9d2d68b4d6cfaeb629abbe492a",
+    "semantic_hash": "2fce1d9d2d68b4d6cfaeb629abbe492a"
   },
   "README.az.md": {
     "mtime": 1786821280.0665095,
@@ -354,10 +354,10 @@
     "semantic_hash": "6ded2d69b1c51a6cff1dad496655c225"
   },
   "deploy/global-CLAUDE.md": {
-    "mtime": 1787272620.0705812,
-    "seen": 1787273989.186878,
-    "ast_hash": "01700f977a70f4f83f5d3642fad6d485",
-    "semantic_hash": "01700f977a70f4f83f5d3642fad6d485"
+    "mtime": 1787517244.927766,
+    "seen": 1787518740.8817189,
+    "ast_hash": "1e90ab384cf83da303d388f9f6f739f9",
+    "semantic_hash": "1e90ab384cf83da303d388f9f6f739f9"
   },
   "docs/MENTOR-NOTES.md": {
     "mtime": 1786625488.7735307,
@@ -444,10 +444,10 @@
     "semantic_hash": "24e7876bdc671242e8cae21d4797f9ae"
   },
   "runtime/playbooks/debugging.md": {
-    "mtime": 1786625488.7896214,
-    "seen": 1787273989.186878,
-    "ast_hash": "3fd8059e10e208a35478fd742599cd7f",
-    "semantic_hash": "3fd8059e10e208a35478fd742599cd7f"
+    "mtime": 1787514572.881716,
+    "seen": 1787518740.8817189,
+    "ast_hash": "ed4780b8fd317959fc0b66ac1fe5a6f2",
+    "semantic_hash": "ed4780b8fd317959fc0b66ac1fe5a6f2"
   },
   "runtime/playbooks/distill.md": {
     "mtime": 1786818781.8011534,
@@ -456,10 +456,10 @@
     "semantic_hash": "98246bb355e629c58b0c355f0422cafc"
   },
   "runtime/playbooks/implementing.md": {
-    "mtime": 1786625488.7896214,
-    "seen": 1787273989.186878,
-    "ast_hash": "67c2c429368b5885b7cdfcccd992c776",
-    "semantic_hash": "67c2c429368b5885b7cdfcccd992c776"
+    "mtime": 1787514562.9004526,
+    "seen": 1787518740.8817189,
+    "ast_hash": "f1e68bb9ed2ed313fa575c732dfb562c",
+    "semantic_hash": "f1e68bb9ed2ed313fa575c732dfb562c"
   },
   "runtime/playbooks/investigating.md": {
     "mtime": 1786807779.0612905,
@@ -468,22 +468,22 @@
     "semantic_hash": "c89a37c28c5893019f51ce338bd1ec06"
   },
   "runtime/playbooks/methods.md": {
-    "mtime": 1786821245.6763737,
-    "seen": 1787273989.186878,
-    "ast_hash": "cc20b4932e38681f10ab8076bb2cf071",
-    "semantic_hash": "cc20b4932e38681f10ab8076bb2cf071"
+    "mtime": 1787515676.269348,
+    "seen": 1787518740.8817189,
+    "ast_hash": "2ecc11834c33a70ab81a931eae85ca38",
+    "semantic_hash": "2ecc11834c33a70ab81a931eae85ca38"
   },
   "runtime/playbooks/orchestration.md": {
-    "mtime": 1786810186.3936188,
-    "seen": 1787273989.186878,
-    "ast_hash": "5957f8cbf21926a601e371aae09ca1dc",
-    "semantic_hash": "5957f8cbf21926a601e371aae09ca1dc"
+    "mtime": 1787516784.740306,
+    "seen": 1787518740.8817189,
+    "ast_hash": "b6d4616134e2105695dc13318e268dfe",
+    "semantic_hash": "b6d4616134e2105695dc13318e268dfe"
   },
   "runtime/playbooks/skeptic.md": {
-    "mtime": 1786810199.890531,
-    "seen": 1787273989.186878,
-    "ast_hash": "d7fdbf76c4998fda90183cf653e2af8c",
-    "semantic_hash": "d7fdbf76c4998fda90183cf653e2af8c"
+    "mtime": 1787514545.3164876,
+    "seen": 1787518740.8817189,
+    "ast_hash": "8260c000e2402e7116b0c3697bc97bdd",
+    "semantic_hash": "8260c000e2402e7116b0c3697bc97bdd"
   },
   "runtime/snippets/probes.md": {
     "mtime": 1786625488.7896214,
@@ -492,9 +492,21 @@
     "semantic_hash": "d4af4d33395a0c5906ea7ade826c4449"
   },
   "runtime/subagent-contract.md": {
-    "mtime": 1786807828.9148533,
-    "seen": 1787273989.186878,
-    "ast_hash": "5b35701072dc5e53d506c299786ce320",
-    "semantic_hash": "5b35701072dc5e53d506c299786ce320"
+    "mtime": 1787514512.3724878,
+    "seen": 1787518740.8817189,
+    "ast_hash": "5e17ef822b8f417ff499d48a7be3e256",
+    "semantic_hash": "5e17ef822b8f417ff499d48a7be3e256"
+  },
+  "docs/PARALLEL-WORK.md": {
+    "mtime": 1787512342.8284154,
+    "seen": 1787518740.8817189,
+    "ast_hash": "4947066aa27b68a5447ee21b3966b2cc",
+    "semantic_hash": "4947066aa27b68a5447ee21b3966b2cc"
+  },
+  "docs/PROOF-LOOP.md": {
+    "mtime": 1787512516.6073318,
+    "seen": 1787518740.8817189,
+    "ast_hash": "b37512ffeed6feec569f184a5e9ac309",
+    "semantic_hash": "b37512ffeed6feec569f184a5e9ac309"
   }
 }

@@ -73,6 +73,18 @@ preconditions, then tag each PROVEN (you ran/read it) or ASSUMED. Every ASSUMED 
 is a candidate finding — an unverified assumption is the usual place a plausible claim is
 actually wrong. This is the depth move: it converts confidence into a checkable list.
 
+## A guard's prose is a claim, not evidence
+What a guard says about itself is untested text. Probe each claim it makes:
+- "catches X" -> compile one probe per spelling of X; the spellings the compiler accepts are
+  rarely the ones you thought of;
+- "is invoked" -> grep its name across scripts and CI, then rename it and watch the runner
+  fail "executed 0 of 1";
+- "guarantees scope S" -> a gate proves only the configuration it COMPILED; cfg- and
+  platform-gated code sits outside every local green;
+- "tests rule R" -> match the tool to R (a lint ban is proven by the linter, never by a
+  successful compile).
+When a fix's premise is "stop scanning text", audit its own guards for text scanning.
+
 ## Rigor gradient
 Verification depth rises toward integration and merge — the last gate before the user is the
 strictest one, never the most trusting.

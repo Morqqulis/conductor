@@ -55,10 +55,20 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    Test fails before revert -> the fix is incomplete: back to step 5.
 7. Completion gate (core), with the ritual's final run as the proving run.
 
+## Before step 2, when the red is SUDDEN
+Ask whether the ENVIRONMENT is alive before hunting a regression: a stopped container, an
+expired credential, a full disk or a revoked token produces a red that looks exactly like
+broken code. Two tells that it is the environment: the failing tests are ones nobody edited,
+and they die on CONNECT/startup rather than on an assertion. Cascading panics from a dead
+dependency read as memory corruption in the output.
+
 ## Tripwires (in your own output)
 - "should work now" / "probably fixes" -> that is a hypothesis; run the repro command.
 - "while I'm here" -> out of scope; follow implementing.md pre-declaration or skip.
 - User says "stop guessing" -> a process signal, not social pressure: return to step 2.
+- A step ALLOWED to fail (continue-on-error, tolerated exit code, best-effort cleanup)
+  reported success -> assert the COUNT of work actually done. "It did not fail" and "it did
+  the work" are different claims, and the first is what a silently dead step reports.
 
 ## Degradation
 Repro requires an unavailable environment (prod-only, missing credentials) -> BLOCKED naming

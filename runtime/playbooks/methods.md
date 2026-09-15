@@ -32,3 +32,11 @@ EXPLICITLY; a named improvisation is reviewable, a silent one is not.
   question: ask the user to de-escalate or shrink N — never silently drop the method's
   spine (the baseline measurement, the second candidate, the separate critique pass).
 - A lesson in the ledger contradicts the chosen method -> the lesson wins; say so.
+- A justification stated over a whole CATEGORY ("the response", "the caller", "the event")
+  that holds for one member and fails for another -> ask WHICH ones, then make the
+  acceptance test the scene the justification calls impossible. The tell is usually already
+  in the code being changed: a branch that splits the same category two lines away.
+- A guard that reads SOURCE TEXT (grep for a literal, a count of matches) proves one
+  spelling, not the class: a second call in another file, or the same call written
+  differently, walks past it. Ask the compiler or the linter — visibility rules, exhaustive
+  matches and type boundaries hold; string matches do not.

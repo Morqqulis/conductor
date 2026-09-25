@@ -4,9 +4,7 @@ Load trigger: enumeration artifact >20 files or >1500 measured lines; >=3 indepe
 subtasks; any T3; or tempted to read serially "just to be sure".
 
 ## Cost model (why these rules generalize)
-Context is rent: everything pasted into the main session is re-read every turn. A subagent
-reads 20 files and returns 10 lines; reading them yourself makes every later turn pay for
-those 20 files again.
+Delegate large independent scopes to reduce main-session context, not to multiply small tasks.
 
 ## WHEN (machine proxies, never judgment)
 - Investigation: the enumeration artifact exceeds 20 files or 1500 measured lines
@@ -20,11 +18,9 @@ those 20 files again.
   worktrees (run probes.md#dirty-tree first) and names each agent's worktree path in slot 2.
 
 ## ASYNC (the controller does not idle)
-Dispatch, then keep working on what does not depend on the returns — a controller blocked on the
-slowest agent has converted parallel work back into serial work. Where the harness supports it,
-keep a long-lived agent across related subtasks: it reads from a warm context instead of paying
-the setup again. Intervene the moment a returned report shows drift or missing context; do not
-wait for the whole fleet to land.
+After dispatch, continue independent work. Reuse a long-lived agent for related subtasks when
+supported, preserving its context. Intervene on drift or missing context without waiting for
+the other agents.
 
 ## FLEET (size and shape — structure decides, never a favorite number)
 - Size = independent angles x verification votes. Research: one agent per angle, blind
@@ -51,7 +47,7 @@ A dispatch prompt contains EXACTLY these slots — never inherited history:
 ```
 Conductor preset: <type>|<tier>, playbook content inline below — skip Step 0 load.
 End with exactly one status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT.
-Fresh proving run before any claim; report <= 15 lines to <report-file>; no nested subagents.
+Applicable evidence before any claim; report <= 15 lines to <report-file>; no nested subagents.
 <full playbook body pasted here>
 ```
 The skeptic dispatch uses skeptic.md's verbatim prompt — it is the sanctioned instantiation of
@@ -68,15 +64,17 @@ products in rules or prompts — generations rotate)
 ## PARALLEL MUTATION (extra rules when two or more agents write)
 - Whole-tree gates (full build/matrix, cross-config diffs) never go into a parallel
   dispatch prompt: a neighbour's half-done state fails them outside the agent's control.
-  Each agent proves its OWN modules narrowly; the controller runs the shared gates ONCE,
-  after all mutators return and the tree stops moving — only that run feeds acceptance.
+  Each agent proves its OWN modules narrowly; after mutators return, the controller checks
+  changed interactions not already proven on the integrated state (verification.md).
+  Run any required shared check once on that state; full gates are not automatic.
 - Launching a second mutator amends the FIRST dispatch: name the neighbour's files
   as off-limits and withdraw any whole-tree gate its prompt carries.
 - Slot 4 for every parallel mutator: neighbour files are read-only; needing one -> BLOCKED
   naming the boundary, never a "careful" shared edit; no project-wide reformatting commands.
 - Acceptance: BEFORE reading a report, diff the agent's changed files against its declared
   area — the difference must be empty. Any file outside it is a finding, including edits
-  beside a boundary refusal. Then the shared gates, then the skeptic on the frozen tree.
+  beside a boundary refusal. Then the impact-selected checks, then the skeptic when required
+  by its invocation rules; no automatic full suite for independent, proven leaf edits.
 - Dispatch the longest task first; do not pair two heavy acceptances — the controller's
   acceptance work does not parallelize.
 
@@ -93,14 +91,15 @@ products in rules or prompts — generations rotate)
 ## Integration
 After all agents return, apply the INTERSECTION RULE first: any file named by two or more
 agents from DIFFERENT angles is a coupling hotspot — read it yourself before accepting any
-conclusion about it. Then run the integration check (full test run / lint) YOURSELF. At T3,
+conclusion about it. Inspect evidence applicability per verification.md; run only missing
+checks of changed interactions. Accept valid agent/CI runs without duplicating them. At T3,
 dispatch skeptic.md on the integrated result, and after the skeptic passes, the core T3
 checkpoint applies: get explicit user approval BEFORE merging/integrating. Rigor peaks here —
 at integration, not dispatch.
 
 What integration verification is FOR: work you did not watch being done. A fresh-context verifier
 catches what a report conceals. It is not a second opinion on an edit you made and already proved
-with your own fresh run — that agent re-derives what you hold evidence for, and costs a context to
+with applicable evidence — that agent re-derives what you hold evidence for, and costs a context to
 do it.
 
 ## Degradation

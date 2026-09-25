@@ -1,7 +1,8 @@
 # Probes (canonical — reference by name, never restate)
 
 ## probes.md#test-runner-discovery
-Manifest in the repo root -> the project's FULL test command (Glob/Read; first hit wins):
+Manifest -> standard suite command (discovery only, NOT a requirement to run the full suite;
+choose scope with verification.md first). Glob/Read; first hit wins:
 package-lock.json|pnpm-lock.yaml|yarn.lock|bun.lockb -> `npm|pnpm|yarn|bun test` (a "test"
 script must exist in package.json; missing -> keep searching); deno.json(c) -> `deno test`;
 Cargo.toml -> `cargo test`; go.mod -> `go test ./...`; pyproject.toml|pytest.ini|tox.ini|
@@ -14,8 +15,8 @@ enable_testing() -> `ctest`; Makefile with a `test:` target -> `make test`.
 Fallback, any language: .github/workflows/*.yml -> the run: line of a test step — the project
 declares its own command there, so an unlisted ecosystem is still covered.
 NONE FOUND -> a "tests pass" claim specifically is impossible (never guess a command); the
-turn is not automatically BLOCKED: an inline execution proof (node/python invocation of the
-changed path) may serve as the gate's proving run — claim it narrowly.
+turn is not automatically BLOCKED: execute the changed path and claim narrowly, or use diff
+inspection for the no-test path in verification.md.
 
 ## probes.md#caller-count
 Grep tool: pattern = the exported symbol name (word-boundary), output_mode = files_with_matches.

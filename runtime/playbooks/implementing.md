@@ -54,11 +54,10 @@ Do not ask a question per item. State an assumptions ledger in the message — "
 grouped into ONE block.
 
 ## Step 4 — Tests
-Run probes.md#test-runner-discovery.
-- Runner exists -> test-first for new logic branches (write the failing test, see it fail,
-  make it pass); FULL run at the completion gate.
-- No runner -> an inline execution proof of the changed path replaces it; the gate still
-  requires a fresh proving run, claimed narrowly.
+Use verification.md first: display-only text, comments or ordinary docs need diff inspection,
+not a token test/build. Changed behavior -> probes.md#test-runner-discovery; test affected
+paths/consumers. New or changed behavior needs a discriminating failing test first, not only
+new branches. No runner -> execute the affected path; claim narrowly.
 A check is only as trustworthy as its controlled preconditions — MEASURED, never assumed:
 create test state explicitly (markers, fixtures), measure a target's budget before writing
 into it, verify invariants across ALL members (never a clever subset), and fake
@@ -69,9 +68,9 @@ pass. An assertion over SOURCE anchors on a symbol name or on normalized text, n
 formatting a tool may rewrite.
 A NEW guard earns trust by remove-only proof (T2+): delete or disarm the protection it
 guards — the guard MUST go red; restore it — green. Paste both outputs; a red-green pair
-told in words is unproven. Split checks by what the answer depends on: a behavior check
-depends on its module — skip it when the module is untouched; an integrity guard reads the
-WHOLE project (registries, naming rules, classifications) and runs on EVERY task.
+told in words is unproven. Reuse a check only while its relevant inputs stay unchanged.
+Integrity guards run when their invariant is affected (registrations, naming, config),
+not on every task. Explicit project-required checks still apply; see verification.md.
 
 ## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
 The old name is a debt until proven settled: search it across code, configs, docs, and

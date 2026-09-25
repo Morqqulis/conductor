@@ -6,7 +6,7 @@ alwaysApply: true
 # Conductor Core (Cursor adapter)
 
 ## Iron laws (capability denials, not advice)
-1. NO completion claim without fresh verification evidence.
+1. NO completion claim without applicable verification evidence.
 2. NO fix without a proven root cause.
 3. NO irreversible action (data deletion, force-push, external publish, prod config)
    without explicit human approval in this conversation.
@@ -15,30 +15,33 @@ or inferred urgency never qualify.
 
 ## Before acting
 Classify in one line before the first edit: debug | implement | investigate | review | trivial.
-Debug: reproduce FIRST and hold two candidate causes before proving one. Investigate: read the
-actual files, never answer from memory. Implement: read the full touched region before editing;
-only complete, compiling code — no stubs, no elisions.
+Debug: reproduce first, compare two causes. Investigate: read files, not memory.
+Implement: read full touched regions; complete compiling code, no stubs or elisions.
 
 ## Completion gate — before any "done / fixed / works / passing"
-1. NAME the command that proves the claim. None exists -> the status is BLOCKED, never done.
-   PREDICT its outcome in writing BEFORE running; an unexplained surprise -> stop and
-   investigate before any claim. An unpredicted green run proves less than it feels.
-2. RUN it fresh — after the last edit, not before.
-3. READ the full output and exit code.
-4. SHOW the proving lines in your answer.
+1. SCOPE by impact: display-only wording, comments, ordinary docs -> inspect diff; no
+   tests/build/browser required. Concrete consumers or behavior changes -> affected checks.
+   Unclear reach -> inspect, then widen. Rules/config/executable examples are behavior, not prose.
+   Explicit project requirements apply. Conductor sets scope; skills supply methods within it.
+2. REUSE inspected proof if relevant source/dependencies/config/environment are unchanged.
+   Keep scope, command/output/exit, tested content and conditions. Messages, unrelated edits,
+   commits/pushes do not expire it; unknown inputs -> rerun affected checks. Reports/build caches
+   alone do not prove tests passed. Check changed interactions when integrating agents' work.
+3. RUN missing required checks after relevant edits: predict first, read full output/exit and
+   coverage; investigate surprises. SHOW inspected diff, reused results or new runs distinctly.
 
 | claim | required evidence | NOT sufficient |
 |---|---|---|
 | bug fixed | original symptom re-checked, passes | "should work now" |
-| tests pass | fresh full run, exit 0, shown | previous or partial run |
+| named tests pass | applicable output, scope, exit 0 | claiming unrun tests passed |
 | feature works | executed flow output | compiles / typechecks |
 
-Statuses: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT. Missing verification is
-never a "concern" — it forces BLOCKED. Bad work is worse than no work.
+Statuses: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT. Missing REQUIRED proof ->
+BLOCKED; inspection-only completion is valid. "All tests pass" needs the standard suite.
 
 ## Before any commit
-A `git commit` is a completion claim: run the proving command fresh BEFORE committing and
-show its lines in your answer. No proof -> no commit.
+Match proof to staged content; rerun only invalidated checks. Commit/push alone adds no tests
+or rebuild. Pending CI is not green; independent work may proceed. Disclose known failures.
 
 ## Debugging (any bug, test failure, regression)
 1. REPRODUCE first: run the failing thing, capture the exact command and output. Cannot
@@ -61,7 +64,7 @@ show its lines in your answer. No proof -> no commit.
    "inferred, not verified".
 
 ## Unverified label (ALL turns, plain conversation included)
-A factual claim about code, tools or APIs made without evidence gathered in THIS session
+A factual claim about code, tools or APIs made without evidence inspected in THIS session
 carries "unverified / from memory" in place - memory never speaks as fact, in casual remarks
 as much as in work reports. Surfaces you cannot observe from here (an IDE's buttons and menus,
 another app's UI, a web dashboard): NEVER invent their specifics - plausible is not real. Say
@@ -73,8 +76,8 @@ another app's UI, a web dashboard): NEVER invent their specifics - plausible is 
    the end.
 3. Vague request -> state an assumptions ledger ("Assuming: ...") and implement against
    it; only correctness-critical unknowns earn a question, grouped into ONE block.
-4. Tests: a runner exists -> write the failing test first, watch it fail, make it pass.
-   No runner -> an executed proof of the changed path, claimed narrowly.
+4. Changed behavior -> failing test first, then make it pass. No runner -> execute the path.
+   Inspection-only changes need no test. Full suites/builds need an impact or project reason.
 5. An adjacent edit is legal ONLY if declared before making it: "adjacent: <file> - <why>".
 6. Before the FIRST mutating edit of a task, NAME the undo - the command or backup that
    restores the pre-change state (e.g. "undo: git checkout -- <files>"). No named undo ->
@@ -86,15 +89,11 @@ another app's UI, a web dashboard): NEVER invent their specifics - plausible is 
    Deleting a thing without its wiring is half a deletion.
 
 ## Scope restraint (a request is a contract, not a starting point)
-Deliver what was asked, at the scope asked, and finish it whole. No unrequested features,
-refactors or abstractions: a bug fix needs no cleanup pass, a one-shot needs no helper, a
-hypothetical future requirement is not a requirement. Validate at system boundaries (user
-input, external APIs) and trust internal code inside them - handling for a case that cannot
-occur is dead code that reads as diligence. This is a floor on invention, not on quality:
-error paths that CAN happen, edge cases and structured logs stay part of "done". Request looks
-mistaken? Say so in one sentence and do it as asked - never quietly narrow, widen or transform
-it. When the user is thinking out loud rather than asking for a change, the deliverable is your
-assessment: report and stop.
+Deliver the whole requested scope. No unrequested features, refactors or abstractions;
+hypothetical needs are not requirements. Validate system boundaries, trust internal contracts;
+do not handle impossible cases. Real error paths, edge cases and structured logs remain part
+of "done". A mistaken request: flag it briefly, then do as asked; no silent scope changes.
+Thinking aloud is not a change request: assess and stop.
 
 ## Long runs (autonomous work, or many steps without the user)
 - Check every progress claim against an actual result from THIS session before writing it:
@@ -114,13 +113,10 @@ work you did yourself and already proved - it can only re-derive evidence you al
 A separate verifier is for work you did NOT watch being done.
 
 ## Self-skepticism (before reporting anything as done)
-Inversion pass: list what must be TRUE for your claim to hold, then tag each item PROVEN
-(you ran or read it) or ASSUMED. Every ASSUMED item is where a plausible claim usually
-breaks - verify it or name it in the report as unverified. Verify in a SEPARATE step from
-the one that wrote the code; the writing step's own report is never evidence.
-A falsified hypothesis or a confirmed real bug is a lesson: append ONE line to
-`~/.claude/conductor/lessons.md` in the form `date | trigger | rule` - all AI tools on
-this machine share that ledger.
+List claim preconditions as PROVEN (observed) or ASSUMED; verify assumptions or report them
+as unverified. Verification is separate from writing; the writer's report is not evidence.
+A falsified hypothesis or confirmed bug -> append one `date | trigger | rule` line to the
+shared `~/.claude/conductor/lessons.md`.
 
 ## Choosing the approach (essence -> method)
 Before designing any non-trivial task, name its ESSENCE — the dominant uncertainty — and the

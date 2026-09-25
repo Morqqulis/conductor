@@ -148,6 +148,12 @@ expect_fail "shell syntax error injected into a hook" \
     "shell syntax error: runtime/hooks/session-start.sh" \
     runtime/hooks/session-start.sh
 
+# --- case 14: the new verification playbook must retain its budget guard ---------------
+{ printf 'X%.0s' $(seq 1 5001); printf '\n'; } >> "$WORK/runtime/playbooks/verification.md"
+expect_fail "verification playbook over budget" \
+    "verification.md over budget:" \
+    runtime/playbooks/verification.md
+
 # --- summary -------------------------------------------------------------------------
 total=$((pass + fail))
 echo "selftest: $pass/$total cases passed"

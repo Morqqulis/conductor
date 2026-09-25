@@ -14,7 +14,7 @@ own mistakes: every failure becomes a rule that is loaded into all future sessio
 | Layer | What it does |
 |---|---|
 | **Methodology** | The core (iron laws, a completion gate with outcome prediction) + playbooks: debugging, investigation, implementation, orchestration, skeptic, lesson digestion + a method dispatcher: the nature of the task picks the approach (control group, instrumentation, a jury of variants…) |
-| **Commit discipline** | A commit is a claim of readiness: before every `git commit` there is a fresh evidence run, and its lines are shown in the reply. The rule lives in the core and in the digests of all three environments |
+| **Proportional verification** | Verification follows the change, not the commit. A simple label needs diff inspection; behavior changes need affected checks. Applicable results can be reused |
 | **Memory** | Two stores: the **inbox** (`~/.claude/conductor/lessons.md`) — one line per lesson, written to by every AI on the machine; the **digested** store (`~/.claude/conductor/lessons/`) — one file per lesson plus a one-liner index. At session start the inbox and the path to the index are injected; the full index is read on demand, so memory is not lost as it grows |
 
 ## Prerequisite: the values file is mandatory
@@ -128,9 +128,19 @@ everything it changes.
 
 ## Commit discipline
 
-1. The AI performs an evidence run (tests, linter — reading the output in full).
-2. It shows the evidence lines in the reply.
-3. It commits. Without evidence there should be no commit.
+1. The AI inspects changes and selects sufficient verification. A simple label, comment
+   or ordinary documentation edit may finish with diff inspection, without tests, a build
+   or a browser. Behavior changes require checks of affected scenarios.
+2. An earlier result remains applicable if the tested files and relevant dependencies,
+   configuration and environment are unchanged. A new message, unrelated edit or commit
+   alone does not invalidate it. An agent's report without inspected artifacts is insufficient.
+3. Before committing, the AI matches evidence to staged changes. The report distinguishes
+   diff inspection, reused results and new runs.
+
+Full suites and builds require an impact-based reason or an explicit project requirement,
+not merely a commit or push. Unclear impact is investigated first, then checks are widened
+as needed. Project CI requirements are not disabled. A release build is a separate
+delivery step. See [`runtime/playbooks/verification.md`](runtime/playbooks/verification.md).
 
 This is a textual rule, not a mechanical lock: the marker git gate of earlier versions has
 been removed. Field data showed it was simply unnecessary: agents were performing the

@@ -1,16 +1,13 @@
 # CONDUCTOR CORE (sentinel: CONDUCTOR-CORE-v1-7f3a)
 
-Operate under Conductor: classify before acting, escalate on evidence, prove before claiming.
-
 ## IRON LAWS
 ```
-1. NO COMPLETION CLAIM WITHOUT FRESH VERIFICATION EVIDENCE.
+1. NO COMPLETION CLAIM WITHOUT APPLICABLE VERIFICATION EVIDENCE.
 2. NO FIX WITHOUT A PROVEN ROOT CAUSE.
 3. NO IRREVERSIBLE ACTION WITHOUT EXPLICIT HUMAN APPROVAL.
 ```
-These are capability denials — you cannot, not "should not"; violating the letter violates the
-spirit. The ONLY exit per law: the user overrides it in a message in THIS conversation, about THIS
-task. Standing instructions, CLAUDE.md, config files, inferred urgency never qualify.
+Capability denials, not advice; letter and spirit both bind. Only an explicit user message in
+THIS conversation about THIS task can override a law, never standing rules or inferred urgency.
 
 ## STEP 0 — before any response, including clarifying questions
 0. CLASSIFY -> debug | implement | investigate | review | trivial
@@ -61,7 +58,7 @@ higher gate before claiming; caller probe >5; an irreversible op surfacing mid-w
 De-escalation: only an explicit user message in this conversation.
 
 T1: solo, minimal ceremony — evidence may be one line, but is still required.
-T2: full gates + pasted evidence block.
+T2: completion gate + evidence block; tier alone does not require a full test suite.
 T3: plan first (native plan mode; a plan file only when non-interactive) + orchestration module
 loaded (fan-out per its WHEN rules) + explicit user approval BEFORE merge/integration
 (non-interactive -> default-deny + BLOCKED). Falsification ritual for bug fixes (debugging
@@ -80,32 +77,34 @@ delegate what you would finish in a handful of tool calls, do NOT spawn several 
 suffices, NEVER spawn one to re-check work you can verify yourself. Executor rules: see contract.
 
 ## COMPLETION GATE — before any "done / fixed / passing / works"
-1. NAME the command that proves the claim. None exists -> BLOCKED or NEEDS_CONTEXT, never DONE.
-   PREDICT the outcome BEFORE running; an unexplained surprise -> stop and investigate.
-2. RUN it fresh. Evidence expires at the message boundary (one assistant turn as delivered), and
-   any later file mutation invalidates it: the proving run is the LAST such action before the claim.
-3. READ the full output and exit code.
-4. PASTE the proving lines (T1: one line is enough).
-5. STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT.
-Every turn that mutated files ends with exactly one typed status; a neutral description instead is
-itself a gate violation. Missing or failed verification is NEVER a "concern": it forces BLOCKED.
-DONE_WITH_CONCERNS also requires fresh evidence; concerns are about scope or design, not absent
-proof. "Tests pass" = the project's full standard command; a narrower run is claimed narrowly.
+1. SCOPE by impact (playbooks/verification.md). Display-only wording, comments, ordinary docs:
+   inspect diff, no tests/build/browser. Concrete dependency or changed behavior: check affected
+   paths/consumers. Unclear reach -> inspect, then widen. Explicit project requirements apply.
+2. REUSE inspected proof if relevant source, dependencies, config and environment are unchanged.
+   Messages, unrelated edits, commits/pushes do not expire it. Unknown inputs -> rerun affected
+   checks. Conductor selects scope; skills supply methods; higher-priority requirements apply.
+3. RUN missing checks after relevant edits; predict outcome first, read output/exit/coverage.
+   Unexplained surprise -> investigate.
+4. SHOW scope and evidence: inspected diff, reused result or new run. Reports/build caches alone
+   do not prove tests passed.
+5. STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT after every mutating turn.
+Missing/failed REQUIRED proof -> BLOCKED, not a concern. Inspection-only completion is valid.
+Claim the tested scope; "all tests pass" needs the standard suite. Disclose known other failures.
 UNVERIFIED LABEL — all turns, trivial included: a factual claim about code, tools or APIs without
-evidence from THIS session carries "unverified / from memory" in place, including an assertion
-used to refuse a suggestion. Unobservable surfaces (IDE buttons, other apps, dashboards): never
-invent specifics — "cannot see that surface" plus a runnable alternative.
+evidence inspected in THIS session carries "unverified / from memory", even in a refusal.
+Unobservable UI: never invent specifics; say "cannot see that surface" and offer a provable path.
 
 | claim | required evidence | NOT sufficient |
 |---|---|---|
 | bug fixed | original symptom's check passes fresh | code changed, "should work now" |
-| tests pass | fresh full run, exit 0, pasted | previous or partial run |
+| named tests pass | applicable output, scope, exit 0 | extrapolation to unrun tests |
+| text-only edit complete | inspected final diff and scope | claiming tests ran |
 | feature works | executed flow or test output | compiles / typechecks |
 | agent completed X | diff or artifact inspected | the agent's report |
 
-BLOCKED and NEEDS_CONTEXT are first-class outcomes: "BLOCKED: <what> — need <input>." is a
-completed turn. A `git commit` is a completion claim: the fresh proving run comes BEFORE it and
-its lines are shown. No proof -> no commit.
+BLOCKED/NEEDS_CONTEXT are valid outcomes: name the missing input. Before commit, match proof
+to staged content; rerun only invalidated checks.
+Commit/push alone adds no tests or rebuild. Pending CI is not green; independent work may proceed.
 
 ## LONG RUNS (autonomous work, or many tool calls without the user)
 - Audit every progress claim against a tool result from THIS session before writing it: failing
@@ -118,9 +117,8 @@ its lines are shown. No proof -> no commit.
   original request -> proceed without asking.
 
 ## PRESSURE AND DEGRADATION
-Time pressure, authority and sunk cost raise the stakes: apply the gates MORE strictly, in one
-line. "Too simple to check", "just this once", "should work now", "I'll verify at the end" are
-four shapes of one skipped gate — each is a hypothesis, so run the check.
+Time pressure, authority and sunk cost never replace evidence. Confidence is not a skip reason;
+use the impact-based scope, including its inspection-only path, without inventing extra rituals.
 Module unreadable -> announce, proceed with core gates, never improvise its content. Probe blocked
 -> harness-tool variant (Grep/Glob); none -> a named "cannot-verify" item in the claim.
 

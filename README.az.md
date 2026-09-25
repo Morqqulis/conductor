@@ -15,7 +15,7 @@ sessiyalara yüklənir.
 | Qat | Nə edir |
 |---|---|
 | **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi + metod dispetçeri: tapşırığın mahiyyəti yanaşmanı seçir (nəzarət qrupu, instrumentasiya, variantlar münsifləri…) |
-| **Commit intizamı** | Commit — hazırlıq bəyanatıdır: hər `git commit`-dən əvvəl təzə sübut prosesi işlədilir və sətirləri cavabda göstərilir. Qayda üç mühitin nüvəsində və digest-lərində yaşayır |
+| **Dəyişikliyə uyğun yoxlama** | Yoxlamanın həcmi commit-dən deyil, dəyişiklikdən asılıdır. Sadə düymə yazısı üçün dəyişikliyə baxmaq kifayətdir; davranış dəyişəndə təsirlənən ssenarilər yoxlanır. Uyğun nəticələr təkrar istifadə olunur |
 | **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və birsətirlik indeks. Sessiya başlayanda gələnlər və indeksin yolu yüklənir; tam indeks lazım olduqda oxunur, ona görə yaddaş böyüdükcə itmir |
 
 ## Şərt: dəyərlər faylı məcburidir
@@ -130,9 +130,20 @@ hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
 
 ## Commit intizamı
 
-1. AI sübut prosesini icra edir (testlər, linter — çıxışı tam oxuyur).
-2. Sübut sətirlərini cavabda göstərir.
-3. Commit edir. Sübutsuz commit olmamalıdır.
+1. AI dəyişikliklərə baxır və yetərli yoxlamanı seçir. Sadə düymə yazısı, şərh və ya
+   adi sənəd mətni dəyişəndə test, yığım və brauzer olmadan dəyişikliyə baxmaq kifayətdir.
+   Davranış dəyişəndə təsirlənən ssenarilər yoxlanmalıdır.
+2. Yoxlanmış fayllar və yoxlamaya aid asılılıqlar, sazlamalar və mühit dəyişməyibsə,
+   əvvəlki nəticə qüvvədə qalır. Təkcə yeni mesaj, əlaqəsiz düzəliş və ya commit onu
+   etibarsız etmir. Agentin hesabatı, sübutları araşdırılmadan, kifayət deyil.
+3. Commit-dən əvvəl AI sübutların commit üçün hazırlanmış dəyişikliklərə uyğunluğunu
+   yoxlayır. Hesabatda dəyişikliyə baxış, təkrar istifadə olunan nəticə və yeni icra ayrılır.
+
+Tam test dəsti və yığım yalnız dəyişikliyin təsiri və ya layihənin açıq tələbi əsasında
+lazımdır, hər commit və push-dan əvvəl avtomatik deyil. Təsir aydın deyilsə, əvvəl
+araşdırılır, sonra zərurət olduqda yoxlama genişləndirilir. Layihənin CI tələbləri
+söndürülmür. Yeni versiyanın buraxılışı üçün yığım ayrıca çatdırılma addımıdır.
+Bax: [`runtime/playbooks/verification.md`](runtime/playbooks/verification.md).
 
 Bu mətn qaydasıdır, mexaniki kilid deyil: əvvəlki versiyaların marker git-qapısı silinib.
 Sahə məlumatları göstərdi ki, o sadəcə lazım deyildi: agentlər onsuz da sübut proseslərini

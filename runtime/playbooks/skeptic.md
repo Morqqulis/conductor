@@ -1,6 +1,6 @@
 # Skeptic Playbook
 
-Load trigger: a claim you cannot verify by your own fresh run must survive an adversary —
+Load trigger: a claim without applicable evidence must survive an adversary —
 integration of delegated work; a checkpoint in a long autonomous run; a review with no
 /code-review skill; or tempted to trust a report.
 
@@ -11,8 +11,8 @@ No subagent capability available -> inline mode (below).
 A verdict binds only a tree that did not change during the round: with parallel mutators
 still active, serialize first (orchestration.md) — a verdict over a moving tree is void.
 
-NOT a skeptic's job: re-checking an edit you made yourself and proved with a fresh run in this
-session. That verifier can only re-derive evidence you already hold, and pays a full context to
+NOT a skeptic's job: re-checking your own edit with applicable proof. That verifier only
+re-derives evidence you already hold, and pays a full context to
 do it. The skeptic exists for the gap between a REPORT and the artifact behind it — the one place
 your own gate cannot reach. At T1/T2, a passing gate on your own work is the verification.
 
@@ -26,7 +26,7 @@ into the shell line raw). At T3, probe first: substitute a trivial prompt ("Repl
 exactly: pong") and run under an OUTER `timeout 25` — a CLI can hang past its own limits,
 so only an external kill bounds the wait. OK -> dispatch the SAME verbatim verifier prompt
 through it under `timeout 300` (cwd = the target repo), same resolution rules; its verdict
-is still a report, never evidence — the controller's own proving run stays mandatory.
+is still a report, never evidence — the controller inspects artifacts and applicability.
 UNAVAILABLE or no config -> same-model skeptic and the report notes the downgrade.
 
 ## Verifier dispatch prompt (use verbatim, fill the <> slots — it fills the task and format
@@ -36,7 +36,7 @@ slots of the orchestration dispatch shape; the files slot is still supplied by y
 You are a skeptic verifier. Below is a report from an implementer. Treat every statement in it
 as an UNVERIFIED CLAIM — the report is not evidence, and rationales never downgrade severity.
 Diff/files: <paths>. Claimed: <one-line summary>.
-Verify claim by claim against the actual artifacts, with fresh runs where runnable.
+Verify claims against artifacts; use verification.md for scope, reuse and missing checks.
 Coverage map first: a dispatch requirement unmapped or MISSING in the report is a finding
 before any content review.
 Output format — every line must be one of: a verdict line (V verified | X refuted |
@@ -55,16 +55,15 @@ four-token default: end with exactly one of DONE (verified) | BLOCKED (refuted o
   lesson: append one line to ~/.claude/conductor/lessons.md (date | trigger | rule).
 - ? (cannot-verify) -> YOU run the exact named check the skeptic could not. If that check is
   impossible to run -> the claim cannot be DONE (core anti-laundering rule).
-- After the skeptic returns DONE: if the skeptic ran the SAME proving command fresh and
-  nothing mutated after it, that run counts as the proving run (core gate step 2) — do not
-  duplicate it. Otherwise run it yourself in the claiming message.
+- After DONE: inspect the skeptic's artifacts and relevant inputs (verification.md).
+  Reuse applicable evidence; rerun only missing/invalidated checks, not on a message boundary.
 - Failed rounds: per core counter — 2 failed skeptic rounds -> STOP + BLOCKED with both
   rounds' findings.
 
 ## Inline mode (no subagents; also serves review classification when /code-review is
 unavailable, regardless of subagent availability)
 In a SEPARATE message from the one that wrote the code: re-read the diff against the core
-claim->evidence table, with fresh runs where runnable, and produce the same verdict-per-line
+claim->evidence table and verification.md, and produce the same verdict-per-line
 format, then apply the same resolution rules. Never verify in the same message that implemented.
 
 ## Inversion pass (run before the verdict)
@@ -86,5 +85,5 @@ What a guard says about itself is untested text. Probe each claim it makes:
 When a fix's premise is "stop scanning text", audit its own guards for text scanning.
 
 ## Rigor gradient
-Verification depth rises toward integration and merge — the last gate before the user is the
-strictest one, never the most trusting.
+Acceptance checks applicability to the final state and changed interactions. Merge/commit alone
+does not widen scope or force a full suite; unknown coupling does require investigation.

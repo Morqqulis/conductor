@@ -12,10 +12,9 @@ Mutating operations are atomic (write to a temp file in the same directory, then
   strip-hooks     remove every conductor entry, leave everything else untouched
   audit-hooks     read only; verify the exact current conductor registrations
 
-"Conductor entry" is decided by an anchored sentinel, never a bare substring: an early
-version matched "conductor" anywhere and deleted a user's unrelated "semiconductor-lint"
-hook. The sentinel is a path segment (/conductor/) or one of our own config keys, each
-anchored on a word boundary so "semiconductor-core-lint" and the like never match.
+Ownership requires a standalone invocation of a shipped Conductor hook script.
+Names, descriptions, prompt text and commands that merely mention Conductor are not
+ownership evidence. Unrecognized or compound commands are preserved for manual review.
 """
 from __future__ import annotations
 
@@ -23,10 +22,17 @@ import argparse
 import json
 import os
 import re
+import shlex
 import sys
 import tempfile
 
-SENTINEL = re.compile(r"[\\/]conductor[\\/]|\bconductor-commit-gate|\bconductor-core")
+OWNED_SCRIPT = re.compile(
+    r"(?:^|/)conductor/(?:"
+    r"hooks/(?:session-start|lessons-inject|subagent-start|user-prompt)\.(?:sh|ps1)|"
+    r"hooks/test-run-journal\.sh|hooks/pre-commit-gate\.ps1|"
+    r"adapters/(?:cursor|antigravity)/gate\.ps1)$|"
+    r"(?:^|/)(?:\.cursor|\.agents)/conductor/gate\.ps1$"
+)
 
 # SessionStart fires on these lifecycle events. "compact" matters most: after a context
 # compaction the core would otherwise be gone from the model's context while the session
@@ -65,8 +71,50 @@ def save(path: str, data: dict) -> None:
         raise
 
 
+def owns_command(value) -> bool:
+    """Recognize shipped Bash/PowerShell invocations without executing shell text."""
+    if not isinstance(value, str):
+        return False
+    try:
+        # Non-POSIX mode retains Windows backslashes inside quoted paths. Strip the
+        # surrounding quotes only; do not interpret variables, escapes or operators.
+        words = shlex.split(value, posix=False)
+    except ValueError:
+        return False
+    words = [word[1:-1] if word[:1] in ("'", '"') and word[-1:] == word[:1] else word
+             for word in words]
+    if not words:
+        return False
+    executable = words[0].replace("\\", "/").rsplit("/", 1)[-1].lower()
+    options = tuple(word.lower() for word in words[1:-1])
+    if len(words) == 1:
+        script = words[0]
+    elif executable in ("bash", "bash.exe", "sh", "sh.exe") and all(
+        option in ("--noprofile", "--norc", "--login", "-l", "-e", "-u") for option in options
+    ):
+        script = words[-1]
+    elif executable in ("pwsh", "pwsh.exe", "powershell", "powershell.exe") and options in (
+        ("-file",), ("-noprofile", "-file"),
+        ("-noprofile", "-executionpolicy", "bypass", "-file"),
+    ):
+        script = words[-1]
+    else:
+        return False
+    return bool(OWNED_SCRIPT.search(script.replace("\\", "/")))
+
+
+def owns_hook(hook) -> bool:
+    return (isinstance(hook, dict) and hook.get("type", "command") == "command"
+            and owns_command(hook.get("command")))
+
+
 def is_ours(entry) -> bool:
-    return bool(SENTINEL.search(json.dumps(entry, ensure_ascii=False)))
+    """Read-only audit also detects misplaced commands inside malformed structures."""
+    if isinstance(entry, dict):
+        return any(is_ours(value) for value in entry.values())
+    if isinstance(entry, list):
+        return any(is_ours(value) for value in entry)
+    return owns_command(entry)
 
 
 def strip(data: dict) -> int:
@@ -85,7 +133,7 @@ def strip(data: dict) -> int:
             if not isinstance(entry, dict) or not isinstance(entry.get("hooks"), list):
                 kept.append(entry)
                 continue
-            foreign = [hook for hook in entry["hooks"] if not is_ours(hook)]
+            foreign = [hook for hook in entry["hooks"] if not owns_hook(hook)]
             removed_from_entry = len(entry["hooks"]) - len(foreign)
             if removed_from_entry == 0:
                 kept.append(entry)

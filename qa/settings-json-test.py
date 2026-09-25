@@ -6,9 +6,9 @@ It performs surgery on settings.json files owned by OTHER tools - the user's mod
 choice, their theme, their own hooks, plugin state. A regression here does not break
 Conductor; it silently corrupts someone else's configuration, and the user finds out
 days later. An early version already did exactly that: a bare "conductor" substring
-match deleted an unrelated "semiconductor-lint" hook. The current sentinel is
-anchored ([\\/]conductor[\\/] | \bconductor-commit-gate | \bconductor-core), and the
-regression tests below pin that anchoring down.
+match deleted an unrelated "semiconductor-lint" hook. Ownership must recognize actual
+shipped hook invocations, not names or metadata; tests check both foreign preservation
+and legitimate removal.
 
 Every test goes through the real CLI via subprocess - the same entry point the bash
 installers call - and asserts on what is left on disk, never on imported internals.
@@ -182,6 +182,83 @@ class SettingsJsonTest(unittest.TestCase):
             "strip-hooks rewrote a file containing zero conductor entries; the "
             "semiconductor-* lookalikes were matched by the sentinel (substring bug is back)",
         )
+
+    def test_foreign_commands_and_metadata_survive_strip(self):
+        foreign = [
+            {"type": "command", "command": "company-conductor-core-lint --fast"},
+            {"type": "command", "command": "conductor-core-lint --fast"},
+            {"type": "command", "command": "company-conductor-commit-gate --check"},
+            {"type": "command", "command": "my-linter", "label": "conductor-core"},
+            {"type": "command", "command": "my-linter",
+             "description": f"see {CONDUCTOR_DIR}/hooks/session-start.sh"},
+            {"type": "prompt", "prompt": f"Review {CONDUCTOR_DIR}/hooks/session-start.sh"},
+            {"type": "command", "command": f'echo "{CONDUCTOR_DIR}/hooks/session-start.sh"'},
+            {"type": "command", "command": f'bash "{CONDUCTOR_DIR}/hooks/company-check.sh"'},
+            {"type": "command", "command": 'bash "/repo/conductor/tools/lint.sh"'},
+            {"type": "command", "command": f'bash "{CONDUCTOR_DIR}/hooks/session-start.sh.bak"'},
+            {"type": "command", "command": f'bash "{CONDUCTOR_DIR}/hooks/session-start.sh" && my-linter'},
+            {"type": "command", "command": f'bash -c "{CONDUCTOR_DIR}/hooks/session-start.sh"'},
+            {"type": "command", "command": 'bash "unterminated'},
+            {"type": "command", "command": ""},
+            {"type": "command", "command": None},
+        ]
+        for hook in foreign:
+            with self.subTest(hook=hook):
+                write_json(self.path, {"hooks": {"PreToolUse": [{"hooks": [hook]}]}})
+                before = read_bytes(self.path)
+                res = run_tool("strip-hooks", "--file", self.path)
+                self.assertEqual(res.returncode, 0, res.stderr)
+                self.assertEqual(read_bytes(self.path), before, "foreign hook was removed or rewritten")
+
+    def test_reinstall_and_audit_preserve_foreign_lookalikes(self):
+        foreign = {
+            "hooks": {"SessionStart": [{"hooks": [
+                {"type": "command", "command": "company-conductor-core-lint --fast"},
+                {"type": "command", "command": "my-linter", "label": "conductor-core"},
+            ]}]},
+        }
+        write_json(self.path, foreign)
+        for _ in range(2):
+            res = self.install()
+            self.assertEqual(res.returncode, 0, res.stderr)
+            self.assertEqual(read_json(self.path)["hooks"]["SessionStart"][0],
+                             foreign["hooks"]["SessionStart"][0], "installation erased foreign hooks")
+        before_audit = read_bytes(self.path)
+        res = run_tool("audit-hooks", "--file", self.path, "--conductor-dir", CONDUCTOR_DIR)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(read_bytes(self.path), before_audit)
+        res = run_tool("strip-hooks", "--file", self.path)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertEqual(read_json(self.path), foreign)
+
+    def test_shipped_legacy_powershell_commands_are_removed(self):
+        commands = [
+            f"pwsh -NoProfile -ExecutionPolicy Bypass -File {CONDUCTOR_DIR}/hooks/{name}.ps1"
+            for name in ("session-start", "lessons-inject", "subagent-start", "user-prompt", "pre-commit-gate")
+        ] + [
+            'powershell -NoProfile -ExecutionPolicy Bypass -File "C:/User Space/.cursor/conductor/gate.ps1"',
+            f"pwsh -NoProfile -ExecutionPolicy Bypass -File {CONDUCTOR_DIR}/adapters/cursor/gate.ps1",
+        ]
+        write_json(self.path, {"hooks": {"PreToolUse": [{"hooks": [
+            {"type": "command", "command": value} for value in commands
+        ]}]}})
+        res = run_tool("strip-hooks", "--file", self.path)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn(f"commands removed: {len(commands)}", res.stdout)
+        self.assertEqual(read_json(self.path), {})
+
+    def test_standalone_hook_invocations_with_quoted_paths_are_removed(self):
+        path = "/home/User Space/.claude/conductor/hooks/session-start.sh"
+        commands = [f'"{path}"', f"bash '{path}'", f'/usr/bin/bash "{path}"',
+                    f'"C:/Program Files/Git/bin/bash.exe" "{path}"',
+                    f'bash --noprofile --norc "{path}"', f'sh "{path}"']
+        write_json(self.path, {"hooks": {"SessionStart": [{"hooks": [
+            {"type": "command", "command": value} for value in commands
+        ]}]}})
+        res = run_tool("strip-hooks", "--file", self.path)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn(f"commands removed: {len(commands)}", res.stdout)
+        self.assertEqual(read_json(self.path), {})
 
     # (4) A genuine conductor entry is recognized by its path - POSIX and Windows separators.
     def test_genuine_conductor_entries_are_removed(self):
@@ -398,6 +475,10 @@ class SettingsJsonTest(unittest.TestCase):
             "string": registered_command,
             "list": [{"foreign": True}, registered_command],
             "mixed": [7, {"nested": [None, {"command": registered_command}]}],
+            "wrong-type": {"type": "prompt", "command": registered_command},
+            "mixed-command-wrapper": {"command": "my-linter", "hooks": [
+                {"command": registered_command}
+            ]},
         }
 
         for label, shape in shapes.items():

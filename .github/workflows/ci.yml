@@ -48,6 +48,7 @@ jobs:
 
       - name: Trust-path behavior self-tests
         run: |
+          bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
           bash qa/journal-report-test.sh
           bash qa/bench-selftest.sh

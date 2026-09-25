@@ -49,11 +49,35 @@ winpath() {
 act() {  # act <description> <command...>
     local desc="$1"; shift
     if [ "$DRY_RUN" -eq 1 ]; then printf '[DRY]  %s\n' "$desc"; return 0; fi
-    if "$@"; then printf '[OK]   %s\n' "$desc"; else printf '[FAIL] %s\n' "$desc" >&2; fi
+    if "$@"; then
+        printf '[OK]   %s\n' "$desc"
+    else
+        printf '[FAIL] %s\n' "$desc" >&2
+        return 1
+    fi
 }
 backup() { [ "$DRY_RUN" -eq 1 ] || { [ -f "$1" ] && cp "$1" "$1.bak-$STAMP"; }; return 0; }
 
 echo '=== Conductor uninstaller ==='
+
+# Secure requested lesson backups BEFORE removing hooks or changing any configuration.
+# A failed copy must leave the installed system usable, not merely keep orphaned data.
+LEDGER="$CONDUCTOR_DIR/lessons.md"
+STORE="$CONDUCTOR_DIR/lessons"
+if [ "$KEEP_LESSONS" -eq 1 ] && [ -d "$CONDUCTOR_DIR" ]; then
+    DESK="$HOME/Desktop"
+    [ -d "$DESK" ] || DESK="$HOME"
+    if [ -f "$LEDGER" ] && ! act "lessons inbox -> $DESK/conductor-lessons-backup.md" \
+        cp "$LEDGER" "$DESK/conductor-lessons-backup.md"; then
+        echo '[FAIL] lesson backup failed; uninstall stopped, original data and settings kept' >&2
+        exit 1
+    fi
+    if [ -d "$STORE" ] && ! act "curated lessons store -> $DESK/conductor-lessons-store-backup/" \
+        cp -R "$STORE" "$DESK/conductor-lessons-store-backup"; then
+        echo '[FAIL] lesson backup failed; uninstall stopped, original data and settings kept' >&2
+        exit 1
+    fi
+fi
 
 # --- 1. Claude Code -------------------------------------------------------------------
 SETTINGS="$CLAUDE_HOME/settings.json"
@@ -68,18 +92,7 @@ if [ -f "$SETTINGS" ] && grep -q conductor "$SETTINGS" 2>/dev/null; then
 fi
 
 if [ -d "$CONDUCTOR_DIR" ]; then
-    LEDGER="$CONDUCTOR_DIR/lessons.md"
-    STORE="$CONDUCTOR_DIR/lessons"
-    if [ "$KEEP_LESSONS" -eq 1 ]; then
-        DESK="$HOME/Desktop"
-        [ -d "$DESK" ] || DESK="$HOME"
-        # Both halves of the memory: the inbox AND the curated store - the store holds the
-        # distilled lessons, losing it silently would be losing most of what was learned.
-        [ -f "$LEDGER" ] && act "lessons inbox -> $DESK/conductor-lessons-backup.md" \
-            cp "$LEDGER" "$DESK/conductor-lessons-backup.md"
-        [ -d "$STORE" ] && act "curated lessons store -> $DESK/conductor-lessons-store-backup/" \
-            cp -R "$STORE" "$DESK/conductor-lessons-store-backup"
-    elif [ -f "$LEDGER" ] || [ -d "$STORE" ]; then
+    if [ "$KEEP_LESSONS" -ne 1 ] && { [ -f "$LEDGER" ] || [ -d "$STORE" ]; }; then
         echo "[NOTE] the lessons inbox AND the curated store will be deleted with the tree - re-run with --keep-lessons to save both"
     fi
     act "remove $CONDUCTOR_DIR (runtime, adapters, lessons)" rm -rf "$CONDUCTOR_DIR"

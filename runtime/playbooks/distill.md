@@ -1,38 +1,40 @@
-# Distillation Procedure (inbox -> curated memory -> permanent rules)
+# Distillation Procedure (inbox -> curated memory -> candidate rules)
 
-Trigger: the session-start block says "DISTILL DUE", or the user asks. Run as its own
-Conductor unit: implement | T2, named undo first.
+Trigger: "DISTILL DUE", or the user asks. A separate implement | T2 unit; named undo.
 
-Memory has two stores under the conductor home (`$CLAUDE_CONFIG_DIR/conductor/`, default
-`~/.claude/conductor/`). The INBOX (`lessons.md`) is where a lesson gets captured in one
-cheap line. The CURATED store (`lessons/`, one file per lesson plus `INDEX.md`) is what
-later sessions read from. Distillation is the move between them, and the moment to ask
-which lessons have stopped being facts and become rules.
+## Maintain memory — works without the source checkout
 
-1. READ the full inbox, and `lessons/INDEX.md` for what is already known — a "new" lesson
-   that restates a filed one is an update to that file, not a second entry.
-2. GROUP related lessons. Each group becomes ONE candidate rule stated generally: the
-   incident is the example, never the rule itself.
-3. DECIDE per group:
-   - recurring across projects, changes how work is done -> graduate into a playbook, core,
-     or the digests, and drop the inbox lines it came from
-   - true but specific (a library quirk, a platform path rule) -> file it into the curated
-     store; it stays retrievable without costing session context
-   - superseded or proven wrong -> delete it and say so in the report. A memory kept past
-     the point it stopped being true is worse than no memory.
-4. PLACE a graduated rule where its audience lives, and MEASURE the target's budget BEFORE
-   writing (`qa/lint.sh` prints core and contract usage; playbooks 6000; probes 3200;
-   digests 12000):
-   - all-session behavior -> core.md (tightest budget: usually requires freeing space first)
-   - task-type behavior -> the matching playbook
-   - subagent behavior -> subagent-contract.md
-   - other-AI behavior -> adapters/core-body.md, then `tools/build-digests.sh`
-5. FILE the rest: `tools/migrate-lessons.sh` moves every remaining inbox line into the
-   curated store and rebuilds the index. Run it after step 3, so it files what survived.
-6. Repo cycle: edit `runtime/` and `adapters/` sources ONLY -> `qa/lint.sh` must PASS ->
-   deploy (`install.sh`, `install-global.sh`) -> verify the deployed copies carry the rule
-   by grep, not by faith.
-7. Commit with the proving lines (lint PASS + deploy grep) shown in the same message.
+The installed conductor home is the parent of this file's `playbooks` directory (normally
+`$CLAUDE_CONFIG_DIR/conductor`, default `~/.claude/conductor`). The inbox is `lessons.md`;
+the curated store is `lessons/` with `INDEX.md`. Respect a configured lesson-path override.
 
-Predict each step's outcome before running it (core gate). An unexplained surprise here
-means a budget or deploy assumption broke — stop and investigate.
+1. Read the entire inbox and index; open relevant filed lessons. Group related incidents,
+   identify duplicates and distinguish specific lessons from candidates for general rules.
+2. Preserve a dated copy of the inbox and every curated file you will edit, outside those
+   files. Keep new captures from other sessions separate; never replace a newer inbox with
+   an older copy. Don't discard an inbox line before its full meaning is durably filed.
+3. File mechanically with the INSTALLED `memory/migrate-lessons.sh`, invoked through bash
+   by its absolute path. Pass `--ledger` with the resolved inbox path; use `--dry-run` first.
+   This keeps raw batch backups, preserves unparseable lines and rebuilds the full index.
+   In a source checkout the same utility is `tools/migrate-lessons.sh`.
+4. Read the output and exit status. Confirm each input lesson is in a curated file or
+   explicitly remains in the inbox, that prior entries remain indexed, and backup exists.
+   On failure preserve the `.processing-*` batch and report it for recovery; don't delete
+   it or claim the inbox is fully processed. New concurrent captures may remain for later.
+5. Consolidate duplicates with their source detail retained. Mark superseded lessons as
+   such instead of silently erasing their history; rebuild the index after curated edits
+   by running the utility again. Report filed/retained entries and the backup location.
+
+## Graduate a rule — only with the Conductor source checkout
+
+Recurring lessons are CANDIDATES, not automatic additions to every session's rules.
+Keep them filed even when graduation is deferred. Installed memory maintenance needs
+neither a source checkout nor a commit/push.
+
+With the source checkout available, apply the core's control-group method to the candidate.
+Measure current limits with `bash qa/lint.sh` before editing. Change `runtime/` or
+`adapters/core-body.md` sources, never a live installed rule. Build affected digests with
+`bash tools/build-digests.sh`; run applicable checks and lint, then deploy and compare
+the installed files with their rendered sources. Commit/push follows the user's authority.
+Without that checkout, report the filed candidate as deferred; don't invent missing
+`qa/`, `tools/` or installer paths inside the runtime.

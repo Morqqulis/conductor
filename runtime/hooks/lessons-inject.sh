@@ -56,38 +56,41 @@ if [ -z "$inbox" ] && [ -z "$index_recent" ]; then
     exit 0
 fi
 
-block="CONDUCTOR LESSONS. Capture rule: a falsified hypothesis, a refuted skeptic claim, or a gate-caught real bug -> append ONE line \"date | trigger | rule\" to $LEDGER."
-
-# Inbox BEFORE the curated section on purpose: the truncation below drops whole lines
-# from the END of the block, so whatever stands last dies first. The unfiled captures are
-# the lessons this hook itself declares most likely to matter right now - with a full
-# store and a full inbox they used to be exactly what got cut.
-if [ -n "$inbox" ]; then
-    # tail, not head: the ledger is append-only, so the NEWEST lessons - the ones most
-    # likely to matter right now - live at the bottom.
-    block="$block
-Captured since the last distillation ($inbox_count):
-$(printf '%s\n' "$inbox" | tail -n "$INBOX_INJECT")"
+# Reserve navigation and capture instructions BEFORE fitting lesson contents. Never let
+# an oversized line hide the address of the complete memory or a later, shorter lesson.
+ledger_label="$LEDGER"
+index_label="$INDEX"
+if [ "$(printf '%s%s' "$LEDGER" "$INDEX" | wc -m)" -gt 1800 ]; then
+    ledger_label='lessons.md under CONDUCTOR_HOME (or CONDUCTOR_LESSONS override)'
+    index_label='lessons/INDEX.md beside that inbox'
 fi
-
+block="CONDUCTOR LESSONS. Capture rule: a falsified hypothesis, a refuted skeptic claim, or a gate-caught real bug -> append ONE line \"date | trigger | rule\" to $ledger_label.
+Inbox: $inbox_count entries; newest fitting entries first. Space-limited preview: omitted entries remain in the inbox/index; read the files for complete memory."
 if [ "$index_count" -gt 0 ]; then
     block="$block
-Curated memory: $index_count lessons, one line each, in $INDEX. NOT injected - READ that file when the task touches an area a past lesson could cover (a framework, a tool, a failure mode you are about to trust). Most recent:
-$index_recent"
+Curated memory: $index_count lessons in $index_label. READ that index when the task touches an area a past lesson could cover."
 fi
-
 if [ "$inbox_count" -gt "$DISTILL_THRESHOLD" ]; then
-    block="DISTILL DUE: the inbox holds $inbox_count lessons (>$DISTILL_THRESHOLD). File them into the curated store and generalize - run playbooks/distill.md as a maintenance unit BEFORE new feature work.
+    block="DISTILL DUE: $inbox_count lessons (>$DISTILL_THRESHOLD); use playbooks/distill.md before new feature work.
 $block"
 fi
 
-# Truncate on WHOLE LINES, dropping from the end until the block fits. cut -c is byte-based
-# on this platform's GNU cut, and a byte cut can split a multi-byte character and produce
-# invalid UTF-8 inside the JSON payload; a whole-line cut can never split a character. awk's
-# length() may count bytes under a C locale - that only truncates earlier, never mid-character.
-if [ "$(printf '%s' "$block" | wc -m | tr -d '[:space:]')" -gt "$MAX_CHARS" ]; then
-    block="$(printf '%s\n' "$block" | awk -v max="$MAX_CHARS" \
-        '{ len = length($0) + 1; if (total + len > max) exit; total += len; print }')"
+append_fitting_line() {
+    local candidate="$block
+$1"
+    if [ "$(printf '%s' "$candidate" | wc -m)" -le "$MAX_CHARS" ]; then
+        block="$candidate"
+    fi
+}
+if [ -n "$inbox" ]; then
+    while IFS= read -r line; do
+        append_fitting_line "$line"
+    done < <(printf '%s\n' "$inbox" | tail -n "$INBOX_INJECT" | awk '{ a[NR]=$0 } END { for (i=NR;i>0;i--) print a[i] }')
+fi
+if [ -n "$index_recent" ]; then
+    while IFS= read -r line; do
+        append_fitting_line "$line"
+    done <<< "$index_recent"
 fi
 
 emit_payload SessionStart "$block"

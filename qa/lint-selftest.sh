@@ -12,8 +12,10 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-WORK="$(mktemp -d)"
-trap 'rm -rf "$WORK"' EXIT
+SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/conductor-lint-selftest.XXXXXX")"
+WORK="$SANDBOX/repo"
+mkdir "$WORK"
+trap 'rm -rf "$SANDBOX"' EXIT
 
 for d in runtime adapters deploy qa tools; do
     [ -d "$SRC/$d" ] || { echo "selftest: missing source dir $SRC/$d" >&2; exit 1; }
@@ -63,6 +65,22 @@ else
     printf '%s\n' "$lint_out" | sed 's/^/    lint| /'
     fail=$((fail + 1))
 fi
+
+# The same complete tree must pass when its root contains spaces. Peer-only
+# references (methods.md) must survive filename handling, not just direct wiring.
+mv "$WORK" "$SANDBOX/repo with spaces"
+WORK="$SANDBOX/repo with spaces"
+run_lint
+if [ "$lint_rc" -eq 0 ]; then
+    echo "selftest PASS: root path with spaces"
+    pass=$((pass + 1))
+else
+    echo "selftest FAIL: root path with spaces (lint exit=$lint_rc, expected 0)"
+    printf '%s\n' "$lint_out" | sed 's/^/    lint| /'
+    fail=$((fail + 1))
+fi
+mv "$WORK" "$SANDBOX/repo"
+WORK="$SANDBOX/repo"
 
 # --- case 1: core sentinel removed ---------------------------------------------------
 sed -i 's/CONDUCTOR-CORE-v1-7f3a//g' "$WORK/runtime/core.md"
@@ -153,6 +171,32 @@ expect_fail "shell syntax error injected into a hook" \
 expect_fail "verification playbook over budget" \
     "verification.md over budget:" \
     runtime/playbooks/verification.md
+
+# --- threshold: each consumer needs one valid declaration, and all must agree ---------
+threshold_files=(runtime/hooks/lessons-inject.sh runtime/hooks/user-prompt.sh tools/doctor.sh)
+for rel in "${threshold_files[@]}"; do
+    want="DISTILL_THRESHOLD requires exactly one valid integer definition in $rel"
+    sed -i '/^DISTILL_THRESHOLD=/d' "$WORK/$rel"
+    expect_fail "threshold missing: $rel" "$want" "$rel"
+
+    grep '^DISTILL_THRESHOLD=' "$SRC/$rel" >> "$WORK/$rel"
+    expect_fail "threshold duplicated: $rel" "$want" "$rel"
+
+    for value in '' invalid; do
+        sed -i "s/^DISTILL_THRESHOLD=.*/DISTILL_THRESHOLD=$value/" "$WORK/$rel"
+        expect_fail "threshold invalid ('$value'): $rel" "$want" "$rel"
+    done
+
+    sed -i 's/^DISTILL_THRESHOLD=.*/DISTILL_THRESHOLD=999/' "$WORK/$rel"
+    expect_fail "threshold diverges: $rel" "DISTILL_THRESHOLD diverges" "$rel"
+done
+
+# Identical invalid values must not be accepted merely because they agree.
+for rel in "${threshold_files[@]}"; do
+    sed -i 's/^DISTILL_THRESHOLD=.*/DISTILL_THRESHOLD=invalid/' "$WORK/$rel"
+done
+expect_fail "all thresholds identically invalid" \
+    "DISTILL_THRESHOLD requires exactly one valid integer definition" "${threshold_files[@]}"
 
 # --- summary -------------------------------------------------------------------------
 total=$((pass + fail))

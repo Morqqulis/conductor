@@ -51,6 +51,10 @@ jobs:
           bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
           bash qa/journal-report-test.sh
+          python -B qa/test-run-journal-test.py
+          python -B qa/memory-test.py
+          python -B qa/memory-restore-test.py
+          python -B qa/safe-undo-test.py
           bash qa/bench-selftest.sh
 
       - name: Sandbox install smoke test (never touches the runner's real config)

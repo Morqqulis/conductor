@@ -9,17 +9,16 @@ SETTINGS_TOOL="$ROOT/tools/settings-json.py"
 SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/conductor-doctor-test.XXXXXX")"
 trap 'rm -rf "$SANDBOX"' EXIT
 
-CLAUDE_HOME="$SANDBOX/claude"
+CLAUDE_HOME="$SANDBOX/claude config"
 CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
-mkdir -p "$CONDUCTOR_DIR/hooks" "$CONDUCTOR_DIR/playbooks"
-printf '%s\n' 'CONDUCTOR-CORE-v1-7f3a' > "$CONDUCTOR_DIR/core.md"
-printf '%s\n' 'contract' > "$CONDUCTOR_DIR/subagent-contract.md"
+mkdir -p "$CONDUCTOR_DIR"
+cp -R "$ROOT/runtime/." "$CONDUCTOR_DIR/"
+mkdir -p "$CONDUCTOR_DIR/memory"
+cp "$ROOT/tools/migrate-lessons.sh" "$CONDUCTOR_DIR/memory/migrate-lessons.sh"
+CORE_BASE="$CONDUCTOR_DIR"
+command -v cygpath >/dev/null 2>&1 && CORE_BASE="$(cygpath -m "$CORE_BASE")"
+sed -i "s|__CONDUCTOR_DIR__|$CORE_BASE|g" "$CONDUCTOR_DIR/core.md"
 printf '%s\n' '- Answer in Russian' > "$CLAUDE_HOME/CLAUDE.md"
-for hook in payload.sh lessons-inject.sh subagent-start.sh user-prompt.sh test-run-journal.sh; do
-    printf '%s\n' '#!/usr/bin/env bash' 'exit 0' > "$CONDUCTOR_DIR/hooks/$hook"
-done
-printf '%s\n' '#!/usr/bin/env bash' "printf '%s\\n' 'CONDUCTOR-CORE-v1-7f3a'" \
-    > "$CONDUCTOR_DIR/hooks/session-start.sh"
 
 run_doctor() {
     set +e
@@ -78,8 +77,7 @@ case "$DOCTOR_OUTPUT" in
 esac
 echo "PASS  nonzero session-start exit fails even when stdout has the core sentinel"
 
-printf '%s\n' '#!/usr/bin/env bash' "printf '%s\\n' 'CONDUCTOR-CORE-v1-7f3a'" \
-    > "$CONDUCTOR_DIR/hooks/session-start.sh"
+cp "$ROOT/runtime/hooks/session-start.sh" "$CONDUCTOR_DIR/hooks/session-start.sh"
 run_doctor
 if [ "$DOCTOR_STATUS" -ne 0 ]; then
     printf '%s\n' "$DOCTOR_OUTPUT"
@@ -95,4 +93,51 @@ case "$DOCTOR_OUTPUT" in
         ;;
 esac
 printf '%s\n' "$DOCTOR_OUTPUT"
+
+expect_runtime_failure() {
+    local label="$1" reason="$2"
+    run_doctor
+    if [ "$DOCTOR_STATUS" -ne 1 ] || ! grep -qF "$reason" <<< "$DOCTOR_OUTPUT"; then
+        printf '%s\n' "$DOCTOR_OUTPUT"
+        echo "doctor test: $label (exit=$DOCTOR_STATUS, expected 1 with $reason)" >&2
+        exit 1
+    fi
+    if grep -qE 'PASS  (shipped runtime files deployed|subagent contract and playbooks deployed)' <<< "$DOCTOR_OUTPUT"; then
+        printf '%s\n' "$DOCTOR_OUTPUT"
+        echo "doctor test: $label also reported a complete runtime" >&2
+        exit 1
+    fi
+    echo "PASS  $label"
+}
+
+mv "$CONDUCTOR_DIR/playbooks" "$SANDBOX/playbooks"
+mkdir "$CONDUCTOR_DIR/playbooks"
+expect_runtime_failure "empty playbooks directory rejected" "runtime file missing or empty: playbooks/"
+rmdir "$CONDUCTOR_DIR/playbooks"
+mv "$SANDBOX/playbooks" "$CONDUCTOR_DIR/playbooks"
+
+# The installer copies runtime/. wholesale. Exercise every shipped file, including
+# snippets and indirectly referenced playbooks, without maintaining a second list.
+while IFS= read -r source_file; do
+    rel="${source_file#"$ROOT/runtime/"}"
+    mv "$CONDUCTOR_DIR/$rel" "$SANDBOX/held-file"
+    expect_runtime_failure "missing $rel rejected" "runtime file missing or empty: $rel"
+    mv "$SANDBOX/held-file" "$CONDUCTOR_DIR/$rel"
+done < <(find "$ROOT/runtime" -type f)
+
+mv "$CONDUCTOR_DIR/playbooks/methods.md" "$SANDBOX/held-file"
+: > "$CONDUCTOR_DIR/playbooks/methods.md"
+expect_runtime_failure "empty module file rejected" "runtime file missing or empty: playbooks/methods.md"
+mv "$SANDBOX/held-file" "$CONDUCTOR_DIR/playbooks/methods.md"
+
+run_doctor
+if [ "$DOCTOR_STATUS" -ne 0 ] || ! grep -qF 'PASS  shipped runtime files deployed' <<< "$DOCTOR_OUTPUT"; then
+    printf '%s\n' "$DOCTOR_OUTPUT"
+    echo "doctor test: restored complete installation did not pass" >&2
+    exit 1
+fi
+echo "PASS  restored complete installation"
+mv "$CONDUCTOR_DIR/memory/migrate-lessons.sh" "$SANDBOX/held-file"
+expect_runtime_failure "missing installed memory utility rejected" "runtime file missing or empty: memory/migrate-lessons.sh"
+mv "$SANDBOX/held-file" "$CONDUCTOR_DIR/memory/migrate-lessons.sh"
 echo "doctor integration tests: PASS"

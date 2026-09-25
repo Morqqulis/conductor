@@ -34,8 +34,10 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 while [ $# -gt 0 ]; do
     case "$1" in
         -n|--dry-run) DRY_RUN=1; shift ;;
-        --ledger)     LEDGER="$2"; shift 2 ;;
-        --store)      STORE="$2"; shift 2 ;;
+        --ledger)     [ $# -ge 2 ] || { echo '--ledger needs a value' >&2; exit 2; }
+                      LEDGER="$2"; shift 2 ;;
+        --store)      [ $# -ge 2 ] || { echo '--store needs a value' >&2; exit 2; }
+                      STORE="$2"; shift 2 ;;
         -h|--help)    sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -73,7 +75,7 @@ rebuild_index() {
         printf 'One line per lesson, newest first. Read this file whenever the task touches an area a\n'
         printf 'lesson might cover; open the lesson file for the full entry. New lessons arrive in\n'
         printf '../lessons.md (the inbox) and are filed here during distillation.\n\n'
-        sort -r "$tmp"
+        sort -r "$tmp" | awk '/^- undated / { later = later $0 "\n"; next } { print } END { printf "%s", later }'
     } > "$STORE/INDEX.md"
     rm -f "$tmp"
 }
@@ -167,9 +169,10 @@ mkdir -p "$STORE"
 rebuild_index
 
 # The processed batch is cheap insurance: the ledger itself is not versioned anywhere.
-mv "$BATCH" "$STORE/.filed-$STAMP.inbox"
+BACKUP="$(mktemp "$STORE/.filed-$STAMP-XXXXXX.inbox")"
+mv "$BATCH" "$BACKUP"
 
-printf 'filed %s lessons -> %s (batch kept: lessons/.filed-%s.inbox)\n' "$count" "$STORE" "$STAMP"
+printf 'filed %s lessons -> %s (batch kept: %s)\n' "$count" "$STORE" "$BACKUP"
 printf 'index: %s (%s bytes, %s entries)\n' "$STORE/INDEX.md" \
     "$(wc -c < "$STORE/INDEX.md" | tr -d '[:space:]')" \
     "$(grep -c '^- ' "$STORE/INDEX.md" || true)"

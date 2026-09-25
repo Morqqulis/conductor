@@ -77,18 +77,29 @@ else
     if grep -q '__CONDUCTOR_DIR__' "$CONDUCTOR_DIR/core.md" 2>/dev/null; then
         fail "deployed core.md is UNRENDERED (module base placeholder intact) - playbooks will not load; run install.sh, do not hand-copy runtime/"
     fi
-    for f in payload.sh session-start.sh lessons-inject.sh subagent-start.sh \
-             user-prompt.sh test-run-journal.sh; do
-        if [ -f "$CONDUCTOR_DIR/hooks/$f" ]; then
-            pass "hook file deployed: $f"
-        else
-            fail "hook file missing: hooks/$f - run install.sh"
+    # install.sh copies runtime/. wholesale; use that same source of truth, including
+    # snippets and playbooks reached only through other modules. Never infer completeness
+    # from the installed directories or maintain a separate list of required files.
+    RUNTIME_SOURCE="$SCRIPT_DIR/../runtime"
+    if runtime_files="$(find "$RUNTIME_SOURCE" -type f)" && [ -n "$runtime_files" ]; then
+        runtime_complete=1
+        while IFS= read -r source_file; do
+            rel="${source_file#"$RUNTIME_SOURCE/"}"
+            if [ ! -f "$CONDUCTOR_DIR/$rel" ] || [ ! -s "$CONDUCTOR_DIR/$rel" ]; then
+                fail "runtime file missing or empty: $rel - run install.sh"
+                runtime_complete=0
+            fi
+        done <<< "$runtime_files"
+        # This source tool is also delivered by install.sh, outside runtime/.
+        if [ ! -s "$CONDUCTOR_DIR/memory/migrate-lessons.sh" ]; then
+            fail "runtime file missing or empty: memory/migrate-lessons.sh - run install.sh"
+            runtime_complete=0
         fi
-    done
-    if [ -f "$CONDUCTOR_DIR/subagent-contract.md" ] && [ -d "$CONDUCTOR_DIR/playbooks" ]; then
-        pass "subagent contract and playbooks deployed"
+        if [ "$runtime_complete" -eq 1 ]; then
+            pass "shipped runtime files deployed"
+        fi
     else
-        fail "subagent-contract.md or playbooks/ missing under $CONDUCTOR_DIR"
+        fail "runtime deployment audit unavailable: shipped source missing or unreadable at $RUNTIME_SOURCE"
     fi
 fi
 

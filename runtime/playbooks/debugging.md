@@ -9,9 +9,10 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
 1. REPRODUCE. Run the failing thing; capture the exact command + output. This is your repro
    command — the attempt counter binds to it. Cannot reproduce -> BLOCKED with the attempted
    repro evidence pasted. Never fix what you cannot see fail. A failure first seen after
-   your change is not yet yours: reproduce it on the pre-change state (stash the edits, or
-   a worktree at HEAD) — failing there -> pre-existing debt, reported separately, never
-   absorbed into this fix.
+   your change is not yet yours: reproduce in an isolated copy of the exact pre-task
+   snapshots, including dirty/untracked files (implementing.md SAFE UNDO). HEAD is a
+   baseline only if those paths were verified clean, tracked and identical at task start.
+   Failing there -> pre-existing debt, reported separately, never absorbed into this fix.
 2. HYPOTHESIZE in writing — at least TWO candidate causes, not one (the first cause is where
    diagnosis goes to die). Rank them by likelihood, and for each name the ONE check that best
    discriminates it from the others: "H1 (likely): <cause>, because <evidence>; discriminating
@@ -35,25 +36,44 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user
    confirmed it is a different bug. At 3 failed attempts -> STOP per core counter rules and
    consult the human.
-6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks). First run
-   probes.md#dirty-tree — unrelated changes must not enter the stash. If any fix-touched file
-   is untracked (`git ls-files --error-unmatch <file>` fails) or stash is unusable, do a
-   manual revert instead: restore the original content (`git show HEAD:<file>`), run, then
-   re-apply the fix — never skip the MUST-FAIL run because tooling was awkward.
+6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks). Use SAFE UNDO
+   in implementing.md and probes.md#dirty-tree. Copy CURRENT files, including dirty and
+   untracked files and the CURRENT regression test, into an isolated disposable directory.
+   Reverse only your own fix hunks there; retain test hunks even in the SAME file. A whole
+   file snapshot or path-scoped stash can remove the test and user edits along with the fix.
+   Before undo/reapply, compare with the expected post-edit bytes/existence; mismatch,
+   active writer or ambiguous ownership -> preserve both states and ask, never overwrite.
    ```
    identify/write a regression test for the ORIGINAL symptom
-   run  -> MUST pass
-   revert ONLY the fix: git stash push -- <files touched by the fix, never test files>
+   run in CURRENT isolated copy -> MUST pass
+   disarm ONLY own fix hunks, keeping the CURRENT test and user content
    run  -> MUST FAIL   # MUST FAIL = the regression test's own assertion fails;
                        # a collection/import/runtime error or a missing test is NOT a valid
-                       # failure — restore and fix the ritual setup instead
-   restore (git stash pop)
+                       # failure — preserve evidence and repair the isolated setup
+   reapply ONLY those hunks after the same expected-state check
    run  -> MUST pass
    ```
-   Outcomes: pass/FAIL/pass = proven. Reverted run PASSES -> the test does not guard the fix:
-   fix the test, redo the ritual. Final run fails -> restore error; re-apply the fix, redo.
-   Test fails before revert -> the fix is incomplete: back to step 5.
+   pass/FAIL/pass = proven. Disarmed run PASSES -> repair the test, repeat. Final FAIL ->
+   repair the isolated restore, repeat. Initial FAIL -> incomplete fix: back to step 5.
 7. Completion gate (core), with the ritual's final run as the proving run.
+
+## Guarded hunks (isolated copy)
+Record snapshots/existence, check ownership, name absolute `target`, `expected_post`,
+`own_patch`; `expected_exists` is yes/no. One file per patch; own hunks only, tests kept.
+Exit 3: preserve and ask, never refresh expectations to bypass refusal. Deletion needs
+a recoverable snapshot; new-file removal needs pre-task absence and sole ownership.
+No concurrent writer may share this copy. Preserve line endings with command-local config.
+```bash
+# safe-undo-example
+set -euo pipefail
+if [ "$expected_exists" = yes ]; then
+    cmp -s -- "$target" "$expected_post" || exit 3
+else
+    [ ! -e "$target" ] && [ ! -L "$target" ] || exit 3
+fi
+git -c core.autocrlf=false apply --check -- "$own_patch" || exit 3
+git -c core.autocrlf=false apply -- "$own_patch"
+```
 
 ## Before step 2, when the red is SUDDEN
 Ask whether the ENVIRONMENT is alive before hunting a regression: a stopped container, an

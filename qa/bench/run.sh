@@ -24,7 +24,12 @@ SCENARIO=''
 REPS=1
 START=1
 
+cli_error() { printf 'bench: %s\n' "$1" >&2; exit 2; }
 while [ $# -gt 0 ]; do
+    case "$1" in
+        --arm|--scenario|--reps|--start)
+            [ $# -ge 2 ] || cli_error "$1 requires a value" ;;
+    esac
     case "$1" in
         --arm)      ARM="${2:-}"; shift 2 ;;
         --scenario) SCENARIO="${2:-}"; shift 2 ;;
@@ -38,15 +43,36 @@ done
 
 die() { printf 'bench: %s\n' "$1" >&2; exit 1; }
 
-case "$ARM" in baseline|conductor) ;; *) die "--arm must be baseline or conductor" ;; esac
-[ -n "$SCENARIO" ] || die "--scenario is required (see --list)"
-case "$REPS" in ''|*[!0-9]*) die "--reps must be a positive integer" ;; esac
-case "$START" in ''|*[!0-9]*) die "--start must be a positive integer" ;; esac
+case "$ARM" in baseline|conductor) ;; *) cli_error "--arm must be baseline or conductor" ;; esac
+[ -n "$SCENARIO" ] || cli_error "--scenario is required (see --list)"
+# Normalize decimal inputs before shell arithmetic can interpret leading zeroes as octal
+# or overflow into an empty range. Validation must precede any artifact creation.
+range="$(python - "$REPS" "$START" <<'PY'
+import sys
+values = []
+for flag, raw in zip(("--reps", "--start"), sys.argv[1:]):
+    try:
+        value = int(raw) if raw.isascii() and raw.isdecimal() else 0
+    except ValueError:
+        value = 0
+    if not 0 < value <= 9223372036854775807:
+        print(f"bench: {flag} must be a positive integer within the supported range", file=sys.stderr)
+        sys.exit(2)
+    values.append(value)
+reps, start = values
+end = start + reps - 1
+if end > 9223372036854775807:
+    print("bench: repetition range is too large", file=sys.stderr)
+    sys.exit(2)
+print(reps, start, end)
+PY
+)" || exit 2
+read -r REPS START END <<< "$range"
 [ -f "$SCENARIOS" ] || die "scenario table missing: $SCENARIOS"
 command -v claude >/dev/null 2>&1 || die "the 'claude' CLI is not on PATH"
 
 row="$(grep -vE '^[[:space:]]*(#|$)' "$SCENARIOS" | awk -F'\t' -v s="$SCENARIO" '$1 == s {print; exit}')"
-[ -n "$row" ] || die "unknown scenario '$SCENARIO' (see --list)"
+[ -n "$row" ] || cli_error "unknown scenario '$SCENARIO' (see --list)"
 FIXTURE_NAME="$(printf '%s' "$row" | cut -f2)"
 PROMPT="$(printf '%s' "$row" | cut -f3-)"
 FIXTURE="$QA/fixtures/$FIXTURE_NAME"
@@ -77,10 +103,32 @@ print(digest.hexdigest())
 PY
 }
 write_manifest() {
-    python - "$1" "$REPO_COMMIT" "$RUNTIME_SHA256" "$ARM" "$SCENARIO" "$2" "$3" "$4" "$INVOCATION_ID" "$5" <<'PY'
+    python - "$1" "$REPO_COMMIT" "$RUNTIME_SHA256" "$ARM" "$SCENARIO" "$2" "$3" "$4" "$INVOCATION_ID" "$5" "$6" <<'PY'
 import json, os, sys, tempfile
-destination, commit, runtime_digest, arm, scenario, repetition, module_base, sentinel, invocation_id, artifact_base = sys.argv[1:11]
+destination, commit, runtime_digest, arm, scenario, repetition, module_base, sentinel, invocation_id, artifact_base, exit_code = sys.argv[1:12]
+exit_code = int(exit_code)
+failure = None
+if exit_code:
+    failure = "claude-exit-nonzero"
+else:
+    try:
+        with open(artifact_base + ".json", encoding="utf-8") as source:
+            result = json.load(source)
+    except (OSError, ValueError):
+        failure = "invalid-json-result"
+    else:
+        if not isinstance(result, dict):
+            failure = "invalid-result-object"
+        elif result.get("is_error") is True or str(result.get("subtype", "")).startswith("error"):
+            failure = "claude-reported-error"
+        elif result.get("type") != "result" or result.get("subtype") != "success" or result.get("is_error") is not False:
+            failure = "incomplete-result"
+        elif not isinstance(result.get("result"), str) or not result["result"].strip():
+            failure = "empty-result"
 data = {
+    "status": "failed" if failure else "completed",
+    "claude_exit_code": exit_code,
+    "failure_reason": failure,
     "repo_commit": commit,
     "runtime_sha256": runtime_digest or None,
     "runtime_digest_scope": "copied-runtime-before-render" if runtime_digest else "not-applicable-baseline",
@@ -104,6 +152,9 @@ try:
 finally:
     if os.path.exists(temporary):
         os.unlink(temporary)
+if failure:
+    print(f"bench: failed {scenario}-{arm}-{repetition}: {failure} (claude exit {exit_code})", file=sys.stderr)
+print(data["status"])
 PY
 }
 
@@ -144,7 +195,8 @@ open(dst, "w", encoding="utf-8", newline="\n").write(json.dumps(data, indent=2) 
 PY
 fi
 
-for i in $(seq "$START" $((START + REPS - 1))); do
+overall_exit=0
+for i in $(seq "$START" "$END"); do
     tagbase="$SCENARIO-$ARM-$i"
     ARTIFACT_BASE="$QA/transcripts/$tagbase-$INVOCATION_ID"
     work="$INVOCATION/$tagbase"
@@ -153,13 +205,13 @@ for i in $(seq "$START" $((START + REPS - 1))); do
 
     extra=()
     [ "$ARM" = 'conductor' ] && extra=(--settings "$(winp "$SETTINGS_RENDERED")")
+    claude_exit=0
     (
         cd "$work"
         claude -p "$PROMPT" --output-format json \
             --permission-mode bypassPermissions --setting-sources project,local "${extra[@]}"
-    ) > "$ARTIFACT_BASE.json" 2> "$ARTIFACT_BASE.stderr" || \
-        echo "note: claude exited non-zero on $tagbase - the output still holds what it produced" >&2
-    write_manifest "$ARTIFACT_BASE.manifest.json" "$i" "$RENDERED_MODULE_BASE" "$CORE_SENTINEL_PRESENT" "$ARTIFACT_BASE"
+    ) > "$ARTIFACT_BASE.json" 2> "$ARTIFACT_BASE.stderr" || claude_exit=$?
+    run_status="$(write_manifest "$ARTIFACT_BASE.manifest.json" "$i" "$RENDERED_MODULE_BASE" "$CORE_SENTINEL_PRESENT" "$ARTIFACT_BASE" "$claude_exit")"
 
     # The final text alone cannot show whether a proving run happened; the .jsonl transcript
     # carries the tool calls. Located by session id, which is race-free under concurrency.
@@ -174,5 +226,11 @@ for i in $(seq "$START" $((START + REPS - 1))); do
     else
         echo "warning: no session_id in $tagbase.json" >&2
     fi
-    echo "done: $tagbase ($INVOCATION_ID)"
+    if [ "$run_status" = completed ]; then
+        echo "done: $tagbase ($INVOCATION_ID)"
+    else
+        overall_exit=1
+        echo "failed: $tagbase ($INVOCATION_ID) - diagnostic artifacts: $ARTIFACT_BASE" >&2
+    fi
 done
+exit "$overall_exit"

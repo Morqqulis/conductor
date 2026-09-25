@@ -182,13 +182,21 @@ hər ikisi lokaldır:
 
 ## Başqa kompüterə köçürmə
 
-Repozitori elə distributivin özüdür: klonlayın və yuxarıdakı iki quraşdırıcını
-işə salın. Özü köçməyən sistemin yaddaşıdır — o, maşında, iki yerdə yaşayır:
-gələnlər jurnalı `~/.claude/conductor/lessons.md` və təsnif edilmiş anbar
-`~/.claude/conductor/lessons/` (dərs başına bir fayl və indeks). Toplanmış dərsləri
-saxlamaq istəyirsinizsə, hər ikisini kopyalayın. Cavab dili seçimini
-(`~/.claude/conductor/reply-language`) kopyalamağa ehtiyac yoxdur — təzə quraşdırma
-onu sadəcə yenidən soruşacaq.
+Conductor mənbə kodu və şəxsi yaddaş ayrı repozitorilərdədir. Əvvəl bütün şəxsi yaddaş
+repozitorisini yeni və ya boş qovluğa bərpa edin, sonra Conductor-u quraşdırın.
+`tools/restore-memory.py` tarixçəni, dərsləri, arxivləri, dili və ehtiyat nüsxə skriptini
+saxlayır; konkret layihənin yaddaş nüsxəsi ayrıca, açıq əmrlə bərpa edilir.
+Dolu təyinat qovluğunun üzərinə yazılmır. Mənbədə commit edilməmiş məlumat clone-a daxil deyil.
+Windows cədvəlini ayrıca `tools/schedule-memory-backup.ps1` ilə bərpa edin:
+əvvəlcədən baxış var, mövcud tapşırıq əvəz edilmir.
+Ardıcıllıq və əmrlər: [yaddaşın bərpası](docs/memory-recovery.md) (rus dilində).
+
+Dərslərə qulluq üçün mənbə kodunun surəti də lazım deyil: quraşdırıcı runtime yanında
+`memory/migrate-lessons.sh` yerləşdirir; qayda `playbooks/distill.md` faylındadır.
+Sessiyanın əvvəlində yeni dərslər öncə göstərilir; uzun qeydlər olduqda da tam jurnalın
+və indeksin ünvanları saxlanır. Bu, bütün yaddaşın yüklənməsi deyil, qısa önbaxışdır.
+Silməzdən əvvəl tam ehtiyat nüsxə yaradın: `--keep-lessons` dərsləri saxlayır,
+bütün şəxsi repozitorini, tarixçəni, skripti və layihə nüsxələrini deyil.
 
 ## Silinmə
 

@@ -180,13 +180,21 @@ switching the language. There are two manual paths, both local:
 
 ## Moving to another machine
 
-The repository is the distribution: clone it and run the two installers (above).
-What does not move on its own is the system's memory — it lives on the machine, in
-two places: the inbox `~/.claude/conductor/lessons.md` and the digested store
-`~/.claude/conductor/lessons/` (one file per lesson plus an index). Copy both if you
-want to keep the accumulated lessons. The reply-language choice
-(`~/.claude/conductor/reply-language`) does not need to be copied — a fresh install
-will simply ask again.
+Conductor source and personal memory are separate repositories. Restore the complete
+private memory repository into a new or empty directory first, then install Conductor.
+`tools/restore-memory.py` preserves history, lessons, archives, language and the backup
+script; restoring a particular project's snapshot is a separate explicit command.
+Non-empty destinations are never overwritten. Clone excludes uncommitted source data.
+Restore the Windows schedule separately with `tools/schedule-memory-backup.ps1`:
+preview is available and existing tasks are never replaced.
+Sequence and commands: [memory recovery guide](docs/memory-recovery.md) (Russian).
+
+Lesson maintenance also works without a source checkout: the installer ships
+`memory/migrate-lessons.sh` beside runtime; follow `playbooks/distill.md`.
+Session startup shows newest lessons first and retains the full inbox/index locations
+even with long entries. This is a short preview, not a load of all stored memory.
+Make a complete backup before uninstalling: `--keep-lessons` saves lessons,
+not the whole private repository, history, script or project snapshots.
 
 ## Uninstalling
 

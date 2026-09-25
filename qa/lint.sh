@@ -62,7 +62,7 @@ for name in "${!BUDGETS[@]}"; do
     if [ ! -f "$p" ]; then check 1 "missing playbook $name"; continue; fi
     n=$(chars "$p")
     [ "$n" -le "${BUDGETS[$name]}" ] || check 1 "$name over budget: $n/${BUDGETS[$name]}"
-    peer_texts="$(cat $(find "$RUNTIME/playbooks" -name '*.md' -not -name "$name") 2>/dev/null)"
+    peer_texts="$(find "$RUNTIME/playbooks" -name '*.md' -not -name "$name" -exec cat {} +)"
     # grep WITHOUT -q on purpose: -q exits at the first match and the abandoned printf
     # takes an EPIPE, which under pipefail fails the whole pipeline on fast readers
     # (ubuntu CI) while passing on buffered ones (Git Bash) - a false "dead wiring" FAIL
@@ -148,9 +148,16 @@ done < <(find "$RUNTIME" "$ADAPTERS" "$ROOT/deploy" -name '*.md' -o -name '*.mdc
 # --- keep-in-sync conventions ----------------------------------------------------------
 # DISTILL_THRESHOLD lives in three files that only a comment kept aligned; a silent
 # divergence would make the per-message reminder and the session-start banner disagree.
-thr_variants="$(grep -h '^DISTILL_THRESHOLD=' \
-        "$RUNTIME/hooks/lessons-inject.sh" "$RUNTIME/hooks/user-prompt.sh" "$ROOT/tools/doctor.sh" \
-    | sed 's/[[:space:]]*#.*$//;s/[[:space:]]*$//' | sort -u)"
+threshold_files=("$RUNTIME/hooks/lessons-inject.sh" "$RUNTIME/hooks/user-prompt.sh" "$ROOT/tools/doctor.sh")
+for f in "${threshold_files[@]}"; do
+    definitions="$(grep -E '^[[:space:]]*DISTILL_THRESHOLD=' "$f")"
+    if [ "$(printf '%s\n' "$definitions" | grep -c .)" -ne 1 ] || \
+            ! grep -qE '^[[:space:]]*DISTILL_THRESHOLD=[0-9]+([[:space:]]+#.*)?[[:space:]]*$' <<< "$definitions"; then
+        check 1 "DISTILL_THRESHOLD requires exactly one valid integer definition in ${f#$ROOT/} (non-negative decimal, optional trailing comment)"
+    fi
+done
+thr_variants="$(grep -hE '^[[:space:]]*DISTILL_THRESHOLD=' "${threshold_files[@]}" \
+    | sed 's/[[:space:]]*#.*$//;s/^[[:space:]]*//;s/[[:space:]]*$//' | sort -u)"
 [ "$(printf '%s\n' "$thr_variants" | wc -l | tr -d '[:space:]')" = "1" ] || \
     check 1 "DISTILL_THRESHOLD diverges across lessons-inject.sh / user-prompt.sh / doctor.sh: $(printf '%s' "$thr_variants" | tr '\n' ' ')"
 

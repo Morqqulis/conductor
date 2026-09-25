@@ -4,31 +4,35 @@ Load trigger: implement classification; or tempted to code before reading.
 
 ## Absolute
 No edit before the touched region has been read in this session.
-At T2+: before the FIRST mutating edit, NAME the undo in the todo or the message — the
-command or backup that restores the pre-edit state ("undo: git checkout -- <files>",
-"undo: restore <path>.bak-<stamp>"). No named undo -> no edit. Iron Law 3 gates the truly
-irreversible; this makes the reversible provably reversible.
+
+## SAFE UNDO (all tiers)
+Before the FIRST write, NAME exact per-file pre-task snapshots: bytes and existence,
+including dirty and untracked files. Record expected post-edit bytes/existence and your
+own hunks separately from test hunks. HEAD is not a baseline unless affected paths were
+verified clean, tracked and byte-identical at task start. No named snapshot -> no edit.
+Before undo/reapply/removal, compare current state with that expected state. Mismatch,
+active concurrent writer or unclear ownership -> preserve both states and ask; do not
+overwrite newer/user edits or refresh expectations to bypass the check.
+Reverse only your hunks. Remove a new file only with recorded pre-task absence AND proof
+the entire current file is yours. Own deletion requires a recoverable pre-task snapshot.
+No blanket stash/reset/clean; even path-scoped stash may hide user/test hunks. Falsify in
+an isolated copy of CURRENT files/tests; debugging.md has the guarded example.
+T1 display-only prose: small snapshot + diff review suffice; no test/build ritual.
+Behavior changes still follow Step 4. Iron Law 3 still gates irreversible actions.
 
 ## Restraint (scope is a contract, not a starting point)
-Deliver what was asked, at the scope intended, and finish it whole. Do not add features,
-refactor surrounding code, or introduce abstractions the task does not require: a bug fix does
-not need a cleanup pass, a one-shot operation does not need a helper, and a hypothetical future
-requirement is not a requirement. Validate at system boundaries — user input, external APIs,
-untrusted data — and trust internal code and framework guarantees inside them; error handling
-for a case that cannot occur is dead code that reads as diligence. Prefer changing the code to
-adding a flag or a compatibility shim when nothing depends on the old path.
-This is a floor on invention, never on quality: the production bar (error paths that CAN happen,
-edge cases, structured logs) is part of "done", not an extra you are being asked to skip.
-If the request looks mistaken or a better approach exists, say so in a sentence and continue with
-the task as asked — do not quietly narrow, widen, or transform it.
+Finish the requested scope; no unrequested features, refactors, helpers or hypothetical needs.
+Validate user input/external APIs/untrusted data; trust internal contracts. Handle real errors,
+edge cases and structured logs, not impossible cases. Prefer changing code to flags or shims
+when nothing needs the old path. Flag a mistaken request or better approach briefly, then do
+as asked; do not silently change scope. Restraint never lowers production quality.
 
 ## Step 1 — Decomposition triage (before any detail work)
 Does the request contain more than one independently deliverable outcome? Yes -> split into
 units; each unit gets its own Step 0 record and its own counters. No -> continue.
 
 ## Step 2 — Branch on an observable predicate
-At T2+, first name the unit's essence and its method in one line per playbooks/methods.md
-("essence: <e> -> method: <m>") — the dominant uncertainty picks the approach.
+At T2+, name "essence: <e> -> method: <m>" per playbooks/methods.md; uncertainty picks method.
 Do the named files/behaviors already exist? (Glob/Grep them — do not assume.)
 
 ### A. Existing surface
@@ -49,38 +53,30 @@ Do the named files/behaviors already exist? (Glob/Grep them — do not assume.)
 3. Implement against those contracts.
 
 ## Step 3 — Vague requests (T1/T2)
-Do not ask a question per item. State an assumptions ledger in the message — "Assuming:
-<defaults>" — and implement against it. Only correctness-critical unknowns earn a question,
-grouped into ONE block.
+State "Assuming: <defaults>" and implement against it. Ask only correctness-critical unknowns,
+grouped into ONE block, not one question per item.
 
 ## Step 4 — Tests
 Use verification.md first: display-only text, comments or ordinary docs need diff inspection,
 not a token test/build. Changed behavior -> probes.md#test-runner-discovery; test affected
 paths/consumers. New or changed behavior needs a discriminating failing test first, not only
 new branches. No runner -> execute the affected path; claim narrowly.
-A check is only as trustworthy as its controlled preconditions — MEASURED, never assumed:
-create test state explicitly (markers, fixtures), measure a target's budget before writing
-into it, verify invariants across ALL members (never a clever subset), and fake
-environments COMPLETELY — a partial fake leaks actions onto real state.
-A green is worth only what it EXERCISED: read the count, the interleaving, the bytes — not
-the exit code. A run that executed no test and a race check whose window cannot open both
-pass. An assertion over SOURCE anchors on a symbol name or on normalized text, never on
-formatting a tool may rewrite.
-A NEW guard earns trust by remove-only proof (T2+): delete or disarm the protection it
-guards — the guard MUST go red; restore it — green. Paste both outputs; a red-green pair
-told in words is unproven. Reuse a check only while its relevant inputs stay unchanged.
+Measure preconditions: create explicit fixtures/markers, measure budgets before writes,
+check ALL members, and fake environments completely so no action leaks into real state.
+Read what ran: counts, interleavings and bytes, not only exit codes. Zero tests or an
+unreachable race can pass. Source assertions anchor on symbols/normalized text, not formatting.
+A NEW guard needs remove-only proof at T2+: disarm its protection in an isolated CURRENT
+copy under SAFE UNDO; the guard must fail, then pass after reapplying only those hunks.
+Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.
 Integrity guards run when their invariant is affected (registrations, naming, config),
 not on every task. Explicit project-required checks still apply; see verification.md.
 
 ## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
-The old name is a debt until proven settled: search it across code, configs, docs, and
-deployed/generated copies. The removal is complete ONLY when that search returns zero
-unexplained hits — paste the count as evidence ("grep <old> -> 0 hits"). Each surviving
-hit is updated or justified in place (historical records may keep it — say so).
-Beyond references, NAME the side artifacts the change orphans — registrations (hooks,
-routes, DI, cron), caches/build outputs, DB columns/tables and the queries/migrations
-touching them, env vars, docs — and resolve each. Deleting a thing without its wiring
-is half a deletion; the report lists what was swept.
+Search the old name across code, configs, docs and deployed/generated copies. Complete
+only at zero unexplained hits; report the count, updating or explaining each remaining
+hit (including historical records). Name and resolve orphaned wiring: hooks/routes/DI/cron,
+caches/build outputs, DB objects and queries/migrations, env vars, docs. Report the sweep;
+deleting a thing without its wiring is incomplete.
 
 ## Library/API claims
 A claim about how a library, framework, or API behaves requires verification against CURRENT
@@ -88,12 +84,9 @@ docs (the context7 tool when available, else the installed package's source/type
 not evidence. Unverifiable right now -> say "from memory, unverified" in place.
 
 ## Writing standard
-Any plan/spec text you produce is written for a zero-context reader. Before claiming done,
-scan your own diff for deferred-work stubs and vague directives (empty handlers left "for
-later", "handle it properly"-style lines, "same as the other file" references) — each one is
-a defect, not a note. Judge completeness against the TASK, not the artifact: in a separate
-pass, map each requirement of the request to where the deliverable satisfies it — an
-unmapped requirement is undelivered.
+Write plans/specs for a zero-context reader. Inspect the diff for stubs, vague directives
+and deferred work; each is a defect. Separately map every requested requirement to its
+delivered location; an unmapped requirement is undelivered.
 
 ## Degradation
 A required context file is unreadable or absent -> NEEDS_CONTEXT naming the exact path.

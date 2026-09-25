@@ -33,7 +33,9 @@ if [ ! -f "$JOURNAL" ]; then
 fi
 
 # Line format (tab-separated, written by test-run-journal.sh):
-#   stamp  outcome  scope  root  command  head12  worktree12
+#   stamp  outcome  scope  root  command  head12  worktree12  recognizer-version
+# Historical seven-column rows stay readable, but their recognizer admitted mentions and
+# masked failures. They cannot qualify the outcome-based gate retroactively.
 awk -F'\t' -v min_lines="$MIN_LINES" -v min_repos="$MIN_REPOS" -v min_days="$MIN_DAYS" '
 # Days since a fixed epoch for a civil date (standard days-from-civil algorithm).
 function serial(y, m, d) {
@@ -72,7 +74,8 @@ function add_gap(gaps, item) {
 {
     # Treat the journal as an untrusted TSV input. Only the exact hook-writer contract
     # may contribute to either readiness gate; malformed rows are visible but inert.
-    if (NF != 7 || !valid_stamp($1) || ($2 != "PASS" && $2 != "FAIL" && $2 != "PIPED") || \
+    if ((NF != 7 && NF != 8) || (NF == 8 && $8 != "v2") || \
+        !valid_stamp($1) || ($2 != "PASS" && $2 != "FAIL" && $2 != "PIPED") || \
         ($3 != "full" && $3 != "partial") || $4 == "" || $5 == "" || \
         !valid_hash($6, "no-head") || !valid_hash($7, "no-hash")) {
         malformed++
@@ -80,6 +83,7 @@ function add_gap(gaps, item) {
     }
 
     total++
+    if (NF == 7) legacy++
     outcome[$2]++
     scope[$3]++
     repos[$4]++
@@ -88,7 +92,7 @@ function add_gap(gaps, item) {
 
     # PASS and FAIL are attributable outcomes. PIPED has no trustworthy exit code, so
     # it contributes to volume only and cannot justify outcome-based decisions.
-    if ($2 == "PASS" || $2 == "FAIL") {
+    if (NF == 8 && ($2 == "PASS" || $2 == "FAIL")) {
         eligible++
         eligible_outcome[$2]++
         eligible_repos[$4]++
@@ -103,7 +107,7 @@ END {
         exit 1
     }
 
-    printf "test-run journal: %d run(s), %s .. %s\n\n", total, first, last
+    printf "test-run journal: %d observation(s), %s .. %s\n\n", total, first, last
 
     piped_count = ("PIPED" in outcome) ? outcome["PIPED"] : 0
     full_count = ("full" in scope) ? scope["full"] : 0
@@ -111,6 +115,7 @@ END {
     printf "evidence: total %d, PIPED %d, eligible %d, FULL %d, PARTIAL %d\n", \
            total, piped_count, eligible + 0, full_count, partial_count
     printf "discarded malformed rows: %d\n\n", malformed + 0
+    printf "legacy rows: %d (excluded from quality readiness)\n", legacy + 0
 
     print "outcomes:"
     for (o in outcome) printf "  %-6s %d\n", o, outcome[o]

@@ -28,10 +28,10 @@ Both fallbacks count the defining file — callers = count - 1. The -1 is mandat
 comparing to the >5 trigger.
 
 ## probes.md#dirty-tree
-Run BEFORE any merge/discard/branch-switch:
-PowerShell: `git status --porcelain`   # any output = dirty
-bash:       `git status --porcelain`   # any output = dirty
-# Dirty -> stop: commit, stash, or get an explicit user decision first. Never discard silently.
+Before merge/discard/branch-switch or undo: `git status --porcelain --untracked-files=all`
+(Bash/PowerShell). Dirty is inventory, not permission to stash/restore. Preserve per-file
+pre-task snapshots and compare expected post-edit bytes/existence (implementing.md SAFE UNDO).
+HEAD needs verified clean tracked paths. Conflict/unclear ownership -> preserve and ask.
 
 ## probes.md#hidden-coupling
 Mechanical detectors for connections no import reveals. Run when investigating cross-module

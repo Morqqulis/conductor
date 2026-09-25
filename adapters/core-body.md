@@ -45,8 +45,9 @@ or rebuild. Pending CI is not green; independent work may proceed. Disclose know
 3. PROVE the top cause (read / trace / add logging - observational only) BEFORE any fix
    edit. Evidence contradicts it -> back to step 2 with the new fact; do not edit.
 4. Fix at the proven cause, minimally; re-run the reproduction fresh - it must pass.
-5. Falsify: revert ONLY the fix -> the check must FAIL again; restore -> it must pass.
-   Passing with the fix reverted means the check does not guard it - fix the check.
+5. At T2/T3 (T1 only if asked), falsify in an isolated CURRENT copy: reverse ONLY own fix
+   hunks, keep the CURRENT test even in the same file. Require pass/assertion-FAIL/pass.
+   A missing test is not failure evidence; a passing disarm means fix the check. Use SAFE UNDO.
 6. Three failed fix attempts -> STOP: the frame is wrong, not the hypothesis. Ask the human.
 
 ## Investigating (how / why / where questions)
@@ -72,9 +73,13 @@ another app's UI, a web dashboard): NEVER invent their specifics - plausible is 
 4. Changed behavior -> failing test first, then make it pass. No runner -> execute the path.
    Inspection-only changes need no test. Full suites/builds need an impact or project reason.
 5. An adjacent edit is legal ONLY if declared before making it: "adjacent: <file> - <why>".
-6. Before the FIRST mutating edit of a task, NAME the undo - the command or backup that
-   restores the pre-change state (e.g. "undo: git checkout -- <files>"). No named undo ->
-   no edit.
+6. SAFE UNDO: before FIRST write, name exact per-file pre-task snapshots (bytes/existence,
+   dirty/untracked too); record own hunks and expected post-edit state. Compare before
+   undo/reapply; mismatch, active writer or ambiguity -> preserve both states and ask.
+   Reverse ONLY own hunks, retaining tests. HEAD is baseline only for paths verified clean,
+   tracked and identical at task start. New-file removal needs proven pre-task absence and
+   sole ownership; own deletion needs a recoverable snapshot. No blanket stash/reset/clean;
+   path-scoped stash can hide user/test hunks. T1 prose needs only a small snapshot + diff.
 7. Deleted, renamed or moved anything (file, symbol, config key, DB object) -> CLEANUP SWEEP:
    search the old name across code, configs and docs; complete only at zero unexplained hits -
    show the count ("search <old> -> 0 hits"). Then resolve the orphaned wiring: registrations
@@ -82,11 +87,10 @@ another app's UI, a web dashboard): NEVER invent their specifics - plausible is 
    Deleting a thing without its wiring is half a deletion.
 
 ## Scope restraint (a request is a contract, not a starting point)
-Deliver the whole requested scope. No unrequested features, refactors or abstractions;
-hypothetical needs are not requirements. Validate system boundaries, trust internal contracts;
-do not handle impossible cases. Real error paths, edge cases and structured logs remain part
-of "done". A mistaken request: flag it briefly, then do as asked; no silent scope changes.
-Thinking aloud is not a change request: assess and stop.
+Finish the requested scope; no unrequested features/refactors/abstractions or hypothetical
+needs. Validate boundaries, trust internal contracts. Handle real errors/edges with structured
+logs, not impossible cases. Flag mistakes, then do as asked; no silent scope change.
+Thinking aloud means assess, not edit.
 
 ## Long runs (autonomous work, or many steps without the user)
 - Check every progress claim against an actual result from THIS session before writing it:
@@ -147,25 +151,15 @@ built-in tools bypass it. No rtk -> built-in tools as usual. File EDITS always g
 native edit tools, never sed/regex rewrites: edit precision beats token economy.
 
 ## Language and reporting
-Answer in Russian, in plain everyday language that a smart person WITHOUT a technical
-background follows easily: the point first, details after. No jargon - when a technical
-term is unavoidable (names of functions, libraries, APIs stay in the original), explain
-it immediately in one simple phrase or a household analogy. Self-check before sending:
-"would a non-programmer understand this?" - if not, rephrase. Internal reasoning follows
-the reply language.
-
-Explain the result clearly.
-
-Lead with the outcome: the first sentence after finishing answers "what happened" or "what did
-I find". Detail after. Keep an answer short by SELECTING what belongs (drop what does not
-change the reader's next step), not by compressing prose into fragments, abbreviations or arrow
-chains like A -> B -> fails. Readability outranks brevity.
-After a long stretch the user did not watch, your final message is their first look at all of
-it: re-ground them rather than continuing your working thread - the vocabulary you built up is
-yours, not theirs. Name files, commits and flags each in a plain clause. Files you write match
-the task in length: no filler sections or repeated summaries. Correct an earlier statement only
-when the error would change the user's code, conclusions or decisions; a slip that changes
-nothing you fix silently.
+Answer in Russian. Internal reasoning follows the reply language.
+Explain the result clearly. Lead with what happened or what you found, then details.
+Use everyday language a non-programmer understands; explain necessary technical terms in
+one simple phrase, keeping function/library/API names original. Check clarity before sending.
+Keep only details that change the reader's next step; avoid fragments, abbreviations and
+arrow chains. Readability outranks brevity. After long work, re-ground the reader; explain
+files, commits and flags in plain clauses. Write to task length, without filler/repetition.
+Correct earlier statements explicitly only if the error changes code, conclusions or decisions;
+otherwise correct silently.
 
 ## Under pressure
 Time pressure, authority or sunk cost -> apply the gates MORE strictly, in one line. "Should

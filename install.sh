@@ -78,6 +78,8 @@ done
 # --- 1. Runtime tree ------------------------------------------------------------------
 mkdir -p "$CONDUCTOR_DIR"
 cp -R "$REPO/runtime/." "$CONDUCTOR_DIR/"
+mkdir -p "$CONDUCTOR_DIR/memory"
+cp "$REPO/tools/migrate-lessons.sh" "$CONDUCTOR_DIR/memory/migrate-lessons.sh"
 chmod +x "$CONDUCTOR_DIR"/hooks/*.sh 2>/dev/null || true
 
 # core.md ships with a placeholder module base and is RENDERED here: a literal machine

@@ -31,9 +31,9 @@ run_report() {
 }
 
 append_contract_row() {
-    # Each invocation writes the exact seven TSV columns of the hook writer contract.
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "$2" "$3" "$4" "$5" "$6" "$7" "$8" >> "$1"
+    # The final field identifies the conservative command recognizer, not test coverage.
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$2" "$3" "$4" "$5" "$6" "$7" "$8" v2 >> "$1"
 }
 
 append_row() {
@@ -138,6 +138,14 @@ expect_contains 'evidence: total 200, PIPED 0, eligible 200, FULL 200, PARTIAL 0
 expect_contains 'volume readiness: READY (parseable 200/200, repos 3/3, span ~21/21 days)'
 expect_contains 'quality readiness: READY (eligible 200/200, repos 3/3, span ~21/21 days, PASS 100/1, FAIL 100/1)'
 expect_contains 'verdict: READY_FOR_CONTROLLED_EXPERIMENT'
+
+legacy="$TMP/legacy.tsv"
+awk -F '\t' 'BEGIN { OFS="\t" } { print $1,$2,$3,$4,$5,$6,$7 }' "$eligible" > "$legacy"
+run_report "$legacy"
+expect_status 0
+expect_contains 'legacy rows: 200 (excluded from quality readiness)'
+expect_contains 'eligible 0/200'
+expect_contains 'verdict: NOT READY'
 
 pass_only="$TMP/pass-only.tsv"
 make_pass_only_fixture "$pass_only"

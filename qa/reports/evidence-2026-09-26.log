@@ -70,6 +70,27 @@ Output >=64 MiB is incomplete. Descendant-held pipe wait is bounded; killing the
 descendant tree is not promised. Other OSes unverified. No automatic pruning.
 Code coverage percentage was not measured; no claim of 100% branch coverage is made.
 
-FINAL GRAPH: official CLI completed with the Python self-reexec workaround; 1136 nodes,
-2215 edges, 53 hyperedges, all 48 documents current. Repository-copy validator exit 0.
+CI FOLLOW-UP (first published run 36250481369):
+Linux passed; Windows failed two tests. Local green was not remote acceptance.
+Cause reproduced with the same Python using a real Windows 8.3 parent alias:
+store containment compared abspath against a resolved project root; the unreadable-file
+test also compared different spellings and never injected its promised read denial.
+checked_path now resolves only AFTER rejecting links/reparse points. The fault test
+compares resolved paths and asserts that denial actually ran. The store test covers
+physical aliases and proves rejection creates no directory.
+- Real short-path reproduction: original two assertion failures -> 2 PASS, exit 0.
+- Final Windows suite: 80 tests, 3 platform skips, exit 0, 25.040s.
+- Final Linux suite: 80 tests, 1 platform skip, exit 0, 15.398s.
+- Isolated CURRENT copy: 2 PASS / assertion FAIL with only normalization reversed /
+  2 PASS after restoration; tests retained. One intermediate restore matched the wrong
+  return in the COPY, failed again, and was corrected using exact function context;
+  final copy equals the main source. The main working source was never disarmed.
+- Live store.py updated only after matching its known old hash, with a recoverable
+  conductor-evidence-alias-backup-625972db10df40228f09c274cb295bc7 in user Temp.
+  All 11 installed package hashes match source; installed CLI list exits 0.
+  Existing Russian rules, lessons and settings were not overwritten by this update.
+Remote acceptance of this follow-up must be read from its own GitHub run.
+
+FINAL GRAPH: official CLI completed with the Python self-reexec workaround; 1137 nodes,
+2235 edges, 53 hyperedges, all 48 documents current. Repository-copy validator exit 0.
 Full extraction caveats and native Python diagnosis: graphify-2026-09-25/finalization.log.

@@ -4,8 +4,8 @@ FINAL DATA UPDATE ACCEPTED WITH EXTRACTION CAVEATS, 2026-09-26.
 This log is the current completion record; historical counts in
 docs/continuation-2026-09-25.md describe earlier verified snapshots.
 
-Current result, after one-source retry through the official CLI (--no-dedup):
-- 1136 nodes, 2215 edges, 53 hyperedges, 86 communities; CLI exit 0.
+Current result, after the document retry and final code-only CLI refresh (--no-dedup):
+- 1137 nodes, 2235 edges, 53 hyperedges, 80 communities; CLI exit 0.
 - All 48 supported documents represented. No duplicate node IDs, dangling edges/group
   members, missing source files, pending/deleted manifest entries, partial cache entries,
   or missing document cache for current content. Independent validator exit 0 before
@@ -15,7 +15,7 @@ Current result, after one-source retry through the official CLI (--no-dedup):
   Marker-gate removal is represented in the README and mentor-notes nodes, not as a
   separate HANDOFF node. Individual node identities/attribution are not a lossless index.
 - Graph/manifest/analysis transfer hashes match the accepted CLI output. Graph SHA-256:
-  47E5456326B1EEB3B38F1523396D74F368014A15738B05C2008719AF6DE0D5AF.
+  E17B8C07203B6C90D55B91852236901B6394069C66A1FC45E7C41A3E926A26F0.
 - Old root graph/cache are recoverable in the task's root-before-final-data-publish;
   old failed HANDOFF entries were quarantined, not deleted. Foreign 2026-08-24 backup
   is untouched. Old report is marked historical; HTML/cost report were not regenerated.
@@ -25,6 +25,17 @@ Current result, after one-source retry through the official CLI (--no-dedup):
 - One HANDOFF CI node is explicitly verification=unverified by Graphify; that flag is
   retained. Out-of-scope/colliding reference warnings remain a semantic quality caveat.
   This map is for navigation, not evidence of code behavior or exhaustive concept coverage.
+
+Final CI path-alias fix changed three Python files. Incremental extraction returned 0
+but lost 21 cross-file AST edges and added one import (2195 edges); comparison rejected
+that intermediate. Official extract --force --code-only --no-dedup re-read all 81 code
+files while preserving the existing semantic layer, as verified in installed cli.py.
+No document/LLM pass ran. All 21 lost edges are restored. The only old edge identity
+not retained now targets a source-qualified skipunless node instead of the unqualified
+one; its same source/decorator/location were inspected. No old node IDs were lost;
+hyperedge content is unchanged. Current corpus/cache and endpoint validator exit 0
+on both task output and transferred repository copy. Three transfer hashes match.
+Original and rejected intermediate graphs remain recoverable in the task Temp folder.
 
 Historical sequence below (superseded by the accepted result above):
 

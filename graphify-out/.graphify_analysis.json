@@ -1,6 +1,63 @@
 {
   "communities": {
     "0": [
+      "argparse",
+      "ctypes",
+      "debugging_md",
+      "difflib",
+      "hashlib",
+      "importlib",
+      "json",
+      "os",
+      "pathlib",
+      "qa_companions_test",
+      "qa_companions_test_rationale_2",
+      "qa_evidence_test_cli",
+      "qa_evidence_test_cli_rationale_1",
+      "qa_evidence_test_discovery",
+      "qa_evidence_test_discovery_discoverytests",
+      "qa_evidence_test_discovery_discoverytests_test_rendered_surfaces_in_three_languages",
+      "qa_evidence_test_discovery_rationale_1",
+      "qa_evidence_test_identity",
+      "qa_evidence_test_identity_rationale_1",
+      "qa_evidence_test_inputs",
+      "qa_evidence_test_inputs_rationale_1",
+      "qa_evidence_test_install",
+      "qa_evidence_test_install_rationale_1",
+      "qa_evidence_test_process",
+      "qa_evidence_test_process_rationale_1",
+      "qa_evidence_test_store",
+      "qa_evidence_test_store_rationale_1",
+      "qa_memory_restore_test",
+      "qa_memory_restore_test_rationale_2",
+      "qa_memory_test",
+      "qa_memory_test_rationale_2",
+      "qa_safe_undo_test",
+      "qa_safe_undo_test_rationale_2",
+      "qa_test_run_journal_test",
+      "qa_test_run_journal_test_rationale_2",
+      "re",
+      "runtime_evidence_identity",
+      "runtime_evidence_identity_rationale_1",
+      "runtime_evidence_pipe_io",
+      "runtime_evidence_pipe_io_rationale_1",
+      "runtime_evidence_pipe_io_read_ready",
+      "runtime_evidence_process",
+      "runtime_evidence_process_rationale_1",
+      "shlex",
+      "shutil",
+      "struct",
+      "subprocess",
+      "sys",
+      "tempfile",
+      "time",
+      "tools_restore_memory",
+      "tools_restore_memory_rationale_2",
+      "unittest",
+      "unittest_mock",
+      "urllib_parse"
+    ],
+    "1": [
       "claude",
       "claude_changelog",
       "claude_code_integrity",
@@ -56,7 +113,7 @@
       "scenario_verifypressure",
       "superpowers_plugin"
     ],
-    "1": [
+    "2": [
       "handoff_adapters_core_body",
       "handoff_adapters_cursor",
       "handoff_audit_hooks",
@@ -110,66 +167,10 @@
       "tools_sweep_git_gate_die",
       "tools_sweep_git_gate_sh__entry"
     ],
-    "2": [
-      "argparse",
-      "ctypes",
-      "debugging_md",
-      "difflib",
-      "hashlib",
-      "importlib",
-      "json",
-      "os",
-      "pathlib",
-      "qa_companions_test",
-      "qa_companions_test_rationale_2",
-      "qa_evidence_test_cli",
-      "qa_evidence_test_cli_rationale_1",
-      "qa_evidence_test_discovery",
-      "qa_evidence_test_discovery_discoverytests",
-      "qa_evidence_test_discovery_discoverytests_test_rendered_surfaces_in_three_languages",
-      "qa_evidence_test_discovery_rationale_1",
-      "qa_evidence_test_identity",
-      "qa_evidence_test_identity_rationale_1",
-      "qa_evidence_test_inputs",
-      "qa_evidence_test_inputs_rationale_1",
-      "qa_evidence_test_install",
-      "qa_evidence_test_install_rationale_1",
-      "qa_evidence_test_process",
-      "qa_evidence_test_process_rationale_1",
-      "qa_memory_restore_test",
-      "qa_memory_restore_test_rationale_2",
-      "qa_memory_test",
-      "qa_memory_test_rationale_2",
-      "qa_safe_undo_test",
-      "qa_safe_undo_test_rationale_2",
-      "qa_test_run_journal_test",
-      "qa_test_run_journal_test_rationale_2",
-      "re",
-      "runtime_evidence_pipe_io",
-      "runtime_evidence_pipe_io_rationale_1",
-      "runtime_evidence_pipe_io_read_ready",
-      "runtime_evidence_process",
-      "runtime_evidence_process_rationale_1",
-      "shlex",
-      "shutil",
-      "stat",
-      "subprocess",
-      "sys",
-      "tempfile",
-      "time",
-      "tools_restore_memory",
-      "tools_restore_memory_rationale_2",
-      "unittest",
-      "unittest_mock",
-      "urllib_parse"
-    ],
     "3": [
-      "qa_evidence_test_store",
       "qa_evidence_test_store_py_skipunless",
-      "qa_evidence_test_store_rationale_1",
       "qa_evidence_test_store_storetests",
       "qa_evidence_test_store_storetests_receipt",
-      "qa_evidence_test_store_storetests_setup",
       "qa_evidence_test_store_storetests_test_atomic_finalize_failure_is_not_success",
       "qa_evidence_test_store_storetests_test_concurrent_first_key_creation",
       "qa_evidence_test_store_storetests_test_concurrent_runs_stay_separate",
@@ -194,7 +195,6 @@
       "runtime_evidence_commands_run_command",
       "runtime_evidence_contract_evidenceerror",
       "runtime_evidence_contract_evidenceerror_init",
-      "runtime_evidence_contract_processresult",
       "runtime_evidence_contract_py_exception",
       "runtime_evidence_contract_read_json",
       "runtime_evidence_contract_read_json_constant",
@@ -214,6 +214,46 @@
       "runtime_evidence_store_write_new"
     ],
     "4": [
+      "adapters_core_body",
+      "adapters_dir",
+      "changelog",
+      "changelog_unreleased_20260821",
+      "changelog_unreleased_20260823",
+      "changelog_unreleased_20260925",
+      "changelog_unreleased_20260926",
+      "changelog_v2_0_0",
+      "changelog_v2_1_0",
+      "changelog_v2_1_1",
+      "concept_commit_discipline",
+      "concept_memory_system",
+      "concept_methodology",
+      "concept_proportional_verification",
+      "conductor_evidence_cli",
+      "core_subagent_contract",
+      "deploy_dir",
+      "deploy_global_claude_md",
+      "docs_dir",
+      "docs_superpowers_plans_2026_09_26_project_verification_evidence_task5",
+      "docs_superpowers_plans_2026_09_26_project_verification_evidence_task6",
+      "ext_graphify",
+      "ext_rtk",
+      "ext_superpowers",
+      "github_workflows_ci",
+      "memory_migrate_lessons",
+      "playbooks_distill",
+      "qa_dir",
+      "qa_evidence",
+      "readme",
+      "readme_az",
+      "readme_commit_discipline",
+      "readme_en",
+      "readme_en_md",
+      "readme_md",
+      "runtime_dir",
+      "superpowers",
+      "tools_dir"
+    ],
+    "5": [
       "conductor_false_success_task",
       "dispatching_parallel_agents",
       "docs_memory_recovery_md",
@@ -253,7 +293,7 @@
       "verification_before_completion",
       "writing_skills"
     ],
-    "5": [
+    "6": [
       "docs_superpowers_plans_2026_07_08_conductor_v1_classify",
       "docs_superpowers_plans_2026_07_08_conductor_v1_degradation",
       "docs_superpowers_plans_2026_07_08_conductor_v1_playbooks",
@@ -292,7 +332,7 @@
       "qa_reports_ab_report_verifypressure",
       "qa_reports_proportional_verification_2026_09_25"
     ],
-    "6": [
+    "7": [
       "docs_research_2026_07_08_superpowers_dissection_announcement_commitment_device",
       "docs_research_2026_07_08_superpowers_dissection_building_module",
       "docs_research_2026_07_08_superpowers_dissection_calibration_floor",
@@ -330,7 +370,43 @@
       "docs_research_2026_07_08_superpowers_dissection_verbatim_script_turn_isolation",
       "docs_research_2026_07_08_superpowers_dissection_zero_context_reader"
     ],
-    "7": [
+    "8": [
+      "conductor_core",
+      "conductor_graphify_tool",
+      "runtime_playbooks_debugging",
+      "runtime_playbooks_debugging_falsification_ritual",
+      "runtime_playbooks_debugging_hypothesize",
+      "runtime_playbooks_debugging_prove",
+      "runtime_playbooks_debugging_reproduce",
+      "runtime_playbooks_debugging_verify",
+      "runtime_playbooks_implementing",
+      "runtime_playbooks_implementing_cleanup_sweep",
+      "runtime_playbooks_implementing_degradation",
+      "runtime_playbooks_implementing_library_api_claims",
+      "runtime_playbooks_implementing_restraint",
+      "runtime_playbooks_implementing_safe_undo",
+      "runtime_playbooks_implementing_step1_decomposition",
+      "runtime_playbooks_implementing_step2_branch",
+      "runtime_playbooks_implementing_step3_vague",
+      "runtime_playbooks_implementing_step4_tests",
+      "runtime_playbooks_implementing_writing_standard",
+      "runtime_playbooks_investigating",
+      "runtime_playbooks_investigating_degradation",
+      "runtime_playbooks_investigating_sequence",
+      "runtime_playbooks_investigating_tripwires",
+      "runtime_playbooks_methods",
+      "runtime_playbooks_methods_dispatch_rule",
+      "runtime_playbooks_methods_dispatch_table",
+      "runtime_playbooks_methods_playbook",
+      "runtime_playbooks_methods_tripwires",
+      "runtime_playbooks_orchestration_when",
+      "runtime_snippets_probes",
+      "runtime_snippets_probes_caller_count",
+      "runtime_snippets_probes_dirty_tree",
+      "runtime_snippets_probes_hidden_coupling",
+      "runtime_snippets_probes_test_runner_discovery"
+    ],
+    "9": [
       "qa_evidence_test_inputs_inputtests",
       "qa_evidence_test_inputs_inputtests_capture",
       "qa_evidence_test_inputs_inputtests_git",
@@ -366,7 +442,7 @@
       "qa_evidence_test_inputs_py_skipunless",
       "skipif"
     ],
-    "8": [
+    "10": [
       "completedprocess",
       "qa_settings_json_test",
       "qa_settings_json_test_canonical",
@@ -401,7 +477,40 @@
       "qa_settings_json_test_settingsjsontest_test_strip_tolerates_nondict_hooks_and_nonlist_events",
       "qa_settings_json_test_write_json"
     ],
-    "9": [
+    "11": [
+      "adapters",
+      "adapters_antigravity_header",
+      "agents",
+      "agents_completion_gate_report",
+      "agents_production_first",
+      "agents_security_antipattern_registry",
+      "codex_agents_global",
+      "conductor_core_sentinel",
+      "deploy_global_claude",
+      "docs_archive_claude_pre_conductor",
+      "docs_audits_2026_09_25_coverage",
+      "docs_research",
+      "docs_research_2026_07_08_superpowers_dissection",
+      "docs_superpowers_specs_2026_07_08_conductor_design",
+      "handoff",
+      "handoff_changelog",
+      "handoff_continuation_note",
+      "handoff_docs_audits",
+      "handoff_graphify_finalization_log",
+      "handoff_qa_evidence_log",
+      "handoff_qa_reliability_report",
+      "lessons",
+      "qa_reports",
+      "qa_reports_ab_v2_baseline_evidence",
+      "qa_reports_ab_v2_conductor_evidence",
+      "qa_reports_baseline_values_file_doc",
+      "rtk",
+      "runtime",
+      "runtime_playbooks_distill",
+      "runtime_playbooks_distill_graduate_rule",
+      "runtime_playbooks_distill_maintain_memory"
+    ],
+    "12": [
       "docs_research_2026_07_08_superpowers_dissection_brainstorming",
       "docs_research_2026_07_08_superpowers_dissection_code_reviewer",
       "docs_research_2026_07_08_superpowers_dissection_dead_wiring",
@@ -434,7 +543,7 @@
       "docs_research_2026_07_08_superpowers_dissection_weaknesses",
       "docs_research_2026_07_08_superpowers_dissection_writing_skills"
     ],
-    "10": [
+    "13": [
       "concept_basalt_platform",
       "concept_conductor_system",
       "docs_parallel_work_document",
@@ -463,36 +572,7 @@
       "docs_proof_loop_task_contract",
       "docs_proof_loop_three_roles"
     ],
-    "11": [
-      "hmac",
-      "platform",
-      "qa_evidence_test_identity_identitytests",
-      "qa_evidence_test_identity_identitytests_git",
-      "qa_evidence_test_identity_identitytests_setup",
-      "qa_evidence_test_identity_identitytests_test_corrupt_git_and_missing_path_are_not_non_git",
-      "qa_evidence_test_identity_identitytests_test_projects_and_aliases",
-      "qa_evidence_test_identity_identitytests_test_recreated_root_changes_identity",
-      "qa_evidence_test_identity_identitytests_test_recycled_inode_uses_birth_time",
-      "qa_evidence_test_identity_identitytests_test_rejects_cmd_without_interpreter",
-      "qa_evidence_test_identity_identitytests_test_worktrees_are_distinct",
-      "qa_evidence_test_inputs_inputtests_setup",
-      "runtime_evidence_contract_canonical",
-      "runtime_evidence_contract_directoryidentity",
-      "runtime_evidence_contract_runspec",
-      "runtime_evidence_identity",
-      "runtime_evidence_identity_directory_identity",
-      "runtime_evidence_identity_identify_project",
-      "runtime_evidence_identity_py_path",
-      "runtime_evidence_identity_rationale_1",
-      "runtime_evidence_identity_resolve_executable",
-      "runtime_evidence_inputs",
-      "runtime_evidence_inputs_capture_inputs",
-      "runtime_evidence_inputs_environment",
-      "runtime_evidence_inputs_rationale_1",
-      "runtime_evidence_inputs_rationale_157",
-      "struct"
-    ],
-    "12": [
+    "14": [
       "adapters_antigravity_conductor_core",
       "adapters_antigravity_conductor_core_choosing_approach",
       "adapters_antigravity_conductor_core_cleanup_sweep",
@@ -516,9 +596,93 @@
       "docs_superpowers_plans_2026_07_08_conductor_v1_rationalizations",
       "gemini_agents",
       "portability_plan_methodology_pack",
-      "runtime_core_completion_gate"
+      "runtime_core",
+      "runtime_core_completion_gate",
+      "runtime_core_step0"
     ],
-    "13": [
+    "15": [
+      "copy",
+      "datetime",
+      "qa_evidence_test_record_schema",
+      "qa_evidence_test_record_schema_rationale_1",
+      "qa_evidence_test_record_schema_recordschematests",
+      "qa_evidence_test_record_schema_recordschematests_setup",
+      "qa_evidence_test_record_schema_recordschematests_test_entry_shape_and_paths",
+      "qa_evidence_test_record_schema_recordschematests_test_failure_and_incomplete_observation_shapes",
+      "qa_evidence_test_record_schema_recordschematests_test_invalid_fields_and_types",
+      "qa_evidence_test_store_storetests_setup",
+      "runtime_evidence_contract_fields",
+      "runtime_evidence_contract_parse_spec",
+      "runtime_evidence_contract_processresult",
+      "runtime_evidence_contract_relative_path",
+      "runtime_evidence_contract_string",
+      "runtime_evidence_record_schema",
+      "runtime_evidence_record_schema_digest",
+      "runtime_evidence_record_schema_directory",
+      "runtime_evidence_record_schema_from_record",
+      "runtime_evidence_record_schema_integer",
+      "runtime_evidence_record_schema_invalid",
+      "runtime_evidence_record_schema_rationale_1",
+      "runtime_evidence_record_schema_run_id",
+      "runtime_evidence_record_schema_snapshot",
+      "runtime_evidence_record_schema_strings",
+      "uuid"
+    ],
+    "16": [
+      "code_review_skill",
+      "runtime_playbooks_orchestration",
+      "runtime_playbooks_orchestration_async",
+      "runtime_playbooks_orchestration_cost_model",
+      "runtime_playbooks_orchestration_degradation",
+      "runtime_playbooks_orchestration_fleet",
+      "runtime_playbooks_orchestration_how_context",
+      "runtime_playbooks_orchestration_integration",
+      "runtime_playbooks_orchestration_model_effort",
+      "runtime_playbooks_orchestration_parallel_mutation",
+      "runtime_playbooks_orchestration_routing",
+      "runtime_playbooks_skeptic",
+      "runtime_playbooks_skeptic_cross_model_variant",
+      "runtime_playbooks_skeptic_guards_prose",
+      "runtime_playbooks_skeptic_inline_mode",
+      "runtime_playbooks_skeptic_inversion_pass",
+      "runtime_playbooks_skeptic_invocation",
+      "runtime_playbooks_skeptic_resolution_rules",
+      "runtime_playbooks_skeptic_rigor_gradient",
+      "runtime_playbooks_skeptic_verifier_dispatch_prompt",
+      "runtime_playbooks_verification",
+      "runtime_playbooks_verification_acceptance_and_reporting",
+      "runtime_playbooks_verification_choose_from_observed_impact",
+      "runtime_playbooks_verification_reuse_rather_than_repeat",
+      "runtime_playbooks_verification_when_execution_is_needed"
+    ],
+    "17": [
+      "hmac",
+      "platform",
+      "qa_evidence_test_inputs_inputtests_setup",
+      "runtime_evidence_contract_canonical",
+      "runtime_evidence_contract_runspec",
+      "runtime_evidence_inputs",
+      "runtime_evidence_inputs_capture_inputs",
+      "runtime_evidence_inputs_checked",
+      "runtime_evidence_inputs_environment",
+      "runtime_evidence_inputs_file_content",
+      "runtime_evidence_inputs_file_identity",
+      "runtime_evidence_inputs_linked",
+      "runtime_evidence_inputs_observation",
+      "runtime_evidence_inputs_observation_init",
+      "runtime_evidence_inputs_observation_ordered",
+      "runtime_evidence_inputs_observation_visit",
+      "runtime_evidence_inputs_py_exception",
+      "runtime_evidence_inputs_py_path",
+      "runtime_evidence_inputs_rationale_1",
+      "runtime_evidence_inputs_rationale_157",
+      "runtime_evidence_inputs_rationale_20",
+      "runtime_evidence_inputs_rationale_29",
+      "runtime_evidence_inputs_stamp",
+      "runtime_evidence_inputs_unobserved",
+      "stat"
+    ],
+    "18": [
       "install",
       "install_die",
       "install_global",
@@ -544,57 +708,7 @@
       "tools_reply_language_sh__entry",
       "tools_reply_language_validate_reply_language"
     ],
-    "14": [
-      "copy",
-      "datetime",
-      "qa_evidence_test_record_schema",
-      "qa_evidence_test_record_schema_rationale_1",
-      "qa_evidence_test_record_schema_recordschematests",
-      "qa_evidence_test_record_schema_recordschematests_setup",
-      "qa_evidence_test_record_schema_recordschematests_test_entry_shape_and_paths",
-      "qa_evidence_test_record_schema_recordschematests_test_failure_and_incomplete_observation_shapes",
-      "qa_evidence_test_record_schema_recordschematests_test_invalid_fields_and_types",
-      "runtime_evidence_contract_fields",
-      "runtime_evidence_contract_relative_path",
-      "runtime_evidence_contract_string",
-      "runtime_evidence_record_schema",
-      "runtime_evidence_record_schema_digest",
-      "runtime_evidence_record_schema_directory",
-      "runtime_evidence_record_schema_from_record",
-      "runtime_evidence_record_schema_integer",
-      "runtime_evidence_record_schema_invalid",
-      "runtime_evidence_record_schema_rationale_1",
-      "runtime_evidence_record_schema_run_id",
-      "runtime_evidence_record_schema_snapshot",
-      "runtime_evidence_record_schema_strings",
-      "uuid"
-    ],
-    "15": [
-      "dataclasses",
-      "math",
-      "qa_evidence_test_assessment",
-      "qa_evidence_test_assessment_assessmenttests_setup",
-      "qa_evidence_test_assessment_rationale_1",
-      "qa_evidence_test_contract",
-      "qa_evidence_test_contract_contracttests",
-      "qa_evidence_test_contract_contracttests_test_arguments_are_data",
-      "qa_evidence_test_contract_contracttests_test_missing_and_wrong_fields",
-      "qa_evidence_test_contract_contracttests_test_rejects_unknown_or_duplicate_json_fields",
-      "qa_evidence_test_contract_contracttests_test_roundtrip",
-      "qa_evidence_test_contract_rationale_1",
-      "qa_evidence_test_contract_valid_spec",
-      "runtime_evidence_assessment",
-      "runtime_evidence_assessment_assess",
-      "runtime_evidence_assessment_rationale_1",
-      "runtime_evidence_contract",
-      "runtime_evidence_contract_assessment",
-      "runtime_evidence_contract_parse_spec",
-      "runtime_evidence_contract_projectidentity",
-      "runtime_evidence_contract_rationale_1",
-      "runtime_evidence_contract_snapshot",
-      "runtime_evidence_contract_to_json"
-    ],
-    "16": [
+    "19": [
       "qa_bench_fixtures_breadth_trap_config_env",
       "qa_bench_fixtures_breadth_trap_config_load",
       "qa_bench_fixtures_breadth_trap_config_load_env",
@@ -619,7 +733,7 @@
       "qa_bench_fixtures_breadth_trap_services_report",
       "qa_bench_fixtures_breadth_trap_services_report_users"
     ],
-    "17": [
+    "20": [
       "qa_evidence_test_process_processtests",
       "qa_evidence_test_process_processtests_run_child",
       "qa_evidence_test_process_processtests_setup",
@@ -644,7 +758,8 @@
       "runtime_evidence_process_capture_process_error",
       "runtime_evidence_process_py_path"
     ],
-    "18": [
+    "21": [
+      "qa_memory_restore_test_py_skipunless",
       "qa_memory_restore_test_recoverytests",
       "qa_memory_restore_test_recoverytests_assert_artifacts",
       "qa_memory_restore_test_recoverytests_clone",
@@ -666,32 +781,32 @@
       "qa_memory_restore_test_recoverytests_test_project_overlap_is_refused",
       "qa_memory_restore_test_recoverytests_test_project_rejects_link_before_copying",
       "qa_memory_restore_test_recoverytests_test_project_restore_is_explicit_and_complete",
-      "qa_memory_restore_test_recoverytests_test_schedule_definition_and_safe_bash_arguments",
-      "skipunless"
+      "qa_memory_restore_test_recoverytests_test_schedule_definition_and_safe_bash_arguments"
     ],
-    "19": [
-      "adapters",
-      "adapters_core_body",
-      "agents",
-      "agents_completion_gate_report",
-      "agents_production_first",
-      "agents_security_antipattern_registry",
-      "changelog",
-      "changelog_unreleased_20260823",
-      "changelog_v2_0_0",
-      "codex_agents_global",
-      "docs_research",
-      "handoff",
-      "handoff_changelog",
-      "handoff_continuation_note",
-      "handoff_docs_audits",
-      "handoff_graphify_finalization_log",
-      "handoff_qa_evidence_log",
-      "handoff_qa_reliability_report",
-      "qa_reports",
-      "runtime"
+    "22": [
+      "dataclasses",
+      "math",
+      "qa_evidence_test_assessment",
+      "qa_evidence_test_assessment_rationale_1",
+      "qa_evidence_test_contract",
+      "qa_evidence_test_contract_contracttests",
+      "qa_evidence_test_contract_contracttests_test_arguments_are_data",
+      "qa_evidence_test_contract_contracttests_test_missing_and_wrong_fields",
+      "qa_evidence_test_contract_contracttests_test_rejects_unknown_or_duplicate_json_fields",
+      "qa_evidence_test_contract_contracttests_test_roundtrip",
+      "qa_evidence_test_contract_rationale_1",
+      "qa_evidence_test_contract_valid_spec",
+      "runtime_evidence_assessment",
+      "runtime_evidence_assessment_assess",
+      "runtime_evidence_assessment_rationale_1",
+      "runtime_evidence_contract",
+      "runtime_evidence_contract_assessment",
+      "runtime_evidence_contract_projectidentity",
+      "runtime_evidence_contract_rationale_1",
+      "runtime_evidence_contract_snapshot",
+      "runtime_evidence_contract_to_json"
     ],
-    "20": [
+    "23": [
       "handoff_qa_settings_json_test",
       "tools_settings_json",
       "tools_settings_json_audit",
@@ -713,49 +828,7 @@
       "tools_settings_json_save",
       "tools_settings_json_strip"
     ],
-    "21": [
-      "changelog_unreleased_20260925",
-      "changelog_unreleased_20260926",
-      "changelog_v2_1_0",
-      "changelog_v2_1_1",
-      "concept_commit_discipline",
-      "concept_memory_system",
-      "concept_methodology",
-      "concept_proportional_verification",
-      "conductor_evidence_cli",
-      "ext_graphify",
-      "ext_rtk",
-      "ext_superpowers",
-      "memory_migrate_lessons",
-      "playbooks_distill",
-      "readme",
-      "readme_commit_discipline",
-      "readme_en",
-      "rtk",
-      "superpowers"
-    ],
-    "22": [
-      "conductor_core",
-      "conductor_graphify_tool",
-      "runtime_playbooks_implementing",
-      "runtime_playbooks_implementing_cleanup_sweep",
-      "runtime_playbooks_implementing_degradation",
-      "runtime_playbooks_implementing_library_api_claims",
-      "runtime_playbooks_implementing_restraint",
-      "runtime_playbooks_implementing_step1_decomposition",
-      "runtime_playbooks_implementing_step2_branch",
-      "runtime_playbooks_implementing_step3_vague",
-      "runtime_playbooks_implementing_step4_tests",
-      "runtime_playbooks_implementing_writing_standard",
-      "runtime_playbooks_investigating_sequence",
-      "runtime_playbooks_orchestration_when",
-      "runtime_snippets_probes",
-      "runtime_snippets_probes_caller_count",
-      "runtime_snippets_probes_dirty_tree",
-      "runtime_snippets_probes_hidden_coupling",
-      "runtime_snippets_probes_test_runner_discovery"
-    ],
-    "23": [
+    "24": [
       "qa_companions_test_bash_path",
       "qa_companions_test_companionstest",
       "qa_companions_test_companionstest_assert_failure",
@@ -776,7 +849,7 @@
       "qa_companions_test_companionstest_test_two_disabled_copies_enable_only_one",
       "qa_companions_test_record"
     ],
-    "24": [
+    "25": [
       "docs_audits_2026_09_25_project_audit",
       "docs_audits_2026_09_25_project_audit_a2_adapter_exception_loss",
       "docs_audits_2026_09_25_project_audit_a3_head_rollback_defect",
@@ -796,7 +869,7 @@
       "runtime_playbooks_distill_distill",
       "runtime_subagent_contract_subagent_contract"
     ],
-    "25": [
+    "26": [
       "qa_bench_fixtures_rootcause_trap_src_carttotal",
       "qa_bench_fixtures_rootcause_trap_src_carttotal_carttotal",
       "qa_bench_fixtures_rootcause_trap_src_carttotal_formattotal",
@@ -816,45 +889,7 @@
       "ref_node_assert",
       "ref_node_test"
     ],
-    "26": [
-      "code_review_skill",
-      "runtime_playbooks_orchestration",
-      "runtime_playbooks_orchestration_async",
-      "runtime_playbooks_orchestration_cost_model",
-      "runtime_playbooks_orchestration_degradation",
-      "runtime_playbooks_orchestration_how_context",
-      "runtime_playbooks_orchestration_integration",
-      "runtime_playbooks_orchestration_model_effort",
-      "runtime_playbooks_orchestration_parallel_mutation",
-      "runtime_playbooks_orchestration_routing",
-      "runtime_playbooks_skeptic",
-      "runtime_playbooks_skeptic_cross_model_variant",
-      "runtime_playbooks_skeptic_guards_prose",
-      "runtime_playbooks_skeptic_inline_mode",
-      "runtime_playbooks_skeptic_inversion_pass",
-      "runtime_playbooks_skeptic_invocation",
-      "runtime_playbooks_skeptic_rigor_gradient"
-    ],
     "27": [
-      "concept_evidence_storage_privacy",
-      "concept_execution_check_states",
-      "concept_project_identity_snapshot",
-      "docs_continuation_2026_09_25",
-      "docs_superpowers_specs_2026_07_08_conductor_design_cut_from_v1",
-      "docs_superpowers_specs_2026_09_26_project_verification_evidence_design_spec",
-      "github_agentic_workflows",
-      "graphify",
-      "graphify_anti_shrink_protection",
-      "mintlify",
-      "runtime_playbooks_skeptic_resolution_rules",
-      "runtime_playbooks_skeptic_verifier_dispatch_prompt",
-      "runtime_playbooks_verification",
-      "runtime_playbooks_verification_acceptance_and_reporting",
-      "runtime_playbooks_verification_choose_from_observed_impact",
-      "runtime_playbooks_verification_reuse_rather_than_repeat",
-      "runtime_playbooks_verification_when_execution_is_needed"
-    ],
-    "28": [
       "docs_archive_claude_pre_conductor_ambiguous_requests",
       "docs_archive_claude_pre_conductor_calibration",
       "docs_archive_claude_pre_conductor_code_codex",
@@ -873,7 +908,7 @@
       "docs_archive_claude_pre_conductor_unified_summary",
       "docs_archive_claude_pre_conductor_workflow_order"
     ],
-    "29": [
+    "28": [
       "basalt_platform",
       "docs_parallel_work",
       "docs_parallel_work_acceptance_protocol",
@@ -891,7 +926,7 @@
       "docs_parallel_work_unwarned_first_trap",
       "docs_parallel_work_whole_tree_gates_trap"
     ],
-    "30": [
+    "29": [
       "runtime_hooks_lessons_inject",
       "runtime_hooks_lessons_inject_append_fitting_line",
       "runtime_hooks_lessons_inject_sh__entry",
@@ -909,7 +944,7 @@
       "runtime_hooks_user_prompt",
       "runtime_hooks_user_prompt_sh__entry"
     ],
-    "31": [
+    "30": [
       "install_companions",
       "install_companions_hint",
       "install_companions_install_graphify",
@@ -926,7 +961,39 @@
       "install_companions_tool_version",
       "install_companions_wire_rtk"
     ],
+    "31": [
+      "concept_evidence_storage_privacy",
+      "concept_execution_check_states",
+      "concept_project_identity_snapshot",
+      "docs_continuation_2026_09_25",
+      "docs_superpowers_plans_2026_07_08_conductor_v1",
+      "docs_superpowers_plans_2026_09_26_project_verification_evidence",
+      "docs_superpowers_specs_2026_07_08_conductor_design_cut_from_v1",
+      "docs_superpowers_specs_2026_09_26_project_verification_evidence_design_spec",
+      "github_agentic_workflows",
+      "graphify",
+      "graphify_anti_shrink_protection",
+      "mintlify",
+      "superpowers_executing_plans",
+      "superpowers_subagent_driven_development"
+    ],
     "32": [
+      "qa_evidence_test_identity_identitytests",
+      "qa_evidence_test_identity_identitytests_git",
+      "qa_evidence_test_identity_identitytests_setup",
+      "qa_evidence_test_identity_identitytests_test_corrupt_git_and_missing_path_are_not_non_git",
+      "qa_evidence_test_identity_identitytests_test_projects_and_aliases",
+      "qa_evidence_test_identity_identitytests_test_recreated_root_changes_identity",
+      "qa_evidence_test_identity_identitytests_test_recycled_inode_uses_birth_time",
+      "qa_evidence_test_identity_identitytests_test_rejects_cmd_without_interpreter",
+      "qa_evidence_test_identity_identitytests_test_worktrees_are_distinct",
+      "runtime_evidence_contract_directoryidentity",
+      "runtime_evidence_identity_directory_identity",
+      "runtime_evidence_identity_identify_project",
+      "runtime_evidence_identity_py_path",
+      "runtime_evidence_identity_resolve_executable"
+    ],
+    "33": [
       "qa_journal_report_test",
       "qa_journal_report_test_append_contract_row",
       "qa_journal_report_test_append_row",
@@ -941,22 +1008,6 @@
       "qa_journal_report_test_make_piped_fixture",
       "qa_journal_report_test_run_report",
       "qa_journal_report_test_sh__entry"
-    ],
-    "33": [
-      "runtime_evidence_inputs_checked",
-      "runtime_evidence_inputs_file_content",
-      "runtime_evidence_inputs_file_identity",
-      "runtime_evidence_inputs_linked",
-      "runtime_evidence_inputs_observation",
-      "runtime_evidence_inputs_observation_init",
-      "runtime_evidence_inputs_observation_ordered",
-      "runtime_evidence_inputs_observation_visit",
-      "runtime_evidence_inputs_py_exception",
-      "runtime_evidence_inputs_py_path",
-      "runtime_evidence_inputs_rationale_20",
-      "runtime_evidence_inputs_rationale_29",
-      "runtime_evidence_inputs_stamp",
-      "runtime_evidence_inputs_unobserved"
     ],
     "34": [
       "docs_mentor_notes",
@@ -974,6 +1025,21 @@
       "runtime_hooks_test_run_journal_sh__entry"
     ],
     "35": [
+      "docs_superpowers_plans_2026_07_09_portability",
+      "portability_plan_ensure_gitgate",
+      "portability_plan_global_rollout",
+      "portability_plan_install_gateinto_bug",
+      "portability_plan_l1_instruction_text",
+      "portability_plan_l2_harness_hooks",
+      "portability_plan_l3_git_native_gate",
+      "portability_plan_marker_protocol_v2",
+      "portability_plan_phase1_git_gate",
+      "portability_plan_phase2_cursor_adapter",
+      "portability_plan_phase3_antigravity_adapter",
+      "portability_plan_phase4_gemini_surfaces",
+      "portability_plan_zero_friction_enforcement"
+    ],
+    "36": [
       "qa_evidence_test_cli_clitests",
       "qa_evidence_test_cli_clitests_cli",
       "qa_evidence_test_cli_clitests_run_record",
@@ -988,7 +1054,7 @@
       "qa_evidence_test_cli_clitests_test_unknown_external_state_never_matches",
       "qa_evidence_test_cli_clitests_write_spec"
     ],
-    "36": [
+    "37": [
       "qa_test_run_journal_test_journalwritertest",
       "qa_test_run_journal_test_journalwritertest_invoke",
       "qa_test_run_journal_test_journalwritertest_setup",
@@ -1003,35 +1069,7 @@
       "qa_test_run_journal_test_journalwritertest_test_partial_run_is_recorded",
       "qa_test_run_journal_test_journalwritertest_test_writer_reader_roundtrip"
     ],
-    "37": [
-      "docs_superpowers_plans_2026_07_08_conductor_v1",
-      "docs_superpowers_plans_2026_07_08_conductor_v1_appendix_b",
-      "docs_superpowers_plans_2026_09_26_project_verification_evidence",
-      "runtime_subagent_contract",
-      "runtime_subagent_contract_evidence",
-      "runtime_subagent_contract_evidence_rule",
-      "runtime_subagent_contract_human_gates",
-      "runtime_subagent_contract_no_nested_orchestration",
-      "runtime_subagent_contract_status",
-      "runtime_subagent_contract_status_rule",
-      "superpowers_executing_plans",
-      "superpowers_subagent_driven_development"
-    ],
     "38": [
-      "docs_superpowers_plans_2026_07_09_portability",
-      "portability_plan_ensure_gitgate",
-      "portability_plan_global_rollout",
-      "portability_plan_install_gateinto_bug",
-      "portability_plan_l2_harness_hooks",
-      "portability_plan_l3_git_native_gate",
-      "portability_plan_marker_protocol_v2",
-      "portability_plan_phase1_git_gate",
-      "portability_plan_phase2_cursor_adapter",
-      "portability_plan_phase3_antigravity_adapter",
-      "portability_plan_phase4_gemini_surfaces",
-      "portability_plan_zero_friction_enforcement"
-    ],
-    "39": [
       "qa_memory_test_memorytest",
       "qa_memory_test_memorytest_payload",
       "qa_memory_test_memorytest_run_script",
@@ -1045,31 +1083,20 @@
       "qa_memory_test_memorytest_test_repeated_migration_keeps_every_raw_batch",
       "qa_memory_test_memorytest_test_three_languages_install_and_render_current_digests"
     ],
+    "39": [
+      "qa_evidence_test_assessment_assessmenttests",
+      "qa_evidence_test_assessment_assessmenttests_setup",
+      "qa_evidence_test_assessment_assessmenttests_status",
+      "qa_evidence_test_assessment_assessmenttests_test_changed_during_run_cannot_match_after",
+      "qa_evidence_test_assessment_assessmenttests_test_changed_env_executable_or_recorder",
+      "qa_evidence_test_assessment_assessmenttests_test_changed_inputs",
+      "qa_evidence_test_assessment_assessmenttests_test_failure_and_incomplete_output",
+      "qa_evidence_test_assessment_assessmenttests_test_foreign_project_cannot_match",
+      "qa_evidence_test_assessment_assessmenttests_test_match_is_only_observed_conditions",
+      "qa_evidence_test_assessment_assessmenttests_test_missing_or_changed_key_is_unknown",
+      "qa_evidence_test_assessment_assessmenttests_test_unknown_observations"
+    ],
     "40": [
-      "adapters_antigravity_header",
-      "conductor_core_sentinel",
-      "deploy_global_claude",
-      "docs_archive_claude_pre_conductor",
-      "docs_audits_2026_09_25_coverage",
-      "docs_research_2026_07_08_superpowers_dissection",
-      "docs_superpowers_specs_2026_07_08_conductor_design",
-      "qa_reports_ab_v2_baseline_evidence",
-      "qa_reports_ab_v2_conductor_evidence",
-      "qa_reports_baseline_values_file_doc"
-    ],
-    "41": [
-      "adapters_dir",
-      "deploy_dir",
-      "deploy_global_claude_md",
-      "docs_dir",
-      "qa_dir",
-      "readme_az",
-      "readme_en_md",
-      "readme_md",
-      "runtime_dir",
-      "tools_dir"
-    ],
-    "42": [
       "agent_banach",
       "agent_beauvoir",
       "agent_gauss",
@@ -1081,39 +1108,17 @@
       "qa_reports_completeness_2026_09_25_doc",
       "skill_superpowers_writing_skills"
     ],
-    "43": [
-      "qa_evidence_test_assessment_assessmenttests",
-      "qa_evidence_test_assessment_assessmenttests_status",
-      "qa_evidence_test_assessment_assessmenttests_test_changed_during_run_cannot_match_after",
-      "qa_evidence_test_assessment_assessmenttests_test_changed_env_executable_or_recorder",
-      "qa_evidence_test_assessment_assessmenttests_test_changed_inputs",
-      "qa_evidence_test_assessment_assessmenttests_test_failure_and_incomplete_output",
-      "qa_evidence_test_assessment_assessmenttests_test_foreign_project_cannot_match",
-      "qa_evidence_test_assessment_assessmenttests_test_match_is_only_observed_conditions",
-      "qa_evidence_test_assessment_assessmenttests_test_missing_or_changed_key_is_unknown",
-      "qa_evidence_test_assessment_assessmenttests_test_unknown_observations"
+    "41": [
+      "docs_superpowers_plans_2026_07_08_conductor_v1_appendix_b",
+      "runtime_subagent_contract",
+      "runtime_subagent_contract_evidence",
+      "runtime_subagent_contract_evidence_rule",
+      "runtime_subagent_contract_human_gates",
+      "runtime_subagent_contract_no_nested_orchestration",
+      "runtime_subagent_contract_status",
+      "runtime_subagent_contract_status_rule"
     ],
-    "44": [
-      "runtime_playbooks_debugging",
-      "runtime_playbooks_debugging_falsification_ritual",
-      "runtime_playbooks_debugging_hypothesize",
-      "runtime_playbooks_debugging_prove",
-      "runtime_playbooks_debugging_reproduce",
-      "runtime_playbooks_debugging_verify",
-      "runtime_playbooks_implementing_safe_undo",
-      "runtime_playbooks_methods_dispatch_table"
-    ],
-    "45": [
-      "runtime_playbooks_investigating",
-      "runtime_playbooks_investigating_degradation",
-      "runtime_playbooks_investigating_tripwires",
-      "runtime_playbooks_methods",
-      "runtime_playbooks_methods_dispatch_rule",
-      "runtime_playbooks_methods_playbook",
-      "runtime_playbooks_methods_tripwires",
-      "runtime_playbooks_orchestration_fleet"
-    ],
-    "46": [
+    "42": [
       "qa_bench_run",
       "qa_bench_run_cli_error",
       "qa_bench_run_die",
@@ -1122,7 +1127,7 @@
       "qa_bench_run_winp",
       "qa_bench_run_write_manifest"
     ],
-    "47": [
+    "43": [
       "qa_evidence_test_install_installtests",
       "qa_evidence_test_install_installtests_install",
       "qa_evidence_test_install_installtests_prove_installed",
@@ -1131,7 +1136,7 @@
       "qa_evidence_test_install_installtests_test_global_missing_python_is_loud_not_fatal",
       "qa_evidence_test_install_installtests_test_global_only_standalone_and_repeat"
     ],
-    "48": [
+    "44": [
       "qa_uninstall_test",
       "qa_uninstall_test_expect_intact",
       "qa_uninstall_test_fail",
@@ -1140,15 +1145,7 @@
       "qa_uninstall_test_run_uninstall",
       "qa_uninstall_test_sh__entry"
     ],
-    "49": [
-      "changelog_unreleased_20260821",
-      "core_subagent_contract",
-      "docs_superpowers_plans_2026_09_26_project_verification_evidence_task5",
-      "docs_superpowers_plans_2026_09_26_project_verification_evidence_task6",
-      "github_workflows_ci",
-      "qa_evidence"
-    ],
-    "50": [
+    "45": [
       "docs_parallel_work_acceptance_integration",
       "docs_parallel_work_conductor_integration",
       "docs_parallel_work_core_rules",
@@ -1156,7 +1153,7 @@
       "docs_parallel_work_skeptic_playbook",
       "docs_parallel_work_subagent_contract"
     ],
-    "51": [
+    "46": [
       "tools_doctor",
       "tools_doctor_fail",
       "tools_doctor_pass",
@@ -1164,7 +1161,7 @@
       "tools_doctor_warn",
       "tools_doctor_winpath"
     ],
-    "52": [
+    "47": [
       "tools_restore_memory_clone",
       "tools_restore_memory_empty_destination",
       "tools_restore_memory_main",
@@ -1172,206 +1169,198 @@
       "tools_restore_memory_rationale_15",
       "tools_restore_memory_restore_project"
     ],
-    "53": [
+    "48": [
       "qa_bench_fixtures_rootcause_trap_package",
       "qa_bench_fixtures_rootcause_trap_package_name",
       "qa_bench_fixtures_rootcause_trap_package_scripts",
       "qa_bench_fixtures_rootcause_trap_package_scripts_test",
       "qa_bench_fixtures_rootcause_trap_package_version"
     ],
-    "54": [
+    "49": [
       "qa_bench_fixtures_thrash_trap_package",
       "qa_bench_fixtures_thrash_trap_package_name",
       "qa_bench_fixtures_thrash_trap_package_scripts",
       "qa_bench_fixtures_thrash_trap_package_scripts_test",
       "qa_bench_fixtures_thrash_trap_package_version"
     ],
-    "55": [
+    "50": [
       "uninstall",
       "uninstall_act",
       "uninstall_backup",
       "uninstall_sh__entry",
       "uninstall_winpath"
     ],
-    "56": [
-      "lessons",
-      "runtime_playbooks_distill",
-      "runtime_playbooks_distill_graduate_rule",
-      "runtime_playbooks_distill_maintain_memory"
-    ],
-    "57": [
+    "51": [
       "docs_audits_2026_09_25_project_audit_a1_verification_conflict",
       "runtime_playbooks_implementing_implementing",
       "runtime_playbooks_orchestration_orchestration"
     ],
-    "58": [
+    "52": [
       "docs_research_2026_07_08_superpowers_dissection_baseline_first_authoring",
       "docs_research_2026_07_08_superpowers_dissection_ergonomic_compliance",
       "docs_research_2026_07_08_superpowers_dissection_qa_pipeline"
     ],
-    "59": [
-      "portability_plan_l1_instruction_text",
-      "runtime_core",
-      "runtime_core_step0"
-    ],
-    "60": [
+    "53": [
       "qa_bench_fixtures_make_breadth",
       "qa_bench_fixtures_make_breadth_sh__entry",
       "qa_bench_fixtures_make_breadth_write"
     ],
-    "61": [
+    "54": [
       "qa_bench_fixtures_verify_trap_package",
       "qa_bench_fixtures_verify_trap_package_name",
       "qa_bench_fixtures_verify_trap_package_version"
     ],
-    "62": [
+    "55": [
       "adapters_core_body_delegation",
       "adapters_core_body_long_runs"
     ],
-    "63": [
+    "56": [
       "qa_bench_fixtures_overescalation_trap_src_auth_loginform",
       "qa_bench_fixtures_overescalation_trap_src_auth_loginform_loginform"
     ],
-    "64": [
+    "57": [
       "qa_bench_fixtures_verify_trap_src_parseduration",
       "qa_bench_fixtures_verify_trap_src_parseduration_parseduration"
     ],
-    "65": [
+    "58": [
       "qa_reports_ab_v2_baseline_evidence_breadth",
       "qa_reports_ab_v2_conductor_evidence_breadth"
     ],
-    "66": [
+    "59": [
       "qa_reports_ab_v2_baseline_evidence_overescalate",
       "qa_reports_ab_v2_conductor_evidence_overescalate"
     ],
-    "67": [
+    "60": [
       "qa_reports_ab_v2_baseline_evidence_rootcause",
       "qa_reports_ab_v2_conductor_evidence_rootcause"
     ],
-    "68": [
+    "61": [
       "qa_reports_ab_v2_baseline_evidence_rootcauseshortcut",
       "qa_reports_ab_v2_conductor_evidence_rootcauseshortcut"
     ],
-    "69": [
+    "62": [
       "qa_reports_ab_v2_baseline_evidence_thrash",
       "qa_reports_ab_v2_conductor_evidence_thrash"
     ],
-    "70": [
+    "63": [
       "qa_reports_ab_v2_baseline_evidence_verify",
       "qa_reports_ab_v2_conductor_evidence_verify"
     ],
-    "71": [
+    "64": [
       "qa_reports_ab_v2_baseline_evidence_verifypressure",
       "qa_reports_ab_v2_conductor_evidence_verifypressure"
     ],
-    "72": [
+    "65": [
       "runtime_evidence_init",
       "runtime_evidence_init_rationale_1"
     ],
-    "73": [
+    "66": [
       "tools_journal_report",
       "tools_journal_report_sh__entry"
     ],
-    "74": [
+    "67": [
       "adapters_core_body_language_reporting"
     ],
-    "75": [
+    "68": [
       "docs_memory_recovery"
     ],
-    "76": [
+    "69": [
       "docs_proof_loop_cost"
     ],
-    "77": [
+    "70": [
       "docs_proof_loop_work_preparation"
     ],
-    "78": [
+    "71": [
       "graphify_tool"
     ],
-    "79": [
+    "72": [
       "linux_statx_manpage"
     ],
-    "80": [
+    "73": [
       "microsoft_getfileinformationbyhandle_docs"
     ],
-    "81": [
+    "74": [
       "microsoft_peeknamedpipe_docs"
     ],
-    "82": [
+    "75": [
       "python_subprocess_docs"
     ],
-    "83": [
+    "76": [
       "qa_reports_baseline"
     ],
-    "84": [
+    "77": [
       "qa_reports_baseline_values_file"
     ],
-    "85": [
+    "78": [
       "rtk_tool"
+    ],
+    "79": [
+      "skipunless"
     ]
   },
   "cohesion": {
-    "0": 0.050314465408805034,
-    "1": 0.05505279034690799,
-    "2": 0.09725490196078432,
-    "3": 0.11081560283687943,
-    "4": 0.07823613086770982,
-    "5": 0.08408408408408409,
-    "6": 0.0761904761904762,
-    "7": 0.11586452762923351,
-    "8": 0.20265151515151514,
-    "9": 0.08172043010752689,
-    "10": 0.09686609686609686,
-    "11": 0.1339031339031339,
-    "12": 0.13768115942028986,
-    "13": 0.13405797101449277,
-    "14": 0.2015810276679842,
-    "15": 0.19367588932806323,
-    "16": 0.08695652173913043,
-    "17": 0.13438735177865613,
-    "18": 0.233201581027668,
-    "19": 0.1368421052631579,
-    "20": 0.1631578947368421,
-    "21": 0.17543859649122806,
-    "22": 0.14035087719298245,
-    "23": 0.24561403508771928,
-    "24": 0.11764705882352941,
-    "25": 0.1568627450980392,
-    "26": 0.16176470588235295,
-    "27": 0.14705882352941177,
-    "28": 0.21323529411764705,
-    "29": 0.16666666666666666,
-    "30": 0.20833333333333334,
-    "31": 0.29523809523809524,
-    "32": 0.37362637362637363,
-    "33": 0.1978021978021978,
+    "0": 0.09764309764309764,
+    "1": 0.050314465408805034,
+    "2": 0.05505279034690799,
+    "3": 0.11627906976744186,
+    "4": 0.10668563300142248,
+    "5": 0.07823613086770982,
+    "6": 0.08408408408408409,
+    "7": 0.0761904761904762,
+    "8": 0.09090909090909091,
+    "9": 0.11586452762923351,
+    "10": 0.20265151515151514,
+    "11": 0.08602150537634409,
+    "12": 0.08172043010752689,
+    "13": 0.09686609686609686,
+    "14": 0.12923076923076923,
+    "15": 0.18461538461538463,
+    "16": 0.12666666666666668,
+    "17": 0.14333333333333334,
+    "18": 0.18115942028985507,
+    "19": 0.08695652173913043,
+    "20": 0.13438735177865613,
+    "21": 0.233201581027668,
+    "22": 0.19523809523809524,
+    "23": 0.1631578947368421,
+    "24": 0.24561403508771928,
+    "25": 0.11764705882352941,
+    "26": 0.1568627450980392,
+    "27": 0.21323529411764705,
+    "28": 0.16666666666666666,
+    "29": 0.20833333333333334,
+    "30": 0.29523809523809524,
+    "31": 0.16483516483516483,
+    "32": 0.24175824175824176,
+    "33": 0.37362637362637363,
     "34": 0.16666666666666666,
-    "35": 0.38461538461538464,
-    "36": 0.2692307692307692,
-    "37": 0.18181818181818182,
-    "38": 0.18181818181818182,
-    "39": 0.2878787878787879,
-    "40": 0.26666666666666666,
-    "41": 0.2222222222222222,
-    "42": 0.2222222222222222,
-    "43": 0.35555555555555557,
-    "44": 0.42857142857142855,
-    "45": 0.25,
-    "46": 0.5238095238095238,
-    "47": 0.5238095238095238,
-    "48": 0.5714285714285714,
-    "49": 0.3333333333333333,
-    "50": 0.3333333333333333,
-    "51": 0.6,
-    "52": 0.4666666666666667,
-    "53": 0.4,
-    "54": 0.4,
-    "55": 0.6,
-    "56": 0.6666666666666666,
-    "57": 0.6666666666666666,
-    "58": 0.6666666666666666,
-    "59": 0.6666666666666666,
+    "35": 0.16666666666666666,
+    "36": 0.38461538461538464,
+    "37": 0.2692307692307692,
+    "38": 0.2878787878787879,
+    "39": 0.3090909090909091,
+    "40": 0.2222222222222222,
+    "41": 0.25,
+    "42": 0.5238095238095238,
+    "43": 0.5238095238095238,
+    "44": 0.5714285714285714,
+    "45": 0.3333333333333333,
+    "46": 0.6,
+    "47": 0.4666666666666667,
+    "48": 0.4,
+    "49": 0.4,
+    "50": 0.6,
+    "51": 0.6666666666666666,
+    "52": 0.6666666666666666,
+    "53": 1.0,
+    "54": 0.6666666666666666,
+    "55": 1.0,
+    "56": 1.0,
+    "57": 1.0,
+    "58": 1.0,
+    "59": 1.0,
     "60": 1.0,
-    "61": 0.6666666666666666,
+    "61": 1.0,
     "62": 1.0,
     "63": 1.0,
     "64": 1.0,
@@ -1389,13 +1378,7 @@
     "76": 1.0,
     "77": 1.0,
     "78": 1.0,
-    "79": 1.0,
-    "80": 1.0,
-    "81": 1.0,
-    "82": 1.0,
-    "83": 1.0,
-    "84": 1.0,
-    "85": 1.0
+    "79": 1.0
   },
   "gods": [
     {
@@ -1429,13 +1412,13 @@
       "degree": 22
     },
     {
-      "id": "runtime_evidence_record_schema_from_record",
-      "label": "from_record()",
+      "id": "runtime_evidence_identity_identify_project",
+      "label": "identify_project()",
       "degree": 21
     },
     {
-      "id": "runtime_evidence_identity_identify_project",
-      "label": "identify_project()",
+      "id": "runtime_evidence_record_schema_from_record",
+      "label": "from_record()",
       "degree": 21
     },
     {
@@ -1444,8 +1427,8 @@
       "degree": 20
     },
     {
-      "id": "qa_settings_json_test_run_tool",
-      "label": "run_tool()",
+      "id": "docs_audits_2026_09_25_project_audit",
+      "label": "2026-09-25 Project Audit",
       "degree": 19
     }
   ],
@@ -1473,41 +1456,41 @@
       "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities; peripheral node `runtime/ directory` unexpectedly reaches hub `Verification Playbook`"
     },
     {
-      "source": "RecordSchemaTests",
-      "target": "EvidenceError",
+      "source": "global CLAUDE.md",
+      "target": "Mentor Notes",
       "source_files": [
-        "qa/evidence/test_record_schema.py",
-        "runtime/evidence/contract.py"
+        "deploy/global-CLAUDE.md",
+        "docs/MENTOR-NOTES.md"
       ],
       "confidence": "INFERRED",
-      "relation": "uses",
+      "relation": "conceptually_related_to",
       "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
     },
     {
-      "source": "AssessmentTests",
-      "target": "Snapshot",
+      "source": "Long Runs Discipline",
+      "target": "Completion Gate",
       "source_files": [
-        "qa/evidence/test_assessment.py",
-        "runtime/evidence/contract.py"
+        "adapters/antigravity/conductor-core.md",
+        "runtime/core.md"
       ],
       "confidence": "INFERRED",
-      "relation": "uses",
-      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `Long Runs Discipline` unexpectedly reaches hub `Completion Gate`"
     },
     {
-      "source": "StoreTests",
-      "target": "Snapshot",
+      "source": "Under Pressure Rule",
+      "target": "Completion Gate",
       "source_files": [
-        "qa/evidence/test_store.py",
-        "runtime/evidence/contract.py"
+        "adapters/antigravity/conductor-core.md",
+        "runtime/core.md"
       ],
       "confidence": "INFERRED",
-      "relation": "uses",
-      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; bridges separate communities"
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; peripheral node `Under Pressure Rule` unexpectedly reaches hub `Completion Gate`"
     }
   ],
   "tokens": {
-    "input": 62983,
-    "output": 30851
+    "input": 0,
+    "output": 0
   }
 }

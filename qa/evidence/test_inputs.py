@@ -186,14 +186,18 @@ class InputTests(unittest.TestCase):
             else:
                 # Windows ACLs/root do not reliably obey chmod; inject only the read fault.
                 real_open = os.open
+                denied_file = self.file.resolve()
+                denied_reads = []
 
                 def denied(path, *args, **kwargs):
-                    if os.fspath(path) == str(self.file):
+                    if Path(path).resolve() == denied_file:
+                        denied_reads.append(path)
                         raise PermissionError(13, "test denied")
                     return real_open(path, *args, **kwargs)
 
                 with patch.object(self.module.os, "open", side_effect=denied):
                     result = self.capture()
+                self.assertTrue(denied_reads, "the actual file read must encounter the injected denial")
             self.assertTrue(result.issues)
             self.assertIn("a.txt", " ".join(result.issues))
         finally:

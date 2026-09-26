@@ -666,10 +666,10 @@
     "semantic_hash": "c60342f1a662de7ee327dfe51c02d48d"
   },
   "qa/evidence/test_inputs.py": {
-    "mtime": 1790428324.3510263,
-    "seen": 1790433167.0200446,
-    "ast_hash": "547a5035e9176a147e61b416a8233297",
-    "semantic_hash": "547a5035e9176a147e61b416a8233297"
+    "mtime": 1790435515.4024813,
+    "seen": 1790435978.845621,
+    "ast_hash": "cc924eb28218d7f7a95794b4b0d130bd",
+    "semantic_hash": "cc924eb28218d7f7a95794b4b0d130bd"
   },
   "qa/evidence/test_install.py": {
     "mtime": 1790428668.7582374,
@@ -690,10 +690,10 @@
     "semantic_hash": "a6250be9bac2b8a2baeaa2e7807cd5ae"
   },
   "qa/evidence/test_store.py": {
-    "mtime": 1790429396.0928926,
-    "seen": 1790433167.0200446,
-    "ast_hash": "6b7f3018adc31c5b8b46aaece2e62624",
-    "semantic_hash": "6b7f3018adc31c5b8b46aaece2e62624"
+    "mtime": 1790435516.0131662,
+    "seen": 1790435978.845621,
+    "ast_hash": "e7dc33c55004719ced50bc093c759261",
+    "semantic_hash": "e7dc33c55004719ced50bc093c759261"
   },
   "runtime/evidence/__init__.py": {
     "mtime": 1790427830.6712773,
@@ -756,10 +756,10 @@
     "semantic_hash": "0a9794aa9d7543114a1d5bde83736ea9"
   },
   "runtime/evidence/store.py": {
-    "mtime": 1790429563.505869,
-    "seen": 1790433167.0258718,
-    "ast_hash": "cc9665a91f22cbafa5944b2acd7dbe3b",
-    "semantic_hash": "cc9665a91f22cbafa5944b2acd7dbe3b"
+    "mtime": 1790435537.3670702,
+    "seen": 1790435978.8492959,
+    "ast_hash": "44a489dc3e28fdd343199465bd2bdfcf",
+    "semantic_hash": "44a489dc3e28fdd343199465bd2bdfcf"
   },
   "docs/superpowers/plans/2026-09-26-project-verification-evidence.md": {
     "mtime": 1790431425.5724409,

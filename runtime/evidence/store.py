@@ -46,7 +46,9 @@ def checked_path(path, create=False):
             info = part.lstat()
         if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
             raise EvidenceError("linked_store", "Links are not permitted in the evidence store")
-    return path
+    # Canonicalize only after rejecting links. Windows 8.3 aliases otherwise compare
+    # unequal to the same physical project root returned by identify_project().
+    return path.resolve(strict=False)
 
 
 def read_bytes(path, maximum=None):

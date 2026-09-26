@@ -1,4 +1,5 @@
 """Store publication, corruption rejection and concurrent writers using real files."""
+import ctypes
 import hashlib
 import json
 import os
@@ -76,8 +77,24 @@ class StoreTests(unittest.TestCase):
         for value in ("../other", "x/../../file", "not-uuid"):
             with self.subTest(value=value), self.assertRaises(EvidenceError):
                 load_run(self.home, self.project, value)
-        with self.assertRaises(EvidenceError):
-            begin_run(self.repo / "evidence", self.project)
+        roots = {self.repo, self.project.root}
+        if os.name == "nt":
+            short_path = ctypes.windll.kernel32.GetShortPathNameW
+            short_path.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint]
+            short_path.restype = ctypes.c_uint
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = short_path(str(self.repo), buffer, len(buffer))
+            self.assertTrue(0 < length < len(buffer))
+            alias = Path(buffer.value)
+            self.assertTrue(alias.samefile(self.repo))
+            roots.add(alias)
+        for root in roots:
+            home = root / "evidence"
+            with self.subTest(home=str(home)):
+                with self.assertRaises(EvidenceError) as caught:
+                    begin_run(home, self.project)
+                self.assertEqual(caught.exception.code, "project_store")
+                self.assertFalse(home.exists(), "rejected in-project store must not be created")
 
     def test_store_link_rejected(self):
         real = self.base / "real"

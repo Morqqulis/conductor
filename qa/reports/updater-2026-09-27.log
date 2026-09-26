@@ -59,7 +59,14 @@ Private local logs/snapshots are intentionally git-ignored, never included in pu
 
 Graph refresh is separate: the first CLI extraction returned exit 0 despite missing
 CHANGELOG output and shrinking Azerbaijani README coverage. The independent coverage
-check rejected it; the public graph was not replaced. A focused retry is in progress.
+check rejected it; the public graph was not replaced until the focused retry succeeded.
+The incremental merger then lost source ownership on colliding IDs. Reassembling the
+complete current semantic cache and fresh AST with Graphify's own build/cluster/export
+APIs passed independent acceptance: 49/49 documents, 1436 nodes, 2795 edges, 59 hyperedges,
+no duplicate IDs, dangling endpoints, pending inputs or stale document cache. Changed
+documents have new generated IDs; unchanged cached concepts remain represented. Reduced
+per-source counts include cross-file source reassignment and removed recent-preview code.
+No handwritten semantic nodes, partial-save override, new HTML or report was used.
 
 CI follow-up: run 36278806599 passed Linux but failed Windows registration: the shell
 embedded RUNNER~1 while Python resolved runneradmin. A case-alias reproduction failed
@@ -70,3 +77,20 @@ hook registrations. No ownership comparison was weakened. Current memory 10, res
 new 8.3 case because this local volume does not assign distinct short names; the case
 alias executed. Linux skipped three Windows cases. Isolated normalization control:
 current test PASS -> assertion FAIL with normalization disabled -> PASS restored.
+
+CI follow-up 2: run 36279694993 passed Linux, then failed Windows recall assertions.
+The returned source was the correct file/content, but tests compared abspath with
+resolve (RUNNER~1 vs runneradmin). A local case-alias test reproduced assertion FAIL;
+samefile and byte equality excluded wrong-source selection. Expectations now preserve
+absolute caller spelling, matching recall's deliberate refusal to resolve links before
+checking them. The same reproduction passes; runtime recall was not weakened or changed.
+Final recall suite: 17 tests, Windows exit 0 (two privileged symlink cases skipped),
+Linux exit 0 (one Windows case skipped); Linux link/FIFO protections executed.
+
+The real installer flow also now runs doctor. It exposed doctor's original-path-only
+comparison after canonicalized installation. Doctor tries either exact path spelling,
+without relaxing hook structure. Current isolated case-alias test: PASS -> assertion
+FAIL with only the canonical fallback disabled -> PASS restored, source hashes matched.
+Doctor negative integration checks passed on both OSes. Final updater suite with doctor:
+39 tests, Windows and Linux exit 0, three documented platform skips on each.
+The final CI result belongs to the new publication; earlier failed runs are not green.

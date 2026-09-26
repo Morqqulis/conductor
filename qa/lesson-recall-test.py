@@ -45,7 +45,7 @@ class RecallTests(unittest.TestCase):
         self.ledger.write_text("\n".join("2026-09-26 | logo | Pick blue colors" for _ in range(12)),
                                encoding="utf-8")
         data = self.run_cli("--query", "Windows Python paths", "--limit", "1")
-        self.assertEqual(data["candidates"][0]["source"], str(old.resolve()))
+        self.assertEqual(data["candidates"][0]["source"], str(old.absolute()))
         self.assertEqual(data["candidates"][0]["matched_terms"], ["paths", "python", "windows"])
         self.assertTrue(data["scan_complete"])
 
@@ -63,7 +63,7 @@ class RecallTests(unittest.TestCase):
         before = {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in self.home.rglob("*") if p.is_file()}
         data = self.run_cli("--query", "Python encoding")
         self.assertEqual({item["source"] for item in data["candidates"]},
-                         {str(path.resolve()), str(self.ledger.resolve())})
+                         {str(path.absolute()), str(self.ledger.absolute())})
         self.assertTrue(all("encoding" in item["excerpt"] for item in data["candidates"]))
         self.assertEqual(before, {p: hashlib.sha256(p.read_bytes()).hexdigest()
                                  for p in self.home.rglob("*") if p.is_file()})
@@ -72,14 +72,14 @@ class RecallTests(unittest.TestCase):
         self.lesson("older.md", "# Rust lifetime\n- date: 2020-01-01\nRead ownership.\n")
         newer = self.lesson("newer.md", "# Rust lifetime\n- date: 2026-09-26\nRead ownership.\n")
         data = self.run_cli("--query", "Rust lifetime")
-        self.assertEqual(data["candidates"][0]["source"], str(newer.resolve()))
+        self.assertEqual(data["candidates"][0]["source"], str(newer.absolute()))
 
     def test_unicode_and_multiple_language_queries(self):
         path = self.lesson("dərs.md", "# Yaddaş xətası\nУрок: кодировка Python.\n")
         for query in ("yaddaş xətası", "кодировка", "PYTHON"):
             with self.subTest(query=query):
                 data = self.run_cli("--query", query)
-                self.assertEqual(data["candidates"][0]["source"], str(path.resolve()))
+                self.assertEqual(data["candidates"][0]["source"], str(path.absolute()))
         data = self.run_cli("--query", "ошибка памяти", "--query", "yaddaş xətası")
         self.assertEqual(len(data["candidates"]), 1)
 
@@ -98,7 +98,7 @@ class RecallTests(unittest.TestCase):
         data = self.run_cli("--query", "Python")
         self.assertEqual(len(data["candidates"]), 1)
         self.assertEqual(data["candidates"][0]["line"], 1)
-        self.assertEqual(data["candidates"][0]["source"], str(self.ledger.resolve()))
+        self.assertEqual(data["candidates"][0]["source"], str(self.ledger.absolute()))
 
     def test_bad_source_is_partial_not_successful_empty_search(self):
         self.lesson("good.md", "# Python encoding")
@@ -138,7 +138,7 @@ class RecallTests(unittest.TestCase):
         override = Path(self.tmp.name) / "other.md"
         override.write_text("2026-09-26 | Rust | Borrow rules\n", encoding="utf-8")
         data = self.run_cli("--query", "Rust", env=dict(self.env, CONDUCTOR_LESSONS=str(override)))
-        self.assertEqual(data["candidates"][0]["source"], str(override.resolve()))
+        self.assertEqual(data["candidates"][0]["source"], str(override.absolute()))
         data = self.run_cli("--query", "Rust", "--ledger", str(self.home / "missing.md"))
         self.assertEqual(data["status"], "NO_MATCH")
 
@@ -154,7 +154,19 @@ class RecallTests(unittest.TestCase):
         data = self.run_cli("--query", "Python encoding")
         self.assertEqual(len(data["candidates"]), 2)
         self.assertEqual({item["line"] for item in data["candidates"]}, {3, 7})
-        self.assertTrue(all(item["source"] == str(path.resolve()) for item in data["candidates"]))
+        self.assertTrue(all(item["source"] == str(path.absolute()) for item in data["candidates"]))
+
+    @unittest.skipUnless(os.name == "nt", "Windows case-insensitive aliases")
+    def test_alias_is_readable_without_resolving_before_link_check(self):
+        path = self.lesson("alias.md", "# Python Windows\nUse native paths.\n")
+        alias = Path(str(self.home).swapcase())
+        data = self.run_cli("--query", "Python", env=dict(self.env, CONDUCTOR_HOME=str(alias)))
+        source = Path(data["candidates"][0]["source"])
+        self.assertTrue(source.is_absolute())
+        self.assertTrue(source.samefile(path))
+        self.assertEqual(source.read_bytes(), path.read_bytes())
+        # abspath is intentional: resolve() would hide links before Corpus rejects them.
+        self.assertEqual(str(source), str(alias / "lessons" / path.name))
 
     def test_query_budgets_and_bad_store_are_explicit(self):
         for args in ((), ("--query", "x" * 4097),

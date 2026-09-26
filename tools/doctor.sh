@@ -55,8 +55,18 @@ else
         SETTINGS_ARG="$(winpath "$SETTINGS")"
         TOOL_ARG="$(winpath "$SETTINGS_TOOL")"
         HOOK_BASE="$(winpath "$CONDUCTOR_DIR")"
-        if audit_out="$("$PYTHON" "$TOOL_ARG" audit-hooks --file "$SETTINGS_ARG" \
-                --conductor-dir "$HOOK_BASE" --shell bash 2>&1)"; then
+        audit_registered_base() {
+            audit_out="$("$PYTHON" "$TOOL_ARG" audit-hooks --file "$SETTINGS_ARG" \
+                --conductor-dir "$HOOK_BASE" --shell bash 2>&1)"
+        }
+        # Old installs retained the caller's path spelling. New installs normalize
+        # Windows 8.3/case aliases before rendering. Audit either exact registration;
+        # never relax the command structure or accept a different directory.
+        original_base="$HOOK_BASE"
+        if audit_registered_base || {
+            HOOK_BASE="$("$PYTHON" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_posix())' "$original_base")" &&
+                [ "$HOOK_BASE" != "$original_base" ] && audit_registered_base
+        }; then
             pass "hook registrations structurally exact ($HOOK_BASE/hooks/session-start.sh)"
             hook_audit_ok=1
         else

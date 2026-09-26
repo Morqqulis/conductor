@@ -64,6 +64,7 @@ class CliTests(unittest.TestCase):
     def test_combined_install_update_check_failure_and_safe_uninstall(self):
         self.install('install.sh')
         self.install('install-global.sh')
+        self.run_command(['bash', ROOT / 'tools/doctor.sh'])
         cli = self.config / 'conductor/updater/cli.py'
         result = self.run_command([sys.executable, '-B', cli, '--config', self.config,
                                    '--profile', self.home, 'status'])

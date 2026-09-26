@@ -7,7 +7,7 @@
 **A discipline system for AI agents.** It makes any AI (Claude Code, Cursor,
 Antigravity, Codex) follow an engineering methodology: classify the task before starting,
 prove the result before saying "done" and before every `git commit`. It learns from its
-own mistakes: every failure becomes a rule that is loaded into all future sessions.
+own mistakes: lessons are stored and retrieved for the task in future sessions.
 
 ## What's inside
 
@@ -15,7 +15,7 @@ own mistakes: every failure becomes a rule that is loaded into all future sessio
 |---|---|
 | **Methodology** | The core (iron laws, a completion gate with outcome prediction) + playbooks: debugging, investigation, implementation, orchestration, skeptic, lesson digestion + a method dispatcher: the nature of the task picks the approach (control group, instrumentation, a jury of variants…) |
 | **Proportional verification** | Verification follows the change, not the commit. A simple label needs diff inspection; behavior changes need affected checks. Applicable results can be reused |
-| **Memory** | Two stores: the **inbox** (`~/.claude/conductor/lessons.md`) — one line per lesson, written to by every AI on the machine; the **digested** store (`~/.claude/conductor/lessons/`) — one file per lesson plus a one-liner index. At session start the inbox and the path to the index are injected; the full index is read on demand, so memory is not lost as it grows |
+| **Memory** | Two stores: the **inbox** (`~/.claude/conductor/lessons.md`) — one line per lesson, written to by every AI on the machine; the **digested** store (`~/.claude/conductor/lessons/`) — one file per lesson plus an index. Claude Code and Codex get access to local task-based search; the agent reads matching lessons in context. Recency is only a tie-breaker |
 
 ## Prerequisite: the values file is mandatory
 
@@ -83,6 +83,37 @@ plugin; now Conductor and superpowers are installed together on purpose.
 `install-global.sh` overwrites `~/.gemini/AGENTS.md` and `~/.codex/AGENTS.md`: if your own
 text was there, it is preserved in `*.bak-<stamp>`, and the installer warns about this
 loudly. To check the health of the installation at any time: `bash tools/doctor.sh`.
+
+### Update from any directory
+
+Both installers deliver the command to `~/.local/bin` (also `conductor.cmd` on Windows).
+If it is not found, add that directory to PATH or use the full path. For an older installation,
+run the new installer for each required environment once; afterwards:
+
+```bash
+conductor status
+conductor update --check
+conductor update
+```
+
+Requires Python 3.10+, Git and Bash. Updates fetch the official `main` into a separate temporary
+directory without changing your working repository. `--ref vX.Y.Z` or a full commit ID selects
+a particular version; releases predating this CLI require the regular installer.
+`--check` downloads and compares without changing installed Conductor files.
+
+Only registered components are updated. The saved language, lessons, private Git repository,
+project rules and other tools' settings are not replaced. A manually edited managed file
+stops the update and is named: preserve your edits and resolve the difference first.
+There is no force-overwrite option. Companions are not upgraded; an updated prepared Cursor
+rule still needs to be pasted manually.
+
+A backup is created before writing in `~/.local/state/conductor/updates/`. Failed checks
+restore prior files; after a crash use `conductor rollback --backup "PRINTED_BACKUP_PATH"`.
+Later user edits block rollback instead of being erased. Backups contain prior rules and
+may be private: do not publish them. They are not automatically deleted, including on
+uninstall. The update is not one atomic replacement of every file: do not run the regular
+installer concurrently, and restart agent sessions afterwards. Concurrent update/rollback
+commands are locked out.
 
 ### Companion tools
 
@@ -232,8 +263,16 @@ Sequence and commands: [memory recovery guide](docs/memory-recovery.md) (Russian
 
 Lesson maintenance also works without a source checkout: the installer ships
 `memory/migrate-lessons.sh` beside runtime; follow `playbooks/distill.md`.
-Session startup shows newest lessons first and retains the full inbox/index locations
-even with long entries. This is a short preview, not a load of all stored memory.
+Session startup supplies memory locations, not a selection of recent entries. Once the
+task is known, the agent runs `memory/recall.py --query "task terms"` through Python 3
+using its absolute path and `--ledger` for the intended inbox. See `memory/recall.md`.
+Search reads the inbox and full curated lessons, including files absent from the index.
+It retrieves lexical candidates: the agent judges meaning and applicability; synonyms
+and terms in another language can use an additional `--query`. Recency only breaks ties
+in relevance. No matches means no unrelated recent fallback. Read failures and exceeded
+budgets return `PARTIAL`, not a successful empty result. Without Python, search files
+directly. Memory stays unchanged; no new database, service or migration is needed.
+Lesson maintenance is unchanged; recall does not need to repeat on every message.
 Make a complete backup before uninstalling: `--keep-lessons` saves lessons,
 not the whole private repository, history, script or project snapshots.
 

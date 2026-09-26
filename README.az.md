@@ -7,8 +7,8 @@
 **AI-agentlər üçün intizam sistemi.** İstənilən AI-ni (Claude Code, Cursor, Antigravity,
 Codex) mühəndis metodologiyası ilə işləməyə məcbur edir: işə başlamazdan əvvəl tapşırığı
 təsnif etmək, «hazırdır» deməzdən əvvəl və hər `git commit`-dən əvvəl nəticəni sübut
-etmək. Öz səhvlərindən öyrənir: hər uğursuzluq qaydaya çevrilir və bütün gələcək
-sessiyalara yüklənir.
+etmək. Öz səhvlərindən öyrənir: dərslər saxlanır və gələcək sessiyalarda tapşırığa
+uyğun seçilir.
 
 ## Nədən ibarətdir
 
@@ -16,7 +16,7 @@ sessiyalara yüklənir.
 |---|---|
 | **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi + metod dispetçeri: tapşırığın mahiyyəti yanaşmanı seçir (nəzarət qrupu, instrumentasiya, variantlar münsifləri…) |
 | **Dəyişikliyə uyğun yoxlama** | Yoxlamanın həcmi commit-dən deyil, dəyişiklikdən asılıdır. Sadə düymə yazısı üçün dəyişikliyə baxmaq kifayətdir; davranış dəyişəndə təsirlənən ssenarilər yoxlanır. Uyğun nəticələr təkrar istifadə olunur |
-| **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və birsətirlik indeks. Sessiya başlayanda gələnlər və indeksin yolu yüklənir; tam indeks lazım olduqda oxunur, ona görə yaddaş böyüdükcə itmir |
+| **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və indeks. Claude Code və Codex tapşırığa uyğun yerli axtarışa çıxış alır; agent uyğun qeydləri kontekstdə oxuyur. Yenilik yalnız əlavə meyardır |
 
 ## Şərt: dəyərlər faylı məcburidir
 
@@ -83,6 +83,37 @@ Conductor və superpowers bilərəkdən birlikdə quraşdırılır. `install-glo
 idisə, o, `*.bak-<vaxt möhürü>` nüsxəsində saxlanılır və quraşdırıcı bu barədə ucadan
 xəbərdarlıq edir. Quraşdırmanın sağlamlığını istənilən vaxt yoxlamaq:
 `bash tools/doctor.sh`.
+
+### İstənilən qovluqdan yeniləmə
+
+Hər iki quraşdırıcı əmri `~/.local/bin` qovluğuna yerləşdirir (Windows-da həmçinin
+`conductor.cmd`). Əmr tapılmırsa, bu qovluğu PATH-a əlavə edin və ya tam yolu istifadə edin.
+Köhnə quraşdırma üçün tələb olunan mühitin yeni quraşdırıcısını bir dəfə başladın; sonra:
+
+```bash
+conductor status
+conductor update --check
+conductor update
+```
+
+Python 3.10+, Git və Bash lazımdır. Yeniləmə rəsmi `main` budağını ayrıca müvəqqəti qovluğa
+yükləyir, iş repozitoriyanızı dəyişmir. `--ref vX.Y.Z` və ya tam commit identifikatoru konkret
+versiyanı seçir; bu CLI-dən əvvəlki versiyalar adi quraşdırıcı tələb edir. `--check` yükləyir
+və müqayisə edir, amma quraşdırılmış Conductor fayllarını dəyişmir.
+
+Yalnız qeydiyyata alınmış komponentlər yenilənir. Saxlanmış dil, dərslər, şəxsi Git,
+layihə qaydaları və digər alətlərin parametrləri əvəz edilmir. İdarə olunan faylı əl ilə
+dəyişmisinizsə, yeniləmə dayanır və həmin faylı göstərir: əvvəlcə dəyişikliklərinizi saxlayın
+və fərqi araşdırın. Məcburi üzərinə yazma yoxdur. Əlavə alətlər yenilənmir; dəyişmiş Cursor
+qaydasının hazırlanmış mətnini əvvəlki kimi əl ilə yerləşdirmək lazımdır.
+
+Yazmadan əvvəl `~/.local/state/conductor/updates/` daxilində ehtiyat nüsxə yaradılır.
+Yoxlama uğursuz olarsa, əvvəlki fayllar bərpa olunur; qəfil dayanma sonrası
+`conductor rollback --backup "GÖSTƏRİLƏN_NÜSXƏ_YOLU"` işlədin. Sonrakı şəxsi dəyişikliklər
+silinmir, geri qaytarmanı dayandırır. Nüsxələr əvvəlki qaydaları saxlayır və şəxsi ola bilər;
+onları paylaşmayın. Conductor silinəndə də avtomatik silinmirlər. Yeniləmə bütün faylların
+vahid atomik əvəzlənməsi deyil: adi quraşdırıcını eyni vaxtda işlətməyin və sonda agent
+sessiyalarını yenidən başladın. Paralel update/rollback əmrləri bloklanır.
 
 ### Birlikdə quraşdırılan alətlər
 
@@ -235,8 +266,16 @@ Ardıcıllıq və əmrlər: [yaddaşın bərpası](docs/memory-recovery.md) (rus
 
 Dərslərə qulluq üçün mənbə kodunun surəti də lazım deyil: quraşdırıcı runtime yanında
 `memory/migrate-lessons.sh` yerləşdirir; qayda `playbooks/distill.md` faylındadır.
-Sessiyanın əvvəlində yeni dərslər öncə göstərilir; uzun qeydlər olduqda da tam jurnalın
-və indeksin ünvanları saxlanır. Bu, bütün yaddaşın yüklənməsi deyil, qısa önbaxışdır.
+Sessiyanın əvvəlində son qeydlər deyil, yaddaşın ünvanları verilir. Tapşırıq məlum olduqda
+agent Python 3 vasitəsilə mütləq yolla `memory/recall.py --query "tapşırıq terminləri"`
+işlədir; lazımi jurnal `--ledger` ilə seçilir. Təlimat: `memory/recall.md`.
+Axtarış gələnləri və təsnif edilmiş dərslərin tam mətnini, indeksdə olmayan faylları da oxuyur.
+Sözlərə görə namizədlər tapılır; mənanı və tətbiq şərtlərini agent yoxlayır. Sinonimlər və
+başqa dildə terminlər əlavə `--query` ilə verilir. Yenilik yalnız uyğunluq bərabər olduqda
+üstünlük verir. Uyğunluq yoxdursa, əlaqəsiz yeni dərslər göstərilmir. Oxuma xətaları və
+limitin aşılması uğurlu boş nəticə deyil, `PARTIAL` verir. Python yoxdursa, fayllarda birbaşa
+axtarış edilir. Yaddaş dəyişmir; yeni baza, xidmət və miqrasiya tələb olunmur.
+Dərslərə qulluq qaydaları dəyişməyib; axtarışı hər mesajda təkrarlamaq lazım deyil.
 Silməzdən əvvəl tam ehtiyat nüsxə yaradın: `--keep-lessons` dərsləri saxlayır,
 bütün şəxsi repozitorini, tarixçəni, skripti və layihə nüsxələrini deyil.
 

@@ -54,6 +54,8 @@ winpath() {
 
 # shellcheck source=tools/reply-language.sh
 . "$REPO/tools/reply-language.sh"
+# shellcheck source=tools/install-cli.sh
+. "$REPO/tools/install-cli.sh"
 
 # A bad --language value fails BEFORE any file is touched, like every other argument
 # error - including an explicitly empty one (--language= or --language ''), which must
@@ -213,6 +215,10 @@ case "$OUT" in
     *CONDUCTOR-CORE-v1-7f3a*) echo "[5/5] smoke test PASS (payload $OUT_BYTES bytes, limit 10000)" ;;
     *) die "smoke test - the hook ran but its payload carries no core sentinel" ;;
 esac
+
+cli_scopes=(claude)
+[ "$SKIP_GLOBAL_MD" -eq 1 ] || cli_scopes+=(values)
+install_update_cli "${cli_scopes[@]}" || die 'could not register the update command'
 
 echo
 echo 'Done. Open a NEW Claude Code session - Conductor announces itself as: "Conductor: <type> | T<n>"'

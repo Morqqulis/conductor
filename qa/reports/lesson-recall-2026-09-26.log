@@ -1,0 +1,56 @@
+Task-relevant lesson retrieval — local acceptance, 2026-09-26
+
+Scope: read-only lexical candidates from active inbox + visible curated Markdown;
+agent reads context and judges applicability. Not an embedding service, guaranteed
+semantic recall, or measured agent speedup. Maintenance/distillation policy unchanged.
+
+BASELINE / RED (actual execution, before the relevant implementation):
+- Recall old-specific-vs-new-partial test: assertion failure, recall CLI absent.
+- SessionStart task-routing test: assertion failure, unrelated newest lesson injected.
+- Unindexed-store task: assertion failure, memory navigation absent.
+- Global-only installation: assertion failure, recall CLI absent in RU/EN/AZ sandboxes.
+These are delivery/selection controls, NOT a blind agent-behavior A/B measurement.
+Initial shell lookup/permission failures were harness failures, not counted as RED proof.
+
+CURRENT / GREEN:
+- Python -B qa/lesson-recall-test.py -v: 16 tests; Windows exit 0 (2 privileged link
+  tests skipped); Linux exit 0, all 16. Linux: local read-only container, no network.
+- Python -B qa/memory-test.py -v: 10 tests, Windows/Linux exit 0. Includes real
+  isolated installs in Russian, English, Azerbaijani; migration behavior retained.
+- Global-only RU/EN/AZ install test repeated after final bytecode fix: Windows exit 0;
+  installed recall CLI executed against a fixture inbox, not just file presence.
+- Python -B qa/evidence/test_install.py -v: 3 tests Windows exit 0; standalone/repeat
+  installs and missing-Python handling still work.
+- bash qa/doctor-test.sh: Windows exit 0; missing shipped memory files are rejected,
+  complete restored installation passes. Empty test journal warning expected.
+- bash qa/lint.sh and LC_ALL=C bash qa/lint.sh: exit 0, core 9450/9500,
+  subagent contract 2998/3000. bash -n on both edited shell files: exit 0.
+- git diff --check: exit 0. Removed preview identifiers INBOX_INJECT, INDEX_INJECT,
+  append_fitting_line, index_recent: 0 active source/test hits.
+- Real local memory queries for Windows/Python paths and test evidence: CANDIDATES,
+  scan_complete=true, exit 0; inbox and curated sources returned. Private lesson text
+  is deliberately not copied into this public log. This is a smoke check, not recall accuracy.
+
+ADVERSARIAL CONTROLS / OWN NEW-CODE BUGS:
+- Legacy text with leading blank lines returned source line 1 instead of 3. A direct
+  parser trace isolated trimming from excerpt calculation. Preserve original newlines.
+- Plain Python (without -B / bytecode environment suppression) wrote corpus.pyc.
+  Verbose importer trace proved cause; disable bytecode before local module imports.
+- In isolated copies of CURRENT code, retained CURRENT tests: relevance ordering and
+  line preservation each PASS -> assertion FAIL when disarmed -> PASS when restored.
+- Bytecode guard independently PASS -> assertion FAIL -> PASS with only that line removed.
+  Final disarm copies match source hashes exactly; no rollback of the working tree.
+
+Source hashes after final behavior edits:
+corpus.py SHA256 598F3B5DD4484FC6F51B29967BE4BEB21224FA97723926EFA31754165944B4CF
+recall.py SHA256 C750DD366FC9FD3495F69D076EDAAD0C64BE02ED8573D47C93510ADBD01CF683
+
+Historical delivery status at this initial check: repository changes only. No live-rule deployment, commit, push, or new
+CI run for this feature. Graphify remains the earlier snapshot; update after the agreed
+change batch. Historical audits remain historical. Two confirmed implementation lessons
+were appended to shared memory; the search itself does not modify memory.
+CLI updater: separate user request, read-only reconnaissance complete; no updater code.
+
+Superseded delivery status, 2026-09-27: lesson retrieval is now included in the CLI
+update package and installed locally in Russian. See updater-2026-09-27.log for current
+delivery, verification and publication; the preceding baseline record is historical.

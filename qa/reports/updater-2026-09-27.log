@@ -1,0 +1,51 @@
+Conductor CLI updater and task-relevant lessons — acceptance ledger, 2026-09-27
+
+Scope: local installed components, official-source acquisition, ownership, language,
+private memory/settings preservation, recoverable update and CLI delivery/removal.
+Companion upgrades, project-adapter updates and automatic Cursor UI changes excluded.
+This is an implementation acceptance record, not a new whole-project audit.
+
+Observed initial checks:
+- Windows updater suite: 32 tests, exit 0, one POSIX symlink test skipped.
+- Linux updater suite: 32 tests, exit 0, all executed.
+- Windows task recall: 16 tests, exit 0, two symlink privilege cases skipped.
+- Windows memory delivery/maintenance: 10 tests, exit 0.
+- Windows evidence: 80 tests, exit 0, three platform-specific cases skipped.
+- Windows settings JSON: 20 tests, exit 0.
+
+Refutations during implementation:
+- Concurrent edit after prepare: assertion FAIL without guarded preflight observations;
+  guard now binds the transaction to the earlier bytes. Fresh targeted test exit 0.
+- Linux installer mode mismatch: identical content hashes, actual mode 0755 vs recorded
+  0644. Registration now records observed installed modes. Fresh installer/update test exit 0.
+- Snapshot recovery size: 13 MiB source produced a backup larger than the reader's limit.
+  Test failed before fix; oversized backup now refuses before target writes, test exit 0.
+- Existing memory tests isolated only CLAUDE_CONFIG_DIR, not HOME. New launcher delivery
+  exposed the incomplete sandbox. Both memory installer fixtures now isolate HOME and
+  USERPROFILE. Two newly created test launchers in the real profile were identified by
+  exact snapshot hashes and prior absence, then moved into their backup for recovery.
+  No pre-existing command was overwritten; no private memory was changed by those tests.
+
+Final affected-suite checks:
+- python -B -m unittest discover -s qa/updater -v: Windows 37 tests, exit 0,
+  two POSIX cases skipped; Linux 37 tests, exit 0, one Windows case skipped.
+- Windows installed-hook verification also passed from PowerShell, where PATH bash
+  resolves to WSL; explicit Git Bash selection prevents the observed hook-smoke failure.
+- Linux mode-only rollback now restores permissions and refuses later user chmod.
+  The original test failed (0644 != 0755). Content-only equality caused the skip;
+  the alternative hypothesis (filesystem ignored chmod) was excluded by stat readings.
+- Existing memory 10, recall 16, evidence 80, memory restore 14 tests passed on both OSes;
+  platform-only cases skipped explicitly. Windows settings JSON 20 tests passed.
+- Doctor integration, uninstall 7 scenarios, lint both locales, lint negative self-test
+  32/32 and shell syntax passed. These unchanged checks are reused after updater-only fixes.
+- Isolated CURRENT copies retained CURRENT tests: preflight edit and backup-size guards,
+  rollback permissions and Windows Bash selection each PASS -> assertion FAIL -> PASS.
+
+Live deployment: both installers completed in Russian with companion installation skipped.
+213 private file hashes (lessons, curated/project memory, private Git metadata, backup
+script and language) were identical before/after; foreign settings preserved. Runtime
+and global rules were snapshotted outside the public Git set. Installed conductor status
+reports claude/global/values, Russian. Bootstrap revision is null, not a claimed release.
+
+Graph refresh and official-source publication/real CLI update: still in progress at this
+record. Do not treat local test fixtures as proof of a published release.

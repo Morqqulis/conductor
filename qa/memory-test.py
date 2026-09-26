@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -24,7 +25,11 @@ class MemoryTest(unittest.TestCase):
         self.store.mkdir(parents=True)
         self.ledger = self.home / "lessons.md"
         self.index = self.store / "INDEX.md"
-        self.env = dict(os.environ, CLAUDE_CONFIG_DIR=self.config.as_posix(),
+        self.profile = Path(self.tmp.name) / "profile"
+        self.profile.mkdir()
+        self.env = dict(os.environ, HOME=self.profile.as_posix(), USERPROFILE=str(self.profile),
+                        GIT_CONFIG_GLOBAL=str(self.profile / "gitconfig"), GIT_CONFIG_NOSYSTEM="1",
+                        CLAUDE_CONFIG_DIR=self.config.as_posix(),
                         CONDUCTOR_HOME=self.home.as_posix(), CONDUCTOR_LESSONS=self.ledger.as_posix())
 
     def run_script(self, script, *args):
@@ -41,22 +46,25 @@ class MemoryTest(unittest.TestCase):
         self.assertLessEqual(len(text), 3000)
         return text
 
-    def test_newest_lesson_and_archive_pointer_survive_long_inbox(self):
+    def test_task_routing_replaces_unrelated_recency_preview(self):
         self.ledger.write_text("\n".join(f"2026-09-25 | old-{i} | " + "x" * 600 for i in range(7))
                                + "\n2026-09-25 | newest | NEWEST_RULE\n", encoding="utf-8")
         self.index.write_text("- 2026-09-24 [old](old.md) — archived rule\n", encoding="utf-8")
         text = self.payload()
-        self.assertIn("NEWEST_RULE", text)
+        self.assertNotIn("NEWEST_RULE", text)
+        self.assertIn("memory/recall.md", text)
+        self.assertIn("task", text)
         self.assertIn(self.index.as_posix(), text)
         self.assertIn(self.ledger.as_posix(), text)
 
-    def test_oversized_newest_is_visible_as_omitted_not_silently_lost(self):
+    def test_oversized_inbox_cannot_hide_recall_or_sources(self):
         self.ledger.write_text("2026-09-24 | earlier | PREVIOUS_RULE\n2026-09-25 | huge | " + "яə" * 4000,
                                encoding="utf-8")
         self.index.write_text("- 2026-09-24 [old](old.md) — old\n", encoding="utf-8")
         text = self.payload()
-        self.assertIn("PREVIOUS_RULE", text)
-        self.assertIn("omitted", text)
+        self.assertNotIn("PREVIOUS_RULE", text)
+        self.assertIn("memory/recall.md", text)
+        self.assertIn(self.ledger.as_posix(), text)
         self.assertIn(self.index.as_posix(), text)
 
     def test_due_empty_and_unicode(self):
@@ -67,8 +75,35 @@ class MemoryTest(unittest.TestCase):
         self.ledger.write_text("\n".join(f"2026-09-25 | урок-{i} | yaddaş ə сохранён" for i in range(13)), encoding="utf-8")
         text = self.payload()
         self.assertIn("DISTILL DUE", text)
-        self.assertIn("урок-12", text)
-        self.assertIn("yaddaş ə сохранён", text)
+        self.assertIn("13 entries", text)
+        self.assertNotIn("урок-12", text)
+        self.assertNotIn("yaddaş ə сохранён", text)
+
+    def test_unindexed_store_still_delivers_recall_pointer(self):
+        (self.store / "unindexed.md").write_text("# Python paths", encoding="utf-8")
+        self.assertIn("memory/recall.md", self.payload())
+
+    def test_global_only_install_ships_recall_without_claude_for_three_languages(self):
+        isolated = Path(self.tmp.name) / "global home"
+        isolated.mkdir()
+        self.env.update(HOME=isolated.as_posix(), USERPROFILE=str(isolated),
+                        GIT_CONFIG_GLOBAL=str(isolated / "gitconfig"), GIT_CONFIG_NOSYSTEM="1")
+        for language in ("Russian", "English", "Azerbaijani"):
+            with self.subTest(language=language):
+                result = self.run_script(ROOT / "install-global.sh", "--language", language)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                cli = self.home / "memory/recall.py"
+                self.assertTrue(cli.is_file(), "global-only installation has no recall tool")
+                self.assertTrue((cli.parent / "corpus.py").is_file())
+                self.assertTrue((cli.parent / "recall.md").is_file())
+                rules = (isolated / ".codex/AGENTS.md").read_text(encoding="utf-8")
+                self.assertIn(self.home.as_posix() + "/memory/recall.md", rules)
+                self.assertIn("Answer in " + language, rules)
+                self.ledger.write_text("2020-01-01 | Python | Check encoding", encoding="utf-8")
+                recall = subprocess.run([sys.executable, "-B", str(cli), "--query", "Python"],
+                                        env=self.env, capture_output=True, encoding="utf-8", timeout=15)
+                self.assertEqual(recall.returncode, 0, recall.stdout + recall.stderr)
+                self.assertEqual(len(json.loads(recall.stdout)["candidates"]), 1)
 
     def test_migration_preserves_bad_lines_and_orders_dated_before_undated(self):
         (self.store / "old.md").write_text("# UNDATED_RULE\n", encoding="utf-8")

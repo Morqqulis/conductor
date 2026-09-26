@@ -80,6 +80,19 @@ if [ "$KEEP_LESSONS" -eq 1 ] && [ -d "$CONDUCTOR_DIR" ]; then
 fi
 
 # --- 1. Claude Code -------------------------------------------------------------------
+# Launcher ownership is proven by the installation manifest, not a name or substring.
+# Update backups are deliberately retained outside the runtime for recovery.
+if [ -f "$CONDUCTOR_DIR/install-state.json" ]; then
+    if [ -z "$PYTHON" ]; then
+        echo '[FAIL] Python is required to remove registered CLI commands safely; uninstall stopped' >&2
+        exit 1
+    fi
+    cli_args=()
+    [ "$DRY_RUN" -eq 0 ] || cli_args+=(--dry-run)
+    "$PYTHON" -B "$(winpath "$REPO/runtime/updater/cli.py")" \
+        --config "$(winpath "$CLAUDE_HOME")" --profile "$(winpath "$HOME")" \
+        unregister "${cli_args[@]}" || exit 1
+fi
 SETTINGS="$CLAUDE_HOME/settings.json"
 if [ -f "$SETTINGS" ] && grep -q conductor "$SETTINGS" 2>/dev/null; then
     if [ -z "$PYTHON" ]; then

@@ -61,6 +61,8 @@ SETTINGS_TOOL="$(winpath "$REPO/tools/settings-json.py")"
 
 # shellcheck source=tools/reply-language.sh
 . "$REPO/tools/reply-language.sh"
+# shellcheck source=tools/install-cli.sh
+. "$REPO/tools/install-cli.sh"
 
 # A bad --language value fails BEFORE any file is touched, like every other argument
 # error - including an explicitly empty one (--language= or --language ''), which must
@@ -77,6 +79,9 @@ for f in "$CURSOR_SRC" "$AG_SRC" "$DEPLOY_MD"; do
     [ -f "$f" ] || die "source not found: ${f#$REPO/} - run this from the conductor repo root"
 done
 [ -f "$REPO/runtime/evidence/cli.py" ] || die 'verification evidence source is missing'
+for f in recall.py corpus.py recall.md; do
+    [ -f "$REPO/runtime/memory/$f" ] || die "lesson recall source is missing: $f"
+done
 
 # --- 0. Reply language ----------------------------------------------------------------
 # Resolution order: --language flag > interactive prompt whose default is the choice saved
@@ -99,10 +104,15 @@ echo "[0/5] reply language: $LANGUAGE"
 EVIDENCE_DIR="$CLAUDE_HOME/conductor/evidence"
 mkdir -p "$EVIDENCE_DIR"
 cp -R "$REPO/runtime/evidence/." "$EVIDENCE_DIR/"
+MEMORY_DIR="$CLAUDE_HOME/conductor/memory"
+mkdir -p "$MEMORY_DIR"
+cp -R "$REPO/runtime/memory/." "$MEMORY_DIR/"
 if [ -n "$PYTHON" ]; then
     echo "      optional verification evidence -> $(winpath "$EVIDENCE_DIR/cli.py")"
+    echo "      task-relevant lessons -> $(winpath "$MEMORY_DIR/recall.py")"
 else
     echo '      WARNING: verification evidence unavailable: Python is not on PATH' >&2
+    echo '      NOTE: lesson recall uses direct file search until Python is available' >&2
 fi
 
 # Claude Code reads its language rule from the global CLAUDE.md. The file is regenerated
@@ -165,12 +175,10 @@ backup "$CODEX_MD"
 warn_foreign_rules "$CODEX_MD"
 {
     printf '# Conductor Core (global rules)\n\n'
-    printf 'Memory (shared by every AI tool on this machine, Codex has no injection hook so it\n'
-    printf 'pulls its own): at session start read `~/.claude/conductor/lessons.md` - the inbox of\n'
-    printf 'lessons captured since the last distillation. When the task touches an area a past\n'
-    printf 'lesson could cover, also read `~/.claude/conductor/lessons/INDEX.md`, one line per\n'
-    printf 'lesson, and open the lesson file behind any line that applies. The capture rule below\n'
-    printf 'appends new lessons to the inbox.\n\n'
+    printf 'Memory (shared; Codex pulls its own): when the task is known or changes topic,\n'
+    printf 'read `%s` and retrieve lessons for the task from inbox AND curated files.\n' "$(winpath "$MEMORY_DIR/recall.md")"
+    printf 'Read candidate context before applying; recency alone is not relevance. Reuse\n'
+    printf 'unchanged recall within a task. If Python is unavailable, search those files directly.\n\n'
     digest_body
 } > "$CODEX_MD"
 echo "[4/5] Codex global rules -> ~/.codex/AGENTS.md (prior file backed up if present)"
@@ -185,6 +193,10 @@ else
     echo '[5/5] init.templateDir untouched (not pointing at the conductor template)'
 fi
 [ -d "$TPL_ROOT" ] && rm -rf "$TPL_ROOT"
+
+cli_scopes=(global)
+[ ! -f "$GLOBAL_MD" ] || cli_scopes+=(values)
+install_update_cli "${cli_scopes[@]}" || die 'could not register the update command'
 
 echo
 echo 'Done. Restart Cursor, Antigravity and Codex sessions to pick up the rule changes.'

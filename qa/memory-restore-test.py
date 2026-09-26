@@ -26,7 +26,8 @@ class RecoveryTests(unittest.TestCase):
         self.home.mkdir()
         self.env = {k: v for k, v in os.environ.items()
                     if not k.startswith("GIT_") and k not in ("BASH_ENV", "ENV")}
-        self.env.update(CLAUDE_CONFIG_DIR=(self.home / ".claude").as_posix(),
+        self.env.update(HOME=self.home.as_posix(), USERPROFILE=str(self.home),
+                        CLAUDE_CONFIG_DIR=(self.home / ".claude").as_posix(),
                         XDG_CONFIG_HOME=(self.home / ".config").as_posix(),
                         GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
                         GIT_TERMINAL_PROMPT="0", GIT_ALLOW_PROTOCOL="file",

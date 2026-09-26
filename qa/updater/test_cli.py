@@ -88,6 +88,31 @@ class CliTests(unittest.TestCase):
         self.run_command(['bash', ROOT / 'uninstall.sh', '--keep-lessons'])
         self.assertEqual(launcher.read_bytes(), b'personal replacement')
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows short-path aliases')
+    def test_short_config_alias_install_matches_updater_rendering(self):
+        import ctypes
+        self.config.mkdir()
+        short = ctypes.windll.kernel32.GetShortPathNameW
+        short.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, ctypes.c_uint]
+        short.restype = ctypes.c_uint
+        buffer = ctypes.create_unicode_buffer(32768)
+        length = short(str(self.config), buffer, len(buffer))
+        self.assertTrue(0 < length < len(buffer))
+        alias = Path(buffer.value)
+        self.assertTrue(alias.samefile(self.config))
+        if str(alias).casefold() == str(self.config).casefold():
+            self.skipTest('volume does not provide distinct short names')
+        self.env['CLAUDE_CONFIG_DIR'] = alias.as_posix()
+        self.test_combined_install_update_check_failure_and_safe_uninstall()
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows case-insensitive path aliases')
+    def test_config_case_alias_matches_updater_rendering(self):
+        self.config.mkdir()
+        alias = Path(str(self.config).swapcase())
+        self.assertTrue(alias.samefile(self.config))
+        self.env['CLAUDE_CONFIG_DIR'] = alias.as_posix()
+        self.test_combined_install_update_check_failure_and_safe_uninstall()
+
 
 if __name__ == '__main__':
     unittest.main()

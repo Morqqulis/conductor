@@ -47,5 +47,26 @@ script and language) were identical before/after; foreign settings preserved. Ru
 and global rules were snapshotted outside the public Git set. Installed conductor status
 reports claude/global/values, Russian. Bootstrap revision is null, not a claimed release.
 
-Graph refresh and official-source publication/real CLI update: still in progress at this
-record. Do not treat local test fixtures as proof of a published release.
+Published implementation: main 5a507120731fe70c5dd7e83b5df6f8cdc6b81f10.
+The final bootstrap delivered the two acceptance fixes, then the installed Windows CLI
+ran from the normal Windows environment, outside the repository, against official GitHub:
+- conductor update --check: exit 0, one state file planned; installed bytes unchanged.
+- conductor update: exit 0, verification passed, recoverable snapshot printed.
+- conductor update again: exit 0, zero changes, no-op message and byte comparison.
+- conductor status: Russian, claude/global/values, exact published revision above.
+All 213 private hashes and settings.json bytes were unchanged across this acceptance.
+Private local logs/snapshots are intentionally git-ignored, never included in publication.
+
+Graph refresh is separate: the first CLI extraction returned exit 0 despite missing
+CHANGELOG output and shrinking Azerbaijani README coverage. The independent coverage
+check rejected it; the public graph was not replaced. A focused retry is in progress.
+
+CI follow-up: run 36278806599 passed Linux but failed Windows registration: the shell
+embedded RUNNER~1 while Python resolved runneradmin. A case-alias reproduction failed
+with the same core.md mismatch; LF/CRLF was excluded by unchanged-byte rendering.
+Both installers now canonicalize the configuration path before rendering any rules or
+hook registrations. No ownership comparison was weakened. Current memory 10, restore
+14 and updater 39 tests passed on Windows/Linux. Windows skipped POSIX cases and the
+new 8.3 case because this local volume does not assign distinct short names; the case
+alias executed. Linux skipped three Windows cases. Isolated normalization control:
+current test PASS -> assertion FAIL with normalization disabled -> PASS restored.

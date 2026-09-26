@@ -76,6 +76,9 @@ for candidate in python3 python; do
     fi
 done
 [ -n "$PYTHON" ] || die "python3 is required to edit settings.json safely (it holds your model, plugins and other tools' hooks). Install Python, or add the hook entries by hand - see tools/settings-json.py."
+canonical_config_home || die 'could not resolve the configuration directory'
+CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
+SETTINGS="$CLAUDE_HOME/settings.json"
 
 # --- 1. Runtime tree ------------------------------------------------------------------
 mkdir -p "$CONDUCTOR_DIR"

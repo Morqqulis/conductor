@@ -84,6 +84,7 @@ for f in recall.py corpus.py recall.md; do
 done
 
 # --- 0. Reply language ----------------------------------------------------------------
+canonical_config_home || die 'could not resolve the configuration directory'
 # Resolution order: --language flag > interactive prompt whose default is the choice saved
 # by a previous run of either installer (a piped or otherwise non-interactive run keeps
 # that default rather than erroring).

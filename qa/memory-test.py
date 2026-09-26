@@ -97,7 +97,7 @@ class MemoryTest(unittest.TestCase):
                 self.assertTrue((cli.parent / "corpus.py").is_file())
                 self.assertTrue((cli.parent / "recall.md").is_file())
                 rules = (isolated / ".codex/AGENTS.md").read_text(encoding="utf-8")
-                self.assertIn(self.home.as_posix() + "/memory/recall.md", rules)
+                self.assertIn(self.home.resolve().as_posix() + "/memory/recall.md", rules)
                 self.assertIn("Answer in " + language, rules)
                 self.ledger.write_text("2020-01-01 | Python | Check encoding", encoding="utf-8")
                 recall = subprocess.run([sys.executable, "-B", str(cli), "--query", "Python"],

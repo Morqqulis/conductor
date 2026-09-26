@@ -64,7 +64,7 @@ else
         # never relax the command structure or accept a different directory.
         original_base="$HOOK_BASE"
         if audit_registered_base || {
-            HOOK_BASE="$("$PYTHON" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_posix())' "$original_base")" &&
+            HOOK_BASE="$(PYTHONIOENCODING=utf-8 "$PYTHON" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_posix())' "$original_base")" &&
                 [ "$HOOK_BASE" != "$original_base" ] && audit_registered_base
         }; then
             pass "hook registrations structurally exact ($HOOK_BASE/hooks/session-start.sh)"

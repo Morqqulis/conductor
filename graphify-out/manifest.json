@@ -306,10 +306,10 @@
     "semantic_hash": "2c05d20bb7322e40282cdcc3e2e135af"
   },
   "tools/doctor.sh": {
-    "mtime": 1790465583.3670983,
-    "seen": 1790465709.5513716,
-    "ast_hash": "52710c9a836ccf2366024659dd86e45a",
-    "semantic_hash": "52710c9a836ccf2366024659dd86e45a"
+    "mtime": 1790466670.6203086,
+    "seen": 1790466735.7838745,
+    "ast_hash": "2c27775f2eabf90cf427439f5ced6f0b",
+    "semantic_hash": "2c27775f2eabf90cf427439f5ced6f0b"
   },
   "tools/journal-report.sh": {
     "mtime": 1790313975.3169093,
@@ -780,10 +780,10 @@
     "semantic_hash": "0a54ebe0941ff915af51a68be454a638"
   },
   "qa/updater/test_cli.py": {
-    "mtime": 1790465542.1180487,
-    "seen": 1790465709.5513716,
-    "ast_hash": "5622328728f55f294ab345198814d1ae",
-    "semantic_hash": "5622328728f55f294ab345198814d1ae"
+    "mtime": 1790466621.5558333,
+    "seen": 1790466735.7838745,
+    "ast_hash": "adaeb78a269c5b6e07a099f14f05440e",
+    "semantic_hash": "adaeb78a269c5b6e07a099f14f05440e"
   },
   "qa/updater/test_flow.py": {
     "mtime": 1790462653.5322132,
@@ -864,10 +864,10 @@
     "semantic_hash": "9492c43107beb5ce9556061ed4f206bb"
   },
   "tools/install-cli.sh": {
-    "mtime": 1790465235.7082145,
-    "seen": 1790465376.813088,
-    "ast_hash": "9d9e6f4a437249e4089caf0f90a6464c",
-    "semantic_hash": "9d9e6f4a437249e4089caf0f90a6464c"
+    "mtime": 1790466639.8239036,
+    "seen": 1790466735.7838745,
+    "ast_hash": "957bb8561ae4ba7499c1d6597b3f62e2",
+    "semantic_hash": "957bb8561ae4ba7499c1d6597b3f62e2"
   },
   "runtime/memory/recall.md": {
     "mtime": 1790448575.8594131,

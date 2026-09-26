@@ -114,6 +114,11 @@ class CliTests(unittest.TestCase):
         self.env['CLAUDE_CONFIG_DIR'] = alias.as_posix()
         self.test_combined_install_update_check_failure_and_safe_uninstall()
 
+    @unittest.skipUnless(os.name == 'nt', 'Windows legacy Python output encoding')
+    def test_installer_and_doctor_support_legacy_output_encoding(self):
+        self.env['PYTHONIOENCODING'] = 'cp1252'
+        self.test_config_case_alias_matches_updater_rendering()
+
 
 if __name__ == '__main__':
     unittest.main()

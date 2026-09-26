@@ -94,3 +94,14 @@ FAIL with only the canonical fallback disabled -> PASS restored, source hashes m
 Doctor negative integration checks passed on both OSes. Final updater suite with doctor:
 39 tests, Windows and Linux exit 0, three documented platform skips on each.
 The final CI result belongs to the new publication; earlier failed runs are not green.
+
+CI follow-up 3: run 36280306212 passed Linux and Windows trust-path tests, then exposed
+UnicodeEncodeError in the new path canonicalizer under Windows CP1252. The directory
+was resolved successfully; printing its Cyrillic name failed. Both installer and doctor
+Python-to-Bash path transfers now set UTF-8 explicitly, without changing caller encoding.
+The real combined installation/doctor test fails with each encoding guard independently
+disabled in a current isolated copy and passes when restored. Windows and Linux evidence
+80 and updater 40 tests passed with PYTHONIOENCODING=cp1252; Windows skips 3 platform
+cases in each suite, Linux skips 1 in evidence and 4 in updater. RU/EN/AZ installs passed.
+Final graph after this code-only correction: 1437 nodes, 2798 edges, 59 hyperedges,
+49 current documents, no pending inputs or dangling endpoints; semantic cache reused.

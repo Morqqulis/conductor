@@ -4,7 +4,7 @@ canonical_config_home() {
     [ -n "$PYTHON" ] || return 0
     # Match the updater's path spelling before embedding paths in rules and hooks.
     # Windows temp/profile variables may use 8.3 aliases such as RUNNER~1.
-    CLAUDE_HOME="$("$PYTHON" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_posix())' \
+    CLAUDE_HOME="$(PYTHONIOENCODING=utf-8 "$PYTHON" -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().as_posix())' \
         "$(winpath "$CLAUDE_HOME")")" || return 1
 }
 

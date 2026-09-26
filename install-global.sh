@@ -76,6 +76,7 @@ DEPLOY_MD="$REPO/deploy/global-CLAUDE.md"
 for f in "$CURSOR_SRC" "$AG_SRC" "$DEPLOY_MD"; do
     [ -f "$f" ] || die "source not found: ${f#$REPO/} - run this from the conductor repo root"
 done
+[ -f "$REPO/runtime/evidence/cli.py" ] || die 'verification evidence source is missing'
 
 # --- 0. Reply language ----------------------------------------------------------------
 # Resolution order: --language flag > interactive prompt whose default is the choice saved
@@ -92,6 +93,17 @@ if [ -z "$LANGUAGE" ]; then
 fi
 save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
 echo "[0/5] reply language: $LANGUAGE"
+
+# Codex-only/global installation must not depend on a prior Claude runtime install.
+# Run records and the environment key live elsewhere; this copies program files only.
+EVIDENCE_DIR="$CLAUDE_HOME/conductor/evidence"
+mkdir -p "$EVIDENCE_DIR"
+cp -R "$REPO/runtime/evidence/." "$EVIDENCE_DIR/"
+if [ -n "$PYTHON" ]; then
+    echo "      optional verification evidence -> $(winpath "$EVIDENCE_DIR/cli.py")"
+else
+    echo '      WARNING: verification evidence unavailable: Python is not on PATH' >&2
+fi
 
 # Claude Code reads its language rule from the global CLAUDE.md. The file is regenerated
 # from the repo source: the corpus is English by design and the reply language is ONE

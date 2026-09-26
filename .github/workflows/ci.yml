@@ -48,6 +48,7 @@ jobs:
 
       - name: Trust-path behavior self-tests
         run: |
+          python -B qa/companions-test.py
           bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
           bash qa/journal-report-test.sh
@@ -56,6 +57,9 @@ jobs:
           python -B qa/memory-restore-test.py
           python -B qa/safe-undo-test.py
           bash qa/bench-selftest.sh
+
+      - name: Per-project verification evidence
+        run: python -B -m unittest discover -s qa/evidence -v
 
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |

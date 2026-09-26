@@ -77,6 +77,53 @@ sandboxed_home() {
 }
 
 # --- superpowers -----------------------------------------------------------------------
+# Parse one successful list, binding each exact id to its own explicit Status field.
+# An unknown/truncated format is not evidence that a plugin is absent or enabled.
+superpowers_state() {
+    awk '
+        function finish() {
+            if (id == "") return
+            records++
+            if (statuses != 1 || state == "") invalid = 1
+            if (id ~ /^superpowers@[a-zA-Z0-9._-]+$/) {
+                if (state == "enabled" && enabled == "") enabled = id
+                if (state == "disabled" && disabled == "") disabled = id
+            }
+            id = state = ""; statuses = 0
+        }
+        { sub(/\r$/, ""); sub(/[[:space:]]+$/, "") }
+        /^Installed plugins:$/ { header++; next }
+        /^No plugins installed\. Use `claude plugin install` to install a plugin\.$/ {
+            empty++; next
+        }
+        /^Synced from claude\.ai / { finish(); synced = 1 }
+        synced { next }
+        /^[[:space:]]*$/ { finish(); next }
+        /^  > [a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+$/ {
+            finish(); id = $2; next
+        }
+        /^    Status: / {
+            statuses++
+            value = $0; sub(/^    Status: /, "", value)
+            if (value ~ /^([^[:alnum:][:space:]]+[[:space:]]+)?enabled$/) state = "enabled"
+            else if (value ~ /^([^[:alnum:][:space:]]+[[:space:]]+)?disabled$/) state = "disabled"
+            else invalid = 1
+            if (id == "") invalid = 1
+            next
+        }
+        /^    [a-zA-Z][a-zA-Z ]*: / { if (id == "") invalid = 1; next }
+        { invalid = 1 }
+        END {
+            finish()
+            if (invalid || !((header == 1 && records > 0 && !empty) ||
+                             (empty == 1 && !header && !records))) exit 1
+            if (enabled != "") print "enabled " enabled
+            else if (disabled != "") print "disabled " disabled
+            else print "absent"
+        }
+    '
+}
+
 # The plugin is installed by default. `-y` is REQUIRED: without a TTY the CLI waits for a
 # confirmation that never arrives and the install hangs instead of failing.
 install_superpowers() {
@@ -89,23 +136,26 @@ install_superpowers() {
         outcome superpowers 'SKIP claude CLI not on PATH'
         return 0
     fi
-    # Match the exact plugin name 'superpowers@<marketplace>' - extract with left context
-    # and keep only ids that START with it, so 'team-superpowers@x' never counts. Presence
-    # is not enough: the previous Conductor installer used to DISABLE this very plugin, so
-    # a listed-but-disabled copy is the common upgrade state. And a machine can hold TWO
-    # copies (official + community, one disabled): prefer a copy that is already enabled -
-    # enabling the disabled twin would run two live copies side by side. A failed enable
-    # falls through to a fresh install instead of stopping.
-    local plugin_id='' ids='' id
-    ids="$(claude plugin list 2>/dev/null | grep -oiE '[a-z0-9._-]*superpowers@[a-z0-9._-]+' | grep -iE '^superpowers@' | sort -u)"
-    if [ -n "$ids" ]; then
-        for id in $ids; do
-            if ! claude plugin list 2>/dev/null | grep -A3 -iF "$id" | grep -qi 'disabled'; then
-                outcome superpowers "OK already enabled ($id)"
-                return 0
-            fi
-        done
-        plugin_id="$(printf '%s\n' "$ids" | head -n 1)"
+    # Keep stderr out of the parser. A failed list (even with partial stdout) cannot
+    # justify success or a fresh install that might enable a duplicate copy.
+    local plugin_id='' state=''
+    if out="$(claude plugin list)"; then
+        if ! state="$(printf '%s\n' "$out" | superpowers_state)"; then
+            outcome superpowers 'FAIL unrecognized plugin list; superpowers state unknown'
+            return 0
+        fi
+    else
+        outcome superpowers "FAIL claude plugin list exited $?; superpowers state unknown"
+        return 0
+    fi
+    # Prefer an explicitly enabled copy across the entire snapshot before enabling any
+    # disabled twin. A failed enable still falls through to the existing install chain.
+    if [[ "$state" == enabled\ * ]]; then
+        outcome superpowers "OK already enabled (${state#enabled })"
+        return 0
+    fi
+    if [[ "$state" == disabled\ * ]]; then
+        plugin_id="${state#disabled }"
         if out="$(claude plugin enable "$plugin_id" 2>&1)"; then
             outcome superpowers "OK enabled ($plugin_id)"
             return 0

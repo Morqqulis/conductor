@@ -1,5 +1,10 @@
 # Graph Report - conductor  (2026-08-24)
 
+> Historical report, not the current map. The adjacent `graph.html` is also the old
+> visualization. Use `graph.json` for current data and
+> `../qa/reports/graphify-2026-09-25/finalization.log` for its acceptance status.
+> A new human report/HTML map was not requested; old community names are not reused.
+
 ## Corpus Check
 - 85 files · ~75,224 words
 - Verdict: corpus is large enough that graph structure adds value.

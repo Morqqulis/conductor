@@ -32,6 +32,9 @@ Implement: read full touched regions; complete compiling code, no stubs or elisi
 Statuses: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT. Missing REQUIRED proof ->
 BLOCKED; inspection-only completion is valid. "All tests pass" needs the standard suite.
 
+Optional: Python `conductor/evidence/cli.py` under CLAUDE_CONFIG_DIR (else ~/.claude), if present.
+MATCH is not PASS; inspect output/coverage. Runs/inspection-only remain valid.
+
 ## Before any commit
 Match proof to staged content; rerun only invalidated checks. Commit/push alone adds no tests
 or rebuild. Pending CI is not green; independent work may proceed. Disclose known failures.

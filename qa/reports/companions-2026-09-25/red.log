@@ -1,0 +1,58 @@
+test_failed_list_with_partial_enabled_output_is_not_success (__main__.CompanionsTest.test_failed_list_with_partial_enabled_output_is_not_success) ... FAIL
+test_missing_status_is_not_enabled (__main__.CompanionsTest.test_missing_status_is_not_enabled) ... FAIL
+test_disabled_uses_one_snapshot_even_if_next_list_would_fail (__main__.CompanionsTest.test_disabled_uses_one_snapshot_even_if_next_list_would_fail) ... FAIL
+
+======================================================================
+FAIL: test_failed_list_with_partial_enabled_output_is_not_success (__main__.CompanionsTest.test_failed_list_with_partial_enabled_output_is_not_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Dee\Desktop\conductor\qa\companions-test.py", line 121, in test_failed_list_with_partial_enabled_output_is_not_success
+    self.assert_failure([(HEADER + record(), 9, "list unavailable\n")])
+  File "C:\Users\Dee\Desktop\conductor\qa\companions-test.py", line 117, in assert_failure
+    self.assertTrue(line.startswith("FAIL "), output)
+AssertionError: False is not true :   superpowers: OK already enabled (superpowers@claude-plugins-official)
+  rtk: OK already (rtk fixture)
+      NOTE: sandboxed home - skipping rtk init -g
+  graphify: OK already
+      NOTE: sandboxed home - skipping graphify install (the skill goes into the real home)
+  summary: 3 ok, 0 skipped, 0 failed (companions are optional - none of this blocks Conductor)
+
+
+======================================================================
+FAIL: test_missing_status_is_not_enabled (__main__.CompanionsTest.test_missing_status_is_not_enabled)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Dee\Desktop\conductor\qa\companions-test.py", line 124, in test_missing_status_is_not_enabled
+    self.assert_failure([HEADER + record(state=None)])
+  File "C:\Users\Dee\Desktop\conductor\qa\companions-test.py", line 117, in assert_failure
+    self.assertTrue(line.startswith("FAIL "), output)
+AssertionError: False is not true :   superpowers: OK already enabled (superpowers@claude-plugins-official)
+  rtk: OK already (rtk fixture)
+      NOTE: sandboxed home - skipping rtk init -g
+  graphify: OK already
+      NOTE: sandboxed home - skipping graphify install (the skill goes into the real home)
+  summary: 3 ok, 0 skipped, 0 failed (companions are optional - none of this blocks Conductor)
+
+
+======================================================================
+FAIL: test_disabled_uses_one_snapshot_even_if_next_list_would_fail (__main__.CompanionsTest.test_disabled_uses_one_snapshot_even_if_next_list_would_fail)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\Dee\Desktop\conductor\qa\companions-test.py", line 131, in test_disabled_uses_one_snapshot_even_if_next_list_would_fail
+    self.assertEqual(line, f"OK enabled ({OFFICIAL})", output)
+AssertionError: 'OK already enabled (superpowers@claude-plugins-official)' != 'OK enabled (superpowers@claude-plugins-official)'
+- OK already enabled (superpowers@claude-plugins-official)
+?   --------
++ OK enabled (superpowers@claude-plugins-official)
+ :   superpowers: OK already enabled (superpowers@claude-plugins-official)
+  rtk: OK already (rtk fixture)
+      NOTE: sandboxed home - skipping rtk init -g
+  graphify: OK already
+      NOTE: sandboxed home - skipping graphify install (the skill goes into the real home)
+  summary: 3 ok, 0 skipped, 0 failed (companions are optional - none of this blocks Conductor)
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.058s
+
+FAILED (failures=3)

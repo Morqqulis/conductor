@@ -1,0 +1,19 @@
+test_all_install_failures_are_loud_but_exit_zero (__main__.CompanionsTest.test_all_install_failures_are_loud_but_exit_zero) ... ok
+test_current_list_with_inactive_synced_section (__main__.CompanionsTest.test_current_list_with_inactive_synced_section) ... ok
+test_disabled_uses_one_snapshot_even_if_next_list_would_fail (__main__.CompanionsTest.test_disabled_uses_one_snapshot_even_if_next_list_would_fail) ... ok
+test_enabled_copy_prevents_duplicate_enable (__main__.CompanionsTest.test_enabled_copy_prevents_duplicate_enable) ... ok
+test_failed_enable_keeps_install_fallback (__main__.CompanionsTest.test_failed_enable_keeps_install_fallback) ... ok
+test_failed_list_with_partial_enabled_output_is_not_success (__main__.CompanionsTest.test_failed_list_with_partial_enabled_output_is_not_success) ... ok
+test_failed_marketplace_add_does_not_block_fallback (__main__.CompanionsTest.test_failed_marketplace_add_does_not_block_fallback) ... ok
+test_foreign_name_does_not_count_as_superpowers (__main__.CompanionsTest.test_foreign_name_does_not_count_as_superpowers) ... ok
+test_invalid_observations_fail_without_mutating (__main__.CompanionsTest.test_invalid_observations_fail_without_mutating) ... ok
+test_known_absence_installs_official (__main__.CompanionsTest.test_known_absence_installs_official) ... ok
+test_missing_status_is_not_enabled (__main__.CompanionsTest.test_missing_status_is_not_enabled) ... ok
+test_no_superpowers_never_calls_claude (__main__.CompanionsTest.test_no_superpowers_never_calls_claude) ... ok
+test_status_is_bound_to_exact_record_not_nearby_lines (__main__.CompanionsTest.test_status_is_bound_to_exact_record_not_nearby_lines) ... ok
+test_two_disabled_copies_enable_only_one (__main__.CompanionsTest.test_two_disabled_copies_enable_only_one) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 12.324s
+
+OK

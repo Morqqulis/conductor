@@ -1,0 +1,254 @@
+Partial progress log retained from the running session; includes the complete terminal output of the 32-chunk extraction. Earlier progress is not fully included.
+Process exit code observed: 0
+[graphify extract] chunk 8/32 done
+[graphify extract] chunk 10/32 done
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/MENTOR-NOTES.md'; the file was not dispatched for extraction
+  _scs(
+[graphify extract] chunk 12/32 done
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/specs/2026-07-08-conductor-design.md'; the file was not dispatched for extraction
+  _scs(
+[graphify extract] chunk 13/32 done
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/conductor-core.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/header.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/conductor-core.mdc'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/header.mdc'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/core.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/lessons-inject.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/payload.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/session-start.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/subagent-start.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/test-run-journal.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/user-prompt.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/debugging.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/distill.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/implementing.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/investigating.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/methods.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/orchestration.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/skeptic.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/snippets/probes.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/subagent-contract.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/reply-language.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/sweep-git-gate.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/arm-conductor-settings.template.json'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/env.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/load.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/pool.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/users.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/index.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/invoice.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/login.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/stats.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/server.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/auth.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/billing.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/report.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/make-breadth.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/overescalation-trap/src/auth/LoginForm.tsx'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/package.json'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/cartTotal.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/parsePrice.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/tests/cart.test.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/package.json'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/src/slugify.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/tests/slugify.test.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/package.json'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/src/parseDuration.js'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/run.sh'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/scenarios.tsv'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitattributes'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitignore'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'CHANGELOG.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.az.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/RED-TEAM-NOTES.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/archive/CLAUDE.pre-conductor.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/research/2026-07-08-superpowers-dissection.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-08-conductor-v1.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-09-portability.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-report.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-evidence.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-grades.tsv'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-evidence.md'; the file was not dispatched for extraction
+  _scs(
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-grades.tsv'; the file was not dispatched for extraction
+  _scs(
+[graphify extract] chunk 14/32 done
+[graphify extract] chunk 17/32 done
+[graphify extract] chunk 18/32 done
+C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'C:/Users/Dee/.claude/settings.json'; the file was not dispatched for extraction
+  _scs(
+[graphify extract] chunk 20/32 done
+[graphify extract] chunk 22/32 done
+[graphify extract] chunk 28/32 done
+[graphify extract] chunk 29/32 done
+[graphify extract] chunk 30/32 done
+[graphify extract] chunk 31/32 done
+[graphify extract] chunk 32/32 done
+[graphify] WARNING: dropped 155 out-of-scope node(s) attributed to file(s) not dispatched for extraction: .gitattributes, .gitignore, GRAPH_REPORT.md, LICENSE, LoginForm.tsx (+71 more). The model mis-attributed them to another corpus file; they were excluded from the graph (#1895).
+[graphify extract] dropped 149 out-of-scope item(s) attributed to 80 file(s) not dispatched this run: .conductor/ledger.md, C:/Users/Dee/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/evidence, CLAUDE copy.md, RTK.md, adapters/antigravity/, adapters/antigravity/gate.ps1, adapters/cursor/, adapters/cursor/gate.ps1, backup-push.sh, cartTotal.js, conductor/core.md, conductor/crossmodel.conf, conductor/lessons.md, core, core-body, core.md, env.js, graphify-out/, hooks.json, install-antigravity.ps1, install-cursor.ps1, install-git-gate.ps1, install-global.ps1, install.ps1, lessons-inject.ps1, lessons.md, lessons/INDEX.md, memory/migrate-lessons.sh, memory/project_conductor_deployed.md, playbooks/debugging.md, playbooks/distill.md, playbooks/implementing.md, playbooks/investigating.md, playbooks/methods.md, playbooks/orchestration.md, playbooks/skeptic.md, playbooks/verification.md, pre-commit-gate.ps1, qa/fixtures/make-breadth.ps1, qa/fixtures/overescalation-trap/src/auth/LoginForm.tsx, qa/fixtures/rootcause-trap/src/cartTotal.js, qa/fixtures/rootcause-trap/src/parsePrice.js, qa/fixtures/rootcause-trap/tests/cart.test.js, qa/fixtures/thrash-trap/src/slugify.js, qa/fixtures/thrash-trap/tests/slugify.test.js, qa/fixtures/verify-trap/src/parseDuration.js, qa/home-probe/settings.json, qa/lint.ps1, qa/run-benchmark.ps1, qa/run-benchmark.sh, qa/scenarios/scenarios.psd1, reviewing.md, runtime/, runtime/git-hooks/post-commit, runtime/git-hooks/post-merge, runtime/git-hooks/pre-commit, runtime/git-hooks/pre-merge-commit, runtime/hooks/pre-commit-gate.ps1, runtime/hooks/session-start.ps1, runtime/hooks/subagent-start.ps1, settings-json.py, settings.json, snippets/probes.md, src/auth/LoginForm.tsx, src/parsePrice.js, subagent-contract, subagent-contract.md, superpowers, test-run-journal.sh, uninstall.ps1, ~/.claude/RTK.md, ~/.claude/conductor/git-template, ~/.claude/conductor/lessons.md, ~/.claude/conductor/lessons/, ~/.claude/conductor/playbooks/debugging.md, ~/.claude/conductor/playbooks/investigating.md, ~/.claude/skills/graphify/SKILL.md, ~/.cursor/hooks.json, ~/.gemini/AGENTS.md, ~/.gemini/config/hooks.json
+[graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'adapters/core-body.md'.
+[graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'adapters/core-body.md'.
+[graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'Core Body (Shared Conductor Rules)'.
+[graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'adapters/core-body.md'.
+[graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'core-body.md adapter source'.
+[graphify] WARNING: node 'lessons' is minted by two different files — keeping 'lessons.md (входящие уроки)' from 'AGENTS.md', dropping '~/.claude/conductor/lessons.md (входящее)' from 'HANDOFF.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] WARNING: node 'lessons_index' is minted by two different files — keeping 'lessons/INDEX.md (разобранное)' from 'HANDOFF.md', dropping 'lessons/INDEX.md (разобранные уроки)' from 'AGENTS.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] note: node 'qa_reports_ab_report_v2' was extracted twice from 'qa/reports/ab-report-v2.md' under different labels — keeping 'AB Report v2', dropping 'ab-report-v2.md report'.
+[graphify] note: node 'qa_reports_ab_report_v2' was extracted twice from 'qa/reports/ab-report-v2.md' under different labels — keeping 'AB Report v2', dropping 'qa/reports/ab-report-v2.md'.
+[graphify] note: node 'qa_reports_ab_report_v2' was extracted twice from 'qa/reports/ab-report-v2.md' under different labels — keeping 'AB Report v2', dropping 'qa/reports/ab-report-v2.md'.
+[graphify] note: node 'qa_reports_ab_report_v2' was extracted twice from 'qa/reports/ab-report-v2.md' under different labels — keeping 'AB Report v2', dropping 'ab-report-v2.md'.
+[graphify] note: node 'qa_reports_ab_report_v2' was extracted twice from 'qa/reports/ab-report-v2.md' under different labels — keeping 'AB Report v2', dropping 'A/B Report v2 (Conductor v2.1 vs Baseline)'.
+[graphify] note: node 'readme_en' was extracted twice from 'README.en.md' under different labels — keeping 'README.en.md', dropping 'Conductor README (English)'.
+[graphify] note: node 'readme_en' was extracted twice from 'README.en.md' under different labels — keeping 'README.en.md', dropping 'README.en.md (English)'.
+[graphify] note: node 'deploy_global_claude' was extracted twice from 'deploy/global-CLAUDE.md' under different labels — keeping 'global CLAUDE.md', dropping 'deploy/global-CLAUDE.md'.
+[graphify] note: node 'deploy_global_claude' was extracted twice from 'deploy/global-CLAUDE.md' under different labels — keeping 'global CLAUDE.md', dropping 'CLAUDE Global Operating Guide'.
+[graphify] note: node 'deploy_global_claude' was extracted twice from 'deploy/global-CLAUDE.md' under different labels — keeping 'global CLAUDE.md', dropping 'deploy/global-CLAUDE.md'.
+[graphify] note: node 'docs_memory_recovery' was extracted twice from 'docs/memory-recovery.md' under different labels — keeping 'memory-recovery.md', dropping 'docs/memory-recovery.md'.
+[graphify] note: node 'docs_memory_recovery' was extracted twice from 'docs/memory-recovery.md' under different labels — keeping 'memory-recovery.md', dropping 'memory recovery guide'.
+[graphify] note: node 'qa_reports_baseline_values_file' was extracted twice from 'qa/reports/baseline-values-file.md' under different labels — keeping 'baseline-values-file.md report', dropping 'qa/reports/baseline-values-file.md'.
+[graphify] note: node 'qa_reports_baseline_values_file' was extracted twice from 'qa/reports/baseline-values-file.md' under different labels — keeping 'baseline-values-file.md report', dropping 'qa/reports/baseline-values-file.md'.
+[graphify] note: node 'qa_reports_baseline' was extracted twice from 'qa/reports/baseline.md' under different labels — keeping 'baseline.md report', dropping 'qa/reports/baseline.md'.
+[graphify] note: node 'qa_reports_baseline' was extracted twice from 'qa/reports/baseline.md' under different labels — keeping 'baseline.md report', dropping 'qa/reports/baseline.md'.
+[graphify] note: node 'qa_reports_baseline' was extracted twice from 'qa/reports/baseline.md' under different labels — keeping 'baseline.md report', dropping 'qa/reports/baseline.md'.
+[graphify] note: node 'runtime_playbooks_verification' was extracted twice from 'runtime/playbooks/verification.md' under different labels — keeping 'verification.md playbook', dropping 'runtime/playbooks/verification.md'.
+[graphify] note: node 'runtime_playbooks_verification' was extracted twice from 'runtime/playbooks/verification.md' under different labels — keeping 'verification.md playbook', dropping 'Verification Playbook (external reference)'.
+[graphify] note: node 'runtime_playbooks_verification' was extracted twice from 'runtime/playbooks/verification.md' under different labels — keeping 'verification.md playbook', dropping 'Proportional Verification'.
+[graphify] note: node 'github_workflows_ci' was extracted twice from '.github/workflows/ci.yml' under different labels — keeping 'CI workflow', dropping 'CI workflow (GitHub Actions)'.
+[graphify] note: node 'github_workflows_ci' was extracted twice from '.github/workflows/ci.yml' under different labels — keeping 'CI workflow', dropping 'CI Workflow (ci.yml)'.
+[graphify] note: node 'github_workflows_ci' was extracted twice from '.github/workflows/ci.yml' under different labels — keeping 'CI workflow', dropping '.github/workflows/ci.yml'.
+[graphify] WARNING: node 'superpowers_plugin' is minted by two different files — keeping 'superpowers plugin' from 'CHANGELOG.md', dropping 'superpowers (Claude Code plugin)' from 'README.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] WARNING: node 'rtk_tool' is minted by two different files — keeping 'rtk (Rust Token Killer)' from 'CHANGELOG.md', dropping 'rtk (Rust Token Killer)' from 'README.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] WARNING: node 'graphify_tool' is minted by two different files — keeping 'graphify' from 'CHANGELOG.md', dropping 'graphify' from 'README.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] WARNING: node 'conductor' is minted by two different files — keeping 'Conductor' from 'README.en.md', dropping 'Conductor system' from 'docs/MENTOR-NOTES.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] WARNING: node 'conductor' is minted by two different files — keeping 'Conductor' from 'README.en.md', dropping 'Conductor' from 'docs/RED-TEAM-NOTES.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] note: node 'docs_parallel_work' was extracted twice from 'docs/PARALLEL-WORK.md' under different labels — keeping 'PARALLEL-WORK', dropping 'PARALLEL-WORK.md'.
+[graphify] note: node 'docs_parallel_work' was extracted twice from 'docs/PARALLEL-WORK.md' under different labels — keeping 'PARALLEL-WORK', dropping 'docs/PARALLEL-WORK.md'.
+[graphify] note: node 'docs_parallel_work' was extracted twice from 'docs/PARALLEL-WORK.md' under different labels — keeping 'PARALLEL-WORK', dropping 'PARALLEL-WORK.md'.
+[graphify] note: node 'docs_proof_loop' was extracted twice from 'docs/PROOF-LOOP.md' under different labels — keeping 'PROOF-LOOP', dropping 'docs/PROOF-LOOP.md'.
+[graphify] note: node 'docs_proof_loop' was extracted twice from 'docs/PROOF-LOOP.md' under different labels — keeping 'PROOF-LOOP', dropping 'PROOF-LOOP.md'.
+[graphify] note: node 'docs_mentor_notes' was extracted twice from 'docs/MENTOR-NOTES.md' under different labels — keeping 'Mentor Notes', dropping 'Письмо наставника (MENTOR-NOTES.md)'.
+[graphify] note: node 'docs_mentor_notes' was extracted twice from 'docs/MENTOR-NOTES.md' under different labels — keeping 'Mentor Notes', dropping 'docs/MENTOR-NOTES.md'.
+[graphify] note: node 'docs_mentor_notes' was extracted twice from 'docs/MENTOR-NOTES.md' under different labels — keeping 'Mentor Notes', dropping 'MENTOR-NOTES.md'.
+[graphify] note: node 'docs_mentor_notes' was extracted twice from 'docs/MENTOR-NOTES.md' under different labels — keeping 'Mentor Notes', dropping 'docs/MENTOR-NOTES.md'.
+[graphify] note: node 'docs_superpowers_specs_2026_07_08_conductor_design' was extracted twice from 'docs/superpowers/specs/2026-07-08-conductor-design.md' under different labels — keeping 'Conductor Design Spec', dropping 'docs/superpowers/specs/2026-07-08-conductor-design.md'.
+[graphify] note: node 'docs_superpowers_specs_2026_07_08_conductor_design' was extracted twice from 'docs/superpowers/specs/2026-07-08-conductor-design.md' under different labels — keeping 'Conductor Design Spec', dropping 'Conductor Design Spec (2026-07-08)'.
+[graphify] note: node 'adapters_antigravity_conductor_core' was extracted twice from 'adapters/antigravity/conductor-core.md' under different labels — keeping 'Conductor Core (Antigravity Adapter)', dropping 'adapters/antigravity/conductor-core.md'.
+[graphify] note: node 'adapters_antigravity_conductor_core' was extracted twice from 'adapters/antigravity/conductor-core.md' under different labels — keeping 'Conductor Core (Antigravity Adapter)', dropping 'adapters/antigravity/conductor-core.md'.
+[graphify] note: node 'adapters_antigravity_header' was extracted twice from 'adapters/antigravity/header.md' under different labels — keeping 'adapters/antigravity/header.md', dropping 'Conductor Core (Antigravity adapter)'.
+[graphify] note: node 'runtime_core' was extracted twice from 'runtime/core.md' under different labels — keeping 'Conductor Core', dropping 'runtime/core.md'.
+[graphify] note: node 'runtime_core' was extracted twice from 'runtime/core.md' under different labels — keeping 'Conductor Core', dropping 'runtime/core.md'.
+[graphify] note: node 'runtime_core' was extracted twice from 'runtime/core.md' under different labels — keeping 'Conductor Core', dropping 'runtime/core.md'.
+[graphify] note: node 'runtime_subagent_contract' was extracted twice from 'runtime/subagent-contract.md' under different labels — keeping 'Conductor Subagent Contract', dropping 'runtime/subagent-contract.md'.
+[graphify] note: node 'runtime_subagent_contract' was extracted twice from 'runtime/subagent-contract.md' under different labels — keeping 'Conductor Subagent Contract', dropping 'runtime/subagent-contract.md'.
+[graphify] note: node 'agents' was extracted twice from 'AGENTS.md' under different labels — keeping 'AGENTS.md', dropping 'AGENTS.md — Codex Operating Guide'.
+[graphify] note: node 'claude' was extracted twice from 'CLAUDE.md' under different labels — keeping 'CLAUDE.md', dropping 'CLAUDE Operating Guide'.
+[graphify] note: node 'claude' was extracted twice from 'CLAUDE.md' under different labels — keeping 'CLAUDE.md', dropping 'Project CLAUDE.md'.
+[graphify] note: node 'readme_az' was extracted twice from 'README.az.md' under different labels — keeping 'README.az.md', dropping 'Conductor README (Azerbaijani)'.
+[graphify] note: node 'readme_az' was extracted twice from 'README.az.md' under different labels — keeping 'README.az.md', dropping 'README.az.md (Azerbaijani)'.
+[graphify] note: node 'readme' was extracted twice from 'README.md' under different labels — keeping 'README', dropping 'Conductor README'.
+[graphify] note: node 'readme' was extracted twice from 'README.md' under different labels — keeping 'README', dropping 'README.md'.
+[graphify] note: node 'readme' was extracted twice from 'README.md' under different labels — keeping 'README', dropping 'README.md'.
+[graphify] note: node 'docs_red_team_notes' was extracted twice from 'docs/RED-TEAM-NOTES.md' under different labels — keeping 'RED-TEAM-NOTES.md', dropping 'docs/RED-TEAM-NOTES.md'.
+[graphify] note: node 'docs_audits_2026_09_25_project_audit' was extracted twice from 'docs/audits/2026-09-25-project-audit.md' under different labels — keeping '2026-09-25 Project Audit', dropping 'Conductor Project Audit (2026-09-25)'.
+[graphify] note: node 'docs_audits_2026_09_25_coverage' was extracted twice from 'docs/audits/2026-09-25-coverage.md' under different labels — keeping '2026-09-25 Coverage Map', dropping 'Coverage Audit 2026-09-25'.
+[graphify] note: node 'docs_superpowers_plans_2026_07_08_conductor_v1' was extracted twice from 'docs/superpowers/plans/2026-07-08-conductor-v1.md' under different labels — keeping 'Conductor v1 Implementation Plan', dropping 'docs/superpowers/plans/2026-07-08-conductor-v1.md'.
+[graphify] note: node 'runtime_snippets_probes' was extracted twice from 'runtime/snippets/probes.md' under different labels — keeping 'Probes Snippets', dropping 'runtime/snippets/probes.md'.
+[graphify] note: node 'runtime_snippets_probes' was extracted twice from 'runtime/snippets/probes.md' under different labels — keeping 'Probes Snippets', dropping 'runtime/snippets/probes.md'.
+[graphify] note: node 'runtime_snippets_probes' was extracted twice from 'runtime/snippets/probes.md' under different labels — keeping 'Probes Snippets', dropping 'Probes Snippets (external reference)'.
+[graphify] note: node 'runtime_snippets_probes' was extracted twice from 'runtime/snippets/probes.md' under different labels — keeping 'Probes Snippets', dropping 'Canonical Probes'.
+[graphify] note: node 'runtime_playbooks_debugging' was extracted twice from 'runtime/playbooks/debugging.md' under different labels — keeping 'Debugging Playbook', dropping 'runtime/playbooks/debugging.md'.
+[graphify] note: node 'runtime_playbooks_debugging' was extracted twice from 'runtime/playbooks/debugging.md' under different labels — keeping 'Debugging Playbook', dropping 'runtime/playbooks/debugging.md'.
+[graphify] note: node 'runtime_playbooks_debugging' was extracted twice from 'runtime/playbooks/debugging.md' under different labels — keeping 'Debugging Playbook', dropping 'Debugging Playbook (external reference)'.
+[graphify] note: node 'runtime_playbooks_implementing' was extracted twice from 'runtime/playbooks/implementing.md' under different labels — keeping 'Implementing Playbook', dropping 'runtime/playbooks/implementing.md'.
+[graphify] note: node 'runtime_playbooks_implementing' was extracted twice from 'runtime/playbooks/implementing.md' under different labels — keeping 'Implementing Playbook', dropping 'runtime/playbooks/implementing.md'.
+[graphify] note: node 'runtime_playbooks_implementing' was extracted twice from 'runtime/playbooks/implementing.md' under different labels — keeping 'Implementing Playbook', dropping 'playbooks/implementing.md'.
+[graphify] note: node 'runtime_playbooks_investigating' was extracted twice from 'runtime/playbooks/investigating.md' under different labels — keeping 'Investigating Playbook', dropping 'runtime/playbooks/investigating.md'.
+[graphify] note: node 'runtime_playbooks_investigating' was extracted twice from 'runtime/playbooks/investigating.md' under different labels — keeping 'Investigating Playbook', dropping 'runtime/playbooks/investigating.md'.
+[graphify] note: node 'runtime_playbooks_investigating' was extracted twice from 'runtime/playbooks/investigating.md' under different labels — keeping 'Investigating Playbook', dropping 'playbooks/investigating.md'.
+[graphify] note: node 'runtime_playbooks_orchestration' was extracted twice from 'runtime/playbooks/orchestration.md' under different labels — keeping 'Orchestration Playbook', dropping 'runtime/playbooks/orchestration.md'.
+[graphify] note: node 'runtime_playbooks_orchestration' was extracted twice from 'runtime/playbooks/orchestration.md' under different labels — keeping 'Orchestration Playbook', dropping 'runtime/playbooks/orchestration.md'.
+[graphify] note: node 'runtime_playbooks_orchestration' was extracted twice from 'runtime/playbooks/orchestration.md' under different labels — keeping 'Orchestration Playbook', dropping 'playbooks/orchestration.md'.
+[graphify] note: node 'runtime_playbooks_skeptic' was extracted twice from 'runtime/playbooks/skeptic.md' under different labels — keeping 'Skeptic Playbook', dropping 'runtime/playbooks/skeptic.md'.
+[graphify] note: node 'runtime_playbooks_skeptic' was extracted twice from 'runtime/playbooks/skeptic.md' under different labels — keeping 'Skeptic Playbook', dropping 'runtime/playbooks/skeptic.md'.
+[graphify] note: node 'runtime_playbooks_skeptic' was extracted twice from 'runtime/playbooks/skeptic.md' under different labels — keeping 'Skeptic Playbook', dropping 'Skeptic Playbook (external reference)'.
+[graphify] note: node 'runtime_core_core' was extracted twice from 'runtime/core.md' under different labels — keeping 'runtime/core.md', dropping 'runtime/core.md (CONDUCTOR CORE)'.
+[graphify] note: node 'docs_superpowers_plans_2026_07_08_conductor_v1_task10' was extracted twice from 'docs/superpowers/plans/2026-07-08-conductor-v1.md' under different labels — keeping 'Task 10 (judge/mining workflow)', dropping 'Task 10: Baseline capture (bare Opus)'.
+[graphify] note: node 'docs_superpowers_plans_2026_07_08_conductor_v1_task13' was extracted twice from 'docs/superpowers/plans/2026-07-08-conductor-v1.md' under different labels — keeping 'Task 13 (judge/mining workflow)', dropping 'Task 13: A/B benchmark + S-criteria report'.
+[graphify] note: node 'docs_superpowers_plans_2026_07_09_portability' was extracted twice from 'docs/superpowers/plans/2026-07-09-portability.md' under different labels — keeping '2026-07-09-portability.md plan', dropping 'docs/superpowers/plans/2026-07-09-portability.md'.
+[graphify] note: node 'docs_superpowers_plans_2026_07_09_portability' was extracted twice from 'docs/superpowers/plans/2026-07-09-portability.md' under different labels — keeping '2026-07-09-portability.md plan', dropping 'Conductor Portability Plan (multi-harness)'.
+[graphify] note: node 'docs_superpowers_specs_2026_07_08_conductor_design_spec' was extracted twice from 'docs/superpowers/specs/2026-07-08-conductor-design.md' under different labels — keeping 'Conductor design spec', dropping 'Conductor Design Specification v1'.
+[graphify] note: node 'docs_research_2026_07_08_superpowers_dissection' was extracted twice from 'docs/research/2026-07-08-superpowers-dissection.md' under different labels — keeping 'Superpowers Dissection Research Report', dropping 'docs/research/2026-07-08-superpowers-dissection.md'.
+[graphify] note: node 'qa_reports_ab_report' was extracted twice from 'qa/reports/ab-report.md' under different labels — keeping 'qa/reports/ab-report.md', dropping 'A/B Report v1 (Conductor v1 vs Baseline)'.
+[graphify] note: node 'runtime_playbooks_methods' was extracted twice from 'runtime/playbooks/methods.md' under different labels — keeping 'playbooks/methods.md', dropping 'runtime/playbooks/methods.md'.
+[graphify] note: node 'runtime_playbooks_distill' was extracted twice from 'runtime/playbooks/distill.md' under different labels — keeping 'playbooks/distill.md', dropping 'runtime/playbooks/distill.md'.
+[graphify] note: node 'runtime_playbooks_distill' was extracted twice from 'runtime/playbooks/distill.md' under different labels — keeping 'playbooks/distill.md', dropping 'Distillation Procedure'.
+[graphify] WARNING: node 'qa_bench' is minted by two different files — keeping 'qa/bench/' from 'HANDOFF.md', dropping 'qa/bench Test Runner' from 'qa/reports/ab-report-v2.md'. An ID is derived from the source path plus the entity name, so this one does not identify a single entity and the dropped node is lost. To keep them distinct, run 'graphify extract' per subfolder and merge with 'graphify merge-graphs'.
+[graphify] note: node 'qa_reports_ab_v2_baseline_evidence' was extracted twice from 'qa/reports/ab-v2/baseline-evidence.md' under different labels — keeping 'Baseline Arm Evidence Report', dropping 'qa/reports/ab-v2/baseline-evidence.md'.
+[graphify] note: node 'qa_reports_ab_v2_conductor_evidence' was extracted twice from 'qa/reports/ab-v2/conductor-evidence.md' under different labels — keeping 'Conductor Arm Evidence Report', dropping 'qa/reports/ab-v2/conductor-evidence.md'.
+[graphify] Deduplicated 23 node(s) (23 exact).
+[graphify extract] wrote C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\graph.json: 829 nodes, 1435 edges, 62 communities
+[graphify extract] wrote C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\.graphify_analysis.json
+[graphify extract] tokens: 2,068,329 in / 494,776 out, est. cost (~claude-cli): $0.0000
+[graphify extract] next: run `graphify cluster-only C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild` to generate GRAPH_REPORT.md and name communities

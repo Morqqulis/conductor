@@ -106,6 +106,7 @@ for rel in "${STALE[@]}"; do
     fi
 done
 echo "[1/5] runtime tree -> $CONDUCTOR_DIR (retired artifacts removed: $stale_removed)"
+echo "      optional verification evidence -> $(winpath "$CONDUCTOR_DIR/evidence/cli.py")"
 
 # --- 2. Hooks in settings.json --------------------------------------------------------
 # The command strings are invoked through bash: on Windows, Claude Code runs hook commands
@@ -195,7 +196,7 @@ fi
 # this catches is a hook that exists and works when run by hand while the harness invokes
 # a path that does not resolve.
 HOOK_CMD="$(
-    "$PYTHON" - "$SETTINGS_ARG" <<'PY'
+    PYTHONIOENCODING=utf-8 "$PYTHON" - "$SETTINGS_ARG" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1], encoding="utf-8"))
 for entry in data.get("hooks", {}).get("SessionStart", []):

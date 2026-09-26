@@ -32,6 +32,15 @@ A later message, unrelated README edit, new commit identity or push alone invali
 If an input matters to one check but not another, invalidate only the dependent check.
 Build-cache reuse is not test-result evidence; test-result caching must cover the test's inputs.
 
+Optional saved evidence: if present, use Python with `conductor/evidence/cli.py` under
+CLAUDE_CONFIG_DIR (otherwise ~/.claude). `run --project ROOT --spec FILE` always executes;
+`list`, `show` and `check --project ROOT --id ID` only inspect saved evidence. Read output,
+scope and limitations before reuse. MATCH is not PASS: only observed conditions match;
+declared inputs may omit dependencies, and external state may be unknown. Other projects,
+changed/unknown conditions or damaged records cannot justify reuse. Normal runs and
+inspection-only completion remain valid; do not create a record for every edit. Arguments
+and raw output may contain secrets; keep this local data private and outside Git.
+
 ## When execution is needed
 - New/changed behavior: add or select a test that distinguishes old from intended behavior;
   include relevant boundary/error cases. For a fix, reproduce the original symptom first.

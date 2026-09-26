@@ -128,6 +128,48 @@ Quraşdırmadan sonra Cursor və Antigravity-ni yenidən başladın (hook konfiq
 startda oxunur). Hər quraşdırıcı təkrar işə salınanda təhlükəsizdir və dəyişdirdiyi
 hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
 
+## Yoxlama nəticələrinin yaddaşı
+
+Hər iki quraşdırıcı könüllü `conductor/evidence/cli.py` alətini
+`${CLAUDE_CONFIG_DIR:-$HOME/.claude}` daxilinə qoyur; Python 3.10+ lazımdır. Alət real
+icranı, çıxışı və göstərilən girişlərin vəziyyətini saxlayır. Layihələrin, klonların və
+iş nüsxələrinin tarixçələri ayrıdır. Bu, fəaliyyət jurnalı və ya testlərin avtomatik
+ötürülməsi deyil. Sadə düymə yazısı dəyişikliyi yenə icra və yeni qeyd tələb etmir.
+
+İcra təsviri JSON-dur; məsələn, `check.py` və `src` olan layihə üçün:
+
+```json
+{"schema_version":1,"name":"unit","argv":["python","-B","check.py"],"cwd":".",
+ "inputs":["src","check.py"],"environment":[],"external_state":"none_declared",
+ "timeout_seconds":60}
+```
+
+Təsviri `verification.json` kimi saxlayın; Bash əmrləri:
+
+```bash
+EVIDENCE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor/evidence/cli.py"
+python "$EVIDENCE" run --project . --spec verification.json
+python "$EVIDENCE" list --project .
+python "$EVIDENCE" show --project . --id RUN_ID
+python "$EVIDENCE" check --project . --id RUN_ID
+```
+
+`RUN_ID` yerinə `run`/`list` nəticəsindəki identifikatoru qoyun. `run` həmişə icra edir;
+`show` qeydi və tam çıxışın yollarını göstərir. `check` heç nə icra etmir: `MATCH` müşahidə
+olunan şərtlərin uyğunluğudur, yeni uğurlu test deyil. Agent girişlərin tamlığını və çıxışın
+tətbiq oluna bilməsini yoxlamalıdır; naməlum xarici vəziyyəti `unknown` göstərin. Keçidlər,
+oxunmayan girişlər və itmiş mühit açarı `MATCH` vermir; `.git` nəzərə alınmır.
+Bütün vacib asılılıqları və sazlamaları göstərin: alət onları özü müəyyən etmir.
+
+Məlumatlar lokaldır: Windows-da `%LOCALAPPDATA%/Conductor/evidence`, digər sistemlərdə
+`${XDG_STATE_HOME:-~/.local/state}/conductor/evidence`; mütləq
+`CONDUCTOR_EVIDENCE_HOME` yolu bunu dəyişir. Saxlama yeri layihədən kənarda olmalıdır.
+Arqumentlər və çıxış sirlər daşıya bilər: onları yayımlamayın; ümumi qovluq məxfiliyi
+təmin etmir. Avtomatik təmizləmə və şəbəkəyə göndərmə yoxdur; qaydaların yenidən
+quraşdırılması və silinməsi tarixçəni saxlayır. Çıxış həddi 64 MiB-dir; kəsilmiş və ya
+zədələnmiş nəticə təkrar istifadəyə əsas vermir. Windows və Linux CI-də yoxlanılır;
+digər əməliyyat sistemləri bu alət üçün hələ yoxlanmayıb.
+
 ## Commit intizamı
 
 1. AI dəyişikliklərə baxır və yetərli yoxlamanı seçir. Sadə düymə yazısı, şərh və ya

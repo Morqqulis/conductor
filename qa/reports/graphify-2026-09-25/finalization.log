@@ -1,0 +1,75 @@
+Graphify finalization — 2026-09-26
+
+FINAL DATA UPDATE ACCEPTED WITH EXTRACTION CAVEATS, 2026-09-26.
+This log is the current completion record; historical counts in
+docs/continuation-2026-09-25.md describe earlier verified snapshots.
+
+Current result, after one-source retry through the official CLI (--no-dedup):
+- 1136 nodes, 2215 edges, 53 hyperedges, 86 communities; CLI exit 0.
+- All 48 supported documents represented. No duplicate node IDs, dangling edges/group
+  members, missing source files, pending/deleted manifest entries, partial cache entries,
+  or missing document cache for current content. Independent validator exit 0 before
+  transfer AND on the repository copy after transfer.
+- HANDOFF now has 49 nodes. Prior topics were compared: memory/index, reply language,
+  hooks/playbooks, historical benchmark removal, digest source and reports are represented.
+  Marker-gate removal is represented in the README and mentor-notes nodes, not as a
+  separate HANDOFF node. Individual node identities/attribution are not a lossless index.
+- Graph/manifest/analysis transfer hashes match the accepted CLI output. Graph SHA-256:
+  47E5456326B1EEB3B38F1523396D74F368014A15738B05C2008719AF6DE0D5AF.
+- Old root graph/cache are recoverable in the task's root-before-final-data-publish;
+  old failed HANDOFF entries were quarantined, not deleted. Foreign 2026-08-24 backup
+  is untouched. Old report is marked historical; HTML/cost report were not regenerated.
+  Old community names are cleared (backup retained) rather than assigned to new groups.
+- Supported corpus: 129 files; 17 unsupported files skipped by CLI. Four code sources
+  with no extracted nodes remain automatically re-queued by this Graphify version.
+- One HANDOFF CI node is explicitly verification=unverified by Graphify; that flag is
+  retained. Out-of-scope/colliding reference warnings remain a semantic quality caveat.
+  This map is for navigation, not evidence of code behavior or exhaustive concept coverage.
+
+Historical sequence below (superseded by the accepted result above):
+
+Recovered CLI output: 833 nodes, 1439 edges, 51 hyperedges.
+Read-only acceptance check: exit 0; all 46 documents represented, no duplicate IDs,
+no dangling pairwise/group endpoints, no pending manifest files, no partial cache,
+no missing semantic cache for the document content at that checkpoint.
+This successful check predates later handoff/specification edits.
+Source-free external reference nodes are listed by the check, not treated as files.
+
+Subsequent incremental CLI run: exit 1. HANDOFF.md extraction shrank from 13 to 10
+source nodes; the write guard refused graph replacement. The saved new cache entry
+contains a duplicate handoff ID and omits previously represented entities still
+mentioned by the source. This is not accepted as a legitimate content deletion.
+The retained graph's SHA-256 matches the pre-run snapshot:
+3D4940A2F224817241B5492C9FDC3829D8814B9B3473E28AB2D6BDDE7DB4C254.
+That CLI process ended. The next run uses the finalized implementation and documents.
+
+The originally remaining steps were: quarantine the unsuccessful extraction cache
+entry, re-extract changed documents through the official CLI, validate completeness
+and freshness, and publish accepted DATA into the repository's graphify-out.
+These steps are now complete. The user does not need a new report or HTML map.
+
+Initial startup observation: graphify.exe extract --help failed without output while
+Windows showed a python.exe memory-read error. No matching accessible event/WER record.
+Plain module --help succeeded, but the initial claim that module invocation alone avoids
+the crash was incorrect: the command-specific startup path differs, and a later compound
+PowerShell command hid the Python exit. The diagnosis below supersedes that interpretation.
+The retained graph hash was rechecked and unchanged after the failed help invocation.
+
+Follow-up crash diagnosis (same session, after a second screenshot): the module entry
+point ALSO crashes for extract --help when PYTHONHASHSEED is absent. A faulthandler
+probe captured native exit -1073741819 / access violation at os.execvpe, called by
+graphify.__main__._pin_hash_seed_if_needed (installed 0.9.67, lines 531/545).
+Plain isolated Python startup exits 0. Exact same Graphify help command with only
+PYTHONHASHSEED=0 added before startup exits 0 and prints help. This bypasses the proven
+crashing self-reexec path; the interpreter/DLL cause underneath it is not established.
+The full extraction already used PYTHONHASHSEED=0. No Python reinstall or persistent
+machine setting changed. Error dialogs were disabled only in the diagnostic process
+and its children, with the parent's previous process-local mode restored afterwards.
+
+Intermediate CLI batch: 12/12 chunks, exit 0, 1089 nodes / 2144 edges written. NOT accepted:
+the CLI explicitly reported HANDOFF.md semantic shrink 13 -> 5 despite exit 0.
+The pre-batch 833-node graph remains backed up; at that point only HANDOFF needed retry.
+
+Known extraction caveat: the CLI discarded out-of-scope references and reported
+colliding entity IDs across files. Use the graph for navigation, verify claims in
+the source. The retained extract-tail.log includes the actual warnings.

@@ -1,0 +1,75 @@
+Project verification evidence — acceptance checkpoint 2026-09-26
+
+IMPLEMENTATION, LOCAL INSTALL AND GRAPH DATA ACCEPTED.
+Publication state: inspect Git history and GitHub checks for the commit containing
+this checkpoint. Local acceptance is not a claim that a later remote CI run passed.
+This is a concise inspected-evidence log, not a second set of agent rules.
+
+New stdlib Python package: runtime/evidence (11 files), CLI run/list/show/check.
+Separate project/worktree/physical-root identity, strict JSON, explicit argv, before/after
+inputs, environment HMAC, bounded output, atomic records, integrity and applicability checks.
+Both installers deliver it. Existing activity journal is unchanged. No auto-skip or upload.
+
+NEW RUNS (complete output/exit inspected):
+- Python 3.12.13 / Windows: python -B -m unittest discover -s qa/evidence -v
+  80 tests, exit 0, 26.082s, 3 POSIX-only skips (execute bits and two FIFO tests).
+- Python 3.13.5 / Linux: same command in networkless read-only rust:1.95.0 container,
+  exec-enabled private /tmp; 80 tests, exit 0, 15.419s, 1 Windows casing skip.
+- bash tools/build-digests.sh && bash qa/lint.sh: exit 0. Digests 11990/11997 <=12000;
+  core 9450/9500 and subagent contract 2998/3000 unchanged. No budgets increased.
+- bash qa/doctor-test.sh: exit 0. Includes rejecting every missing new evidence module.
+- Companion installer integration: python3 -B qa/companions-test.py -v in the same
+  networkless Linux container: 14 tests, exit 0, 0.672s. Earlier Windows proof is in
+  qa/reports/companions-2026-09-25/verification.log; source/test hashes still match it.
+- git diff --check: exit 0.
+- Discovery: actual Claude/global installs for Russian, English and Azerbaijani;
+  repeat installs, Unicode/space paths, global-only use, missing-Python warning all tested.
+
+RED/GREEN and falsification:
+- Before implementation: absent modules and absent installed CLI, failed discovery on all
+  three languages; subsequent relevant groups passed. These import failures are not
+  claimed as assertion-based falsification.
+- Real Unicode install reproduced legacy Python-stdout/Bash decoding failure. UTF-8 at
+  that boundary fixed it. Current isolated copy: install tests PASS / one assertion FAIL
+  after removing only encoding fix / PASS after reapplying (tests retained).
+- Current isolated copy: assessment 8 PASS / 7 assertion failures when foreign-project,
+  changed-condition and incomplete-output guards disabled / 8 PASS after reapplying.
+- Additional negative tests caught oversized timeout, FIFO blocking read, unknown entry
+  kind and non-object executable metadata. Corrected at their observed causes; included
+  in the final 80-test runs. Real child success + failed publication returns INVALID/2.
+- Delegated inputs implementation was read by main; hashes matched delivery; integrated
+  tests passed on both systems. No separate verifier repeated main's witnessed checks.
+
+Real agent control group (three tiny projects, same requested assertion total(3)==6):
+- Baseline only retained prior session summary. Curie reran all 3: PASS / FAIL(9 != 6) /
+  PASS for unchanged / changed / foreign-current. Counters independently read: 1 -> 2 each.
+- Treatment retained full artifacts and used new pointer + frozen installed CLI copy.
+  Chandrasekhar first got MATCH for unchanged, CHANGED for changed, INDETERMINATE for
+  foreign-current. Later unchanged check found a changed environment HMAC, so reuse was
+  revoked and it too was rerun. Final counters 1 -> 2 each; outcomes identical to baseline.
+  Check wall times 0.180-0.268s; run wall times 0.391-0.406s. These include CLI startup,
+  exclude later human/agent interpretation, and are not a production speed benchmark.
+- No false acceptance. NO measured reduction in actual reruns (3 vs 3). Transient env
+  difference's cause is not established. Read-only reuse without execution is separately
+  proven by CLI counter test. Benefit on real costly checks remains to be measured.
+
+LIVE INSTALL:
+install.sh --language Russian --skip-companions; install-global.sh --language Russian;
+tools/doctor.sh: all exit 0, doctor 0 warnings. Installed CLI list works outside imports.
+11 evidence source hashes match. 122 inbox/curated lesson files and settings.json unchanged.
+Backup: conductor-evidence-live-fd7479fba3e64523aab3cd5888df21b8 in local user Temp.
+Foreign global rule content was checked before replacement; no personal additions found.
+Cursor paste-ready file updated; manual UI paste is not claimed.
+
+LIMITATIONS:
+MATCH observes declared inputs, not all transitive dependencies or external services.
+Before/after snapshots do not detect temporary changes restored between observations.
+Local same-user tampering is not prevented by integrity hashes. Raw output/argv may contain
+secrets. Windows inherits directory ACL; shared overrides are not promised private.
+Output >=64 MiB is incomplete. Descendant-held pipe wait is bounded; killing the entire
+descendant tree is not promised. Other OSes unverified. No automatic pruning.
+Code coverage percentage was not measured; no claim of 100% branch coverage is made.
+
+FINAL GRAPH: official CLI completed with the Python self-reexec workaround; 1136 nodes,
+2215 edges, 53 hyperedges, all 48 documents current. Repository-copy validator exit 0.
+Full extraction caveats and native Python diagnosis: graphify-2026-09-25/finalization.log.

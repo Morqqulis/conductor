@@ -1,0 +1,65 @@
+Companions false-success verification — 2026-09-25
+
+WRITE SCOPE: install-companions.sh and qa/companions-test.py only.
+CI, Changelog, graphify and private configuration belong to the other agent.
+No commit, real plugin enable/install, or real companion mutation was run.
+Only help/list used the real Claude CLI. Fixture commands block real mutations.
+
+PROVEN causes:
+- Negating grep disabled treats absent state and failed list pipelines as enabled.
+- Repeated list reads mix observations; a second failure becomes OK already enabled.
+- grep -A3 misses a disabled Status moved below additional metadata.
+
+Read-only format probes (each exit 0):
+& 'C:/Users/Dee/.local/bin/claude.exe' plugin list --help
+& 'C:/Users/Dee/.local/bin/claude.exe' plugin list
+& 'C:/Users/Dee/.local/bin/claude.exe' plugin list --json
+An additional plugin list in this directory's readonly-empty-config, via child CLAUDE_CONFIG_DIR,
+confirmed: No plugins installed. Use `claude plugin install` to install a plugin.
+
+Initial RED, before production edits, working directory C:/Users/Dee/Desktop/conductor:
+& 'C:/Users/Dee/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe' qa/companions-test.py -v CompanionsTest.test_failed_list_with_partial_enabled_output_is_not_success CompanionsTest.test_missing_status_is_not_enabled CompanionsTest.test_disabled_uses_one_snapshot_even_if_next_list_would_fail
+Exit 1, three assertion failures, each showing false OK already enabled. Log: red.log.
+
+Initial GREEN after production fix:
+& 'C:/Users/Dee/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe' qa/companions-test.py -v
+Exit 0, 12 test methods at that point. Log: green.log.
+
+Final CURRENT-copy green/red/green:
+& 'C:/Users/Dee/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe' 'C:/Users/Dee/AppData/Local/Temp/conductor-companions-782c3f910d10477f97715aeeb4579e40/current/qa/companions-test.py' -v
+Exit 0, 14 methods. Log: isolated-green-before.log.
+Then reversed ONLY own installer hunks using apply_patch in CURRENT copy.
+Installer SHA256 returned exactly to pre-task bytes; current test SHA256 stayed unchanged.
+& 'C:/Users/Dee/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe' 'C:/Users/Dee/AppData/Local/Temp/conductor-companions-782c3f910d10477f97715aeeb4579e40/current/qa/companions-test.py' -v CompanionsTest.test_failed_list_with_partial_enabled_output_is_not_success CompanionsTest.test_missing_status_is_not_enabled CompanionsTest.test_disabled_uses_one_snapshot_even_if_next_list_would_fail
+Exit 1, three assertion failures for the original false success. Log: isolated-red.log.
+Then reapplied ONLY the same hunks with apply_patch in CURRENT copy.
+& 'C:/Users/Dee/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe' 'C:/Users/Dee/AppData/Local/Temp/conductor-companions-782c3f910d10477f97715aeeb4579e40/current/qa/companions-test.py' -v
+Exit 0, 14 methods. Log: isolated-green-after.log.
+
+Other checks, working directory C:/Users/Dee/Desktop/conductor:
+& 'C:/Program Files/Git/bin/bash.exe' --noprofile --norc -n install-companions.sh
+Exit 0, no output.
+git diff --check -- install-companions.sh qa/companions-test.py
+Exit 0, no output. Installer diff and complete test inspected.
+No full project suite run: validation scoped to the installer, as requested.
+
+Cases: failed list with partial enabled stdout; missing/unknown/loaded/contradictory state;
+empty/malformed/truncated stdout; stderr cannot supply state; exact names vs foreign lookalikes;
+metadata beyond 3 lines; CRLF; enabled twin in either position; two disabled copies enable one;
+current inactive synced section; failed enable; official install; fallback despite failed add;
+failure text claiming success still requires exit 0; --no-superpowers makes no Claude calls.
+Every fixture checks installer exit 0, exactly one superpowers outcome, summary counters,
+exact external command sequence, and absence of forbidden real-tool calls.
+
+Safe undo evidence:
+install-companions.sh.before: exact pre-task bytes, tracked clean at start
+SHA256 1115F8C1069A7D7F720FBAE982BD08BC03D7B9E663C8676879FDCF7A71FECC47
+qa/companions-test.py: pre-task absence recorded in snapshot.txt
+install-companions.sh.after SHA256 A625A33AB9D112B7D970E1679038CC4CB2F3FC73AB8635011774785D6AE214C5
+companions-test.py.after SHA256 023A4C6A502DB39267CA1761DE3FE2F8D54DAD18FA6F7FE028F274FC03D02ECB
+Both final workspace files and the restored CURRENT-copy files had these exact hashes.
+Own hunks recorded in own-installer.diff. Before any undo compare current bytes to .after;
+if different preserve both versions and ask. Reverse only own hunks, never reset/checkout the tree.
+
+Limit: parser recognizes the inspected CLI text format; unrecognized local output fails loudly.
+All reported execution proof is Git Bash on Windows with Python 3.12; Linux execution not observed.

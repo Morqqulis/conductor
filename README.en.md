@@ -126,6 +126,47 @@ After installation, restart Cursor and Antigravity (hook configs are read at sta
 Every installer is safe to re-run and makes backup copies (`*.bak-<timestamp>`) of
 everything it changes.
 
+## Saved verification evidence
+
+Both installers deliver the optional `conductor/evidence/cli.py` under
+`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`; Python 3.10+ is required. It saves real executions,
+output and snapshots of declared inputs. Projects, clones and worktrees have separate
+histories. This is neither the activity journal nor automatic test skipping. A simple
+label edit still needs no execution or new record.
+
+A run description is JSON, for example for a project containing `check.py` and `src`:
+
+```json
+{"schema_version":1,"name":"unit","argv":["python","-B","check.py"],"cwd":".",
+ "inputs":["src","check.py"],"environment":[],"external_state":"none_declared",
+ "timeout_seconds":60}
+```
+
+Save it as `verification.json`; in Bash:
+
+```bash
+EVIDENCE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor/evidence/cli.py"
+python "$EVIDENCE" run --project . --spec verification.json
+python "$EVIDENCE" list --project .
+python "$EVIDENCE" show --project . --id RUN_ID
+python "$EVIDENCE" check --project . --id RUN_ID
+```
+
+Replace `RUN_ID` with an identifier from `run`/`list`. `run` always executes; `show` returns
+metadata and paths to complete output. `check` never executes: `MATCH` means observed
+conditions match, not a new passing test. The agent must still inspect input coverage and
+output applicability; declare unknown external state as `unknown`. Links, unreadable inputs
+and a missing environment key prevent `MATCH`; `.git` is excluded. Declare all relevant
+dependencies and configuration: the tool cannot infer them.
+
+Storage is local: Windows `%LOCALAPPDATA%/Conductor/evidence`, otherwise
+`${XDG_STATE_HOME:-~/.local/state}/conductor/evidence`; an absolute
+`CONDUCTOR_EVIDENCE_HOME` overrides it. The store must be outside the project. Arguments
+and output can contain secrets: do not publish them; a shared directory is not private.
+There is no automatic pruning or upload; reinstalling and uninstalling rules preserve data.
+Output is capped at 64 MiB; truncated or damaged evidence cannot justify reuse.
+Windows and Linux are tested in CI; other operating systems are not yet verified for this tool.
+
 ## Commit discipline
 
 1. The AI inspects changes and selects sufficient verification. A simple label, comment

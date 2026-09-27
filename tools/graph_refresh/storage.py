@@ -160,7 +160,8 @@ class Workspace:
 
         mapped = lambda items: {"state" if key == "graph.json" else key: value
                                 for key, value in items.items()}
-        transaction = _transaction.Transaction(_Paths(self), mapped(changes), mapped(expected))
+        transaction = _transaction.Transaction(_Paths(self), mapped(changes), mapped(expected),
+                                               external_journal=True)
         _transaction.write(self.work / "pending.json",
                            json.dumps({"id": transaction.backup.name}).encode(), 0o600)
         pending = _transaction.read(self.work / "pending.json")

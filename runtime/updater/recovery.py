@@ -2,16 +2,7 @@
 import json
 import re
 
-from transaction import digest, plain, read, rollback, write
-
-
-def unique_object(pairs):
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f'duplicate JSON key: {key}')
-        result[key] = value
-    return result
+from transaction import digest, plain, read, rollback, unique_object, write
 
 
 def marker(paths):

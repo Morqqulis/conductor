@@ -47,6 +47,15 @@ def digest(data):
     return None if data is None else hashlib.sha256(data).hexdigest()
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f'duplicate JSON key: {key}')
+        result[key] = value
+    return result
+
+
 class Paths:
     def __init__(self, config, profile):
         self.config, self.profile = plain(config), plain(profile)
@@ -112,14 +121,18 @@ def write(path, data, mode=0o644):
 
 
 class Transaction:
-    def __init__(self, paths, changes, expected=None):
+    def __init__(self, paths, changes, expected=None, *, external_journal=False):
         self.paths, self.changes = paths, changes
+        # Graph publication owns its lock and pending marker outside the CLI
+        # protocol. File snapshots/verification/rollback remain shared.
+        self.external_journal = external_journal
         self.before = {key: read(paths.target(key)) for key in changes}
         self.expected = expected if expected is not None else self.before
         self.backup = paths.backups / uuid.uuid4().hex
 
     def apply(self, verify):
-        from recovery import begin, finish
+        if not self.external_journal:
+            from recovery import begin, finish
         for key, before in self.expected.items():
             if read(self.paths.target(key)) != before:
                 raise ValueError(f"file changed before update: {key}")
@@ -133,7 +146,7 @@ class Transaction:
             raise ValueError('backup exceeds recovery size limit; no files updated')
         plain(self.backup).mkdir(parents=True, mode=0o700)
         write(self.backup / "snapshot.json", encoded, 0o600)
-        journal = begin(self.paths, self.backup, encoded)
+        journal = None if self.external_journal else begin(self.paths, self.backup, encoded)
         try:
             for key in sorted(self.changes, key=lambda key: (key == "state", key)):
                 if key == "state":
@@ -151,11 +164,13 @@ class Transaction:
                     raise ValueError(f"written file verification failed: {key}")
             if "state" not in self.changes:
                 verify()
-            finish(self.paths, journal)
+            if not self.external_journal:
+                finish(self.paths, journal)
         except (Exception, KeyboardInterrupt) as exc:
             try:
                 rollback(self.paths, self.backup)
-                finish(self.paths, journal)
+                if not self.external_journal:
+                    finish(self.paths, journal)
             except (OSError, ValueError) as rollback_error:
                 raise ValueError(f"update failed ({exc}); rollback conflict: {rollback_error}; backup: {self.backup}") from exc
             raise ValueError(f"update failed ({exc}); restored previous files; backup: {self.backup}") from exc
@@ -163,7 +178,6 @@ class Transaction:
 
 
 def rollback(paths, backup):
-    from recovery import unique_object
     raw, _ = read(plain(backup) / "snapshot.json")
     try:
         snapshot = json.loads(raw, object_pairs_hook=unique_object)

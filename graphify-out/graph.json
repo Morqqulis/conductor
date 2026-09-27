@@ -4678,7 +4678,7 @@
       "file_type": "code",
       "norm_label": ".install()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L34"
+      "source_location": "L44"
     },
     {
       "id": "qa_updater_test_cli_clitests_run_command",
@@ -4689,7 +4689,7 @@
       "file_type": "code",
       "norm_label": ".run_command()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L27"
+      "source_location": "L35"
     },
     {
       "id": "qa_updater_test_cli_clitests_setup",
@@ -4711,7 +4711,7 @@
       "file_type": "code",
       "norm_label": ".test_combined_install_update_check_failure_and_safe_uninstall()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L64"
+      "source_location": "L74"
     },
     {
       "id": "qa_updater_test_cli_clitests_test_config_case_alias_matches_updater_rendering",
@@ -4722,7 +4722,7 @@
       "file_type": "code",
       "norm_label": ".test_config_case_alias_matches_updater_rendering()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L110"
+      "source_location": "L120"
     },
     {
       "id": "qa_updater_test_cli_clitests_test_global_installer_delivers_command_from_any_directory_in_three_languages",
@@ -4733,7 +4733,7 @@
       "file_type": "code",
       "norm_label": ".test_global_installer_delivers_command_from_any_directory_in_three_languages()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L40"
+      "source_location": "L50"
     },
     {
       "id": "qa_updater_test_cli_clitests_test_installer_and_doctor_support_legacy_output_encoding",
@@ -4744,7 +4744,7 @@
       "file_type": "code",
       "norm_label": ".test_installer_and_doctor_support_legacy_output_encoding()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L118"
+      "source_location": "L128"
     },
     {
       "id": "qa_updater_test_cli_clitests_test_short_config_alias_install_matches_updater_rendering",
@@ -4755,7 +4755,7 @@
       "file_type": "code",
       "norm_label": ".test_short_config_alias_install_matches_updater_rendering()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L93"
+      "source_location": "L103"
     },
     {
       "id": "qa_updater_test_cli_clitests_test_uninstall_preserves_later_modified_command",
@@ -4766,7 +4766,7 @@
       "file_type": "code",
       "norm_label": ".test_uninstall_preserves_later_modified_command()",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L85"
+      "source_location": "L95"
     },
     {
       "id": "qa_safe_undo_test_command",
@@ -23904,7 +23904,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L38",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -23916,7 +23916,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L65",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -23928,7 +23928,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L67",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -23940,7 +23940,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L115",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -23952,7 +23952,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L43",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -23964,7 +23964,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L46",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -23976,7 +23976,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L120",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -23988,7 +23988,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L107",
+      "source_location": "L117",
       "weight": 1.0
     },
     {
@@ -24000,7 +24000,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L86",
+      "source_location": "L96",
       "weight": 1.0
     },
     {
@@ -24012,7 +24012,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L89",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -27624,7 +27624,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L109",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -27636,7 +27636,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L117",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -27648,7 +27648,7 @@
       "confidence_score": 1.0,
       "context": "decorator",
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L92",
+      "source_location": "L102",
       "weight": 1.0
     },
     {
@@ -38521,13 +38521,24 @@
     },
     {
       "source": "qa_updater_test_cli_clitests",
+      "target": "qa_updater_test_cli_clitests_test_short_config_alias_install_matches_updater_rendering",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "qa/updater/test_cli.py",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "qa_updater_test_cli_clitests",
       "target": "qa_updater_test_cli_clitests_test_config_case_alias_matches_updater_rendering",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L110",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -38538,7 +38549,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L118",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -38560,7 +38571,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L27",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -38571,7 +38582,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L34",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -38582,7 +38593,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L40",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -38593,7 +38604,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L64",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -38604,18 +38615,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "qa/updater/test_cli.py",
-      "source_location": "L85",
-      "weight": 1.0
-    },
-    {
-      "source": "qa_updater_test_cli_clitests",
-      "target": "qa_updater_test_cli_clitests_test_short_config_alias_install_matches_updater_rendering",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "qa/updater/test_cli.py",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -50955,5 +50955,5 @@
       "source_file": "qa/reports/reliability-2026-09-25.md"
     }
   ],
-  "built_at_commit": "187de135e1fb8d856f314a0367ab4e04231a4073"
+  "built_at_commit": "28034755efecbdb3a37a5491c0d5f2138f40498a"
 }

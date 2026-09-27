@@ -23,8 +23,18 @@ class CliTests(unittest.TestCase):
                         CLAUDE_CONFIG_DIR=str(self.config), PYTHONIOENCODING='utf-8',
                         GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
         self.env['PATH'] = str(Path(sys.executable).parent) + os.pathsep + self.env['PATH']
+        self.bash = shutil.which('bash')
+        if os.name == 'nt':
+            git = Path(shutil.which('git')).resolve()
+            git_home = next(folder for folder in git.parents[:3]
+                            if (folder / 'cmd/git.exe').is_file() and (folder / 'bin/bash.exe').is_file())
+            self.bash = str(git_home / 'bin/bash.exe')
+            self.env['PATH'] = os.pathsep.join([str(git_home / 'usr/bin'),
+                                               str(git_home / 'bin'), self.env['PATH']])
 
     def run_command(self, args, code=0, **kwargs):
+        if args[0] == 'bash':
+            args = [self.bash, *args[1:]]  # CreateProcess may choose System32/WSL before PATH.
         result = subprocess.run(list(map(str, args)), env=self.env, cwd=kwargs.pop('cwd', ROOT),
                                 stdin=subprocess.DEVNULL, capture_output=True, text=True,
                                 encoding='utf-8', errors='replace', timeout=60, **kwargs)

@@ -72,7 +72,7 @@ class SourceTests(unittest.TestCase):
         result = self.module().fetch(self.destination, remote=str(self.remote))
         self.assertEqual(set(result), {"source", "commit", "ref", "remote"})
         self.assertIsInstance(result["source"], Path)
-        self.assertTrue(result["source"].is_relative_to(self.destination))
+        self.assertTrue(result["source"].is_relative_to(self.destination.resolve()))
         self.assertEqual(result["commit"], self.first)
         self.assertRegex(result["commit"], r"^[0-9a-f]{40}$")
         self.assertEqual((result["ref"], result["remote"]), ("main", str(self.remote)))

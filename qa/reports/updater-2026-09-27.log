@@ -105,3 +105,12 @@ disabled in a current isolated copy and passes when restored. Windows and Linux 
 cases in each suite, Linux skips 1 in evidence and 4 in updater. RU/EN/AZ installs passed.
 Final graph after this code-only correction: 1437 nodes, 2798 edges, 59 hyperedges,
 49 current documents, no pending inputs or dangling endpoints; semantic cache reused.
+
+CI follow-up 4: run 36280874907 passed Windows trust-path/evidence suites; updater fixture
+used bare bash, which CreateProcess selected as WSL. Running the same fixture directly
+from local PowerShell reproduced the failure before the installer could execute. The
+test fixture now selects Git Bash explicitly (independently of the production selector).
+Source containment expectation now compares against the canonical destination, matching
+fetch's contract; the prior assertion failed on CI's 8.3 alias. Production guards unchanged.
+The complete 40-test updater suite passed from normal PowerShell with CP1252 (3 platform
+skips) and Linux (4 skips). Graph acceptance remains 1437/2798/59, all 49 documents current.

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .storage import tx
+from .call_repairs import repair_calls
 from .validation import check_semantic_relations, geometry, validate_transition
 
 
@@ -94,6 +95,7 @@ def build(root, run, corpus, hashes, kinds, base, semantic, review, sources, pro
     ast = extract([Path(p) for p in corpus['files'].get('code', [])], root=root, cache_root=stage, parallel=False)
     if ast.get('failed_sources'):
         raise ValueError(f'AST extraction failed: {ast["failed_sources"]}')
+    ast, call_reviews = repair_calls(ast, base, review, hashes)
     # References to newly added code are legal only after real AST extraction
     # proves those endpoints. They are never supplied as model-authored stubs.
     proof_base = deepcopy(base)
@@ -117,6 +119,7 @@ def build(root, run, corpus, hashes, kinds, base, semantic, review, sources, pro
     labels = label_communities_by_hub(graph, communities)
     graph.graph['verified_source_hashes'] = hashes
     graph.graph['conductor_producer'] = producer
+    graph.graph['conductor_ast_call_repairs'] = call_reviews
     # Identity/relation checks below authorize only explicitly reviewed removals.
     # The output is NEW, not a force-overwrite of an existing map.
     out.mkdir(parents=True, exist_ok=True)

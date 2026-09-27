@@ -74,3 +74,19 @@ guards restored pass. Main source and current tests retained throughout.
 Search retired cargo/system-pip commands in non-graph source: 0 hits.
 Foreign graph backup remains unchanged:
 B81699CD5431126F0B784454D2EB436BA311F47E174DFEC810FDB4BC76BF9F11.
+
+Graph maintenance: NOT accepted as a complete semantic refresh.
+Official graphify 0.9.67 CLI ran in a separate graph-build directory, never over
+the public graph. Initial backend hit two 240-second timeouts; only that owned
+process and child were stopped. Smaller chunks with explicit model completed 5/5.
+The CLI warned of semantic shrink: CHANGELOG 49 -> 7, HANDOFF 61 -> 12, plus README
+reductions. Out-of-scope attributions were rejected by Graphify. A complete cache
+rebuild also reduced those source counts (1494 nodes, 3050 edges, 50 hyperedges);
+all 49 documents and edge endpoints resolved, but that does NOT prove retention
+of their concepts. Therefore neither candidate replaced the previous public map.
+The private rebuild helper initially omitted the Windows multiprocessing guard;
+Graphify reported the failure and used sequential fallback. This is not a proven
+cause of the user's earlier native Python memory-access crash.
+No HTML/report generation. Public graph remains the previous snapshot and must
+not be treated as current installer documentation. Source and README are current.
+Investigating semantic attribution/shrink further is separate from this installer.

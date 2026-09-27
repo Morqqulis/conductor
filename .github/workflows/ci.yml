@@ -50,6 +50,7 @@ jobs:
         run: |
           python -B qa/companions-test.py
           python -B -m unittest discover -s qa/companions -v
+          python -B -m unittest discover -s qa/project_artifacts -v
           bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
           bash qa/journal-report-test.sh

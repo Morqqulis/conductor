@@ -1,15 +1,14 @@
-"""Guard owned files and save existing installation targets before shell deployment."""
+"""Compatibility read-only preflight; the shared installer owns backup and writes."""
 import argparse
-import json
 from pathlib import Path
 import sys
-import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'runtime/updater'))
-from installation import load_state, prepare
-from payload import language, payload
-from transaction import Paths, read, write
+from deployment import prepare_install
+from payload import language
+from recovery import pending
+from transaction import Paths
 
 
 def main():
@@ -21,26 +20,11 @@ def main():
     args = parser.parse_args()
     try:
         paths = Paths(args.config, args.profile)
-        state = load_state(paths, optional=True)
-        if state['scopes']:
-            prepare(paths, ROOT, state['revision'])  # Validate ownership; do NOT write or expire proof.
+        if pending(paths):
+            raise ValueError('unfinished operation; run the installer to recover it')
         scopes = ['claude', 'global'] if args.scope == 'all' else [args.scope]
-        if not args.skip_global_md and (args.scope != 'global' or paths.target('claude-values').exists()):
-            scopes.append('values')
-        targets = set(payload(ROOT, paths, scopes, language(paths))) | {'state', 'language', 'settings'}
-        for key in ('launcher', 'launcher.cmd'):
-            if read(paths.target(key))[0] is not None and key not in state['files']:
-                raise ValueError(f'existing unmanaged command: {paths.target(key)}')
-        before = {key: read(paths.target(key)) for key in targets}
-        existing = {key: value for key, value in before.items() if value[0] is not None}
-        if existing:
-            destination = paths.profile / '.local/state/conductor/installs' / uuid.uuid4().hex
-            manifest = {}
-            for key, (data, mode) in existing.items():
-                write(destination / 'before' / key, data, 0o600)
-                manifest[key] = {'path': str(paths.target(key)), 'mode': mode}
-            write(destination / 'manifest.json', json.dumps(manifest, ensure_ascii=False).encode('utf-8'), 0o600)
-            print(f'Pre-install backup: {destination}')
+        changes = prepare_install(paths, ROOT, scopes, language(paths), args.skip_global_md, None)
+        print(f'Preflight: {len(changes)} planned changes; no files written.')
         return 0
     except (OSError, ValueError, RuntimeError) as exc:
         print(f'install preflight: FAILED: {exc}', file=sys.stderr)

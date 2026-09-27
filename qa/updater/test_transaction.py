@@ -9,6 +9,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "runtime/updater/transaction.py"
+sys.path.insert(0, str(MODULE.parent))
 
 
 class TransactionTests(unittest.TestCase):

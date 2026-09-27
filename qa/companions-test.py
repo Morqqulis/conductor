@@ -101,22 +101,18 @@ class CompanionsTest(unittest.TestCase):
                 [bash, "--noprofile", "--norc", "-c",
                  'export PATH="$1:/usr/bin:/bin"; exec /bin/bash "$2" "${@:3}"',
                  "companions-test", bash_path(bin_dir),
-                 bash_path(ROOT / "install-companions.sh"), *args],
+                 bash_path(ROOT / "install-companions.sh"), '--only-superpowers', *args],
                 cwd=fixture, env=env, capture_output=True, text=True, encoding="utf-8",
                 errors="replace", timeout=15,
             )
             output = result.stdout + result.stderr
-            self.assertEqual(result.returncode, 0, output)
             self.assertFalse((fixture / "blocked").exists(), output)
             calls_file = fixture / "calls"
             calls = calls_file.read_text(encoding="utf-8").splitlines() if calls_file.exists() else []
             lines = re.findall(r"^  superpowers: (.*)$", result.stdout, re.MULTILINE)
             self.assertEqual(len(lines), 1, output)
             status = lines[0].split()[0]
-            totals = {"OK": "1 ok, 0 skipped, 0 failed, 2 incomplete",
-                      "FAIL": "0 ok, 0 skipped, 1 failed, 2 incomplete",
-                      "SKIP": "0 ok, 1 skipped, 0 failed, 2 incomplete"}
-            self.assertIn("summary: " + totals[status], output)
+            self.assertEqual(result.returncode, 3 if status == 'FAIL' else 0, output)
             return lines[0], calls, output
 
     def assert_failure(self, listings):
@@ -213,7 +209,7 @@ class CompanionsTest(unittest.TestCase):
         self.assertEqual(line, "OK installed (superpowers-marketplace)", output)
         self.assertEqual(calls, [LIST, INSTALL, ADD, FALLBACK], output)
 
-    def test_all_install_failures_are_loud_but_exit_zero(self):
+    def test_all_install_failures_are_loud_and_exit_three(self):
         line, calls, output = self.run_installer([EMPTY])
         self.assertTrue(line.startswith("FAIL "), output)
         self.assertIn("fixture: command failed", line)

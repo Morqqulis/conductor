@@ -1,5 +1,6 @@
 """Render only explicitly installed Conductor components; private memory is never source."""
 import json
+import hashlib
 from pathlib import Path
 import re
 import shlex
@@ -78,10 +79,16 @@ def payload(source, paths, scopes, reply):
         if any(any(char in arg for char in '\r\n"') for arg in args):
             raise ValueError('unsupported quote/newline in launcher path')
         command = ' '.join('"' + arg.replace('%', '%%') + '"' for arg in args)
+        runner = ('@echo off\r\n' + command + ' %*\r\n'
+                  'set "CONDUCTOR_EXIT=%errorlevel%"\r\n'
+                  'if defined CONDUCTOR_PREV_CP chcp %CONDUCTOR_PREV_CP% >nul\r\n'
+                  'exit /b %CONDUCTOR_EXIT%\r\n').encode('utf-8')
+        key = 'launch/' + hashlib.sha256(runner).hexdigest() + '.cmd'
+        result[key] = (runner, 0o644)
+        # Batch chaining WITHOUT CALL transfers control; it never rereads a launcher
+        # that install/update/uninstall might replace or delete while Python runs.
+        target = str(paths.target(key)).replace('%', '%%')
         result['launcher.cmd'] = ('@echo off\r\nrem CONDUCTOR-CLI-v1\r\nsetlocal DisableDelayedExpansion\r\n'
                                   'for /f "tokens=2 delims=:" %%C in (\'chcp\') do set "CONDUCTOR_PREV_CP=%%C"\r\n'
-                                  'chcp 65001 >nul\r\n' + command + ' %*\r\n'
-                                  'set "CONDUCTOR_EXIT=%errorlevel%"\r\n'
-                                  'if defined CONDUCTOR_PREV_CP chcp %CONDUCTOR_PREV_CP% >nul\r\n'
-                                  'exit /b %CONDUCTOR_EXIT%\r\n').encode('utf-8'), 0o644
+                                  'chcp 65001 >nul\r\n"' + target + '" %*\r\n').encode('utf-8'), 0o644
     return result

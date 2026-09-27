@@ -107,6 +107,22 @@ class BootstrapTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     handler.redirect_request(Request('https://api.github.com/x'), None, 302, '', {}, url)
 
+    def test_legacy_installer_is_refused_before_execution(self):
+        self.target.mkdir()
+        (self.target / 'tools').mkdir()
+        (self.target / 'tools/install-preflight.py').write_bytes(b'# obsolete installer')
+        with patch.object(self.api.subprocess, 'run') as run:
+            with self.assertRaisesRegex(ValueError, 'predates|protocol'):
+                self.api.install(self.target, SHA, 'bash', [])
+            run.assert_not_called()
+
+    def test_partial_companion_failure_keeps_exit_three(self):
+        self.target.mkdir()
+        (self.target / 'runtime/updater').mkdir(parents=True)
+        (self.target / 'runtime/updater/install-protocol.json').write_bytes(b'{"schema":1}')
+        with patch.object(self.api.subprocess, 'run', return_value=type('Result', (), {'returncode': 3})()):
+            self.assertEqual(self.api.install(self.target, SHA, 'bash', []), 3)
+
 
 if __name__ == '__main__':
     unittest.main()

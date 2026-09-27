@@ -10,6 +10,7 @@ import sys
 
 from payload import language, payload
 from transaction import Paths, Transaction, digest, read, rollback, write
+from recovery import unique_object
 
 
 def encode(value):
@@ -23,7 +24,7 @@ def load_state(paths, optional=False):
     if raw is None:
         raise ValueError('installation is not registered; run the new installer once')
     try:
-        state = json.loads(raw)
+        state = json.loads(raw, object_pairs_hook=unique_object)
         if type(state['schema']) is not int or state['schema'] != 1 or not isinstance(state['files'], dict) or len(state['files']) > 2000:
             raise ValueError('invalid installation state')
         if state['revision'] is not None and (not isinstance(state['revision'], str) or
@@ -34,7 +35,8 @@ def load_state(paths, optional=False):
             raise ValueError('invalid installed components')
         for key, entry in state['files'].items():
             paths.target(key)
-            if key in ('state', 'settings', 'language'):
+            if key in ('state', 'settings', 'language', 'cursor-settings', 'antigravity-settings',
+                       'lesson-inbox', 'gitconfig', 'gitconfig-xdg') or key.startswith(('lesson/', 'legacy/')):
                 raise ValueError('invalid state ownership')
             if not isinstance(entry['sha256'], str) or not re.fullmatch(r'[a-f0-9]{64}', entry['sha256']):
                 raise ValueError('invalid ownership hash')
@@ -51,7 +53,7 @@ def settings_audit(paths):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     raw, _ = read(paths.target('settings'))
-    data = json.loads(raw) if raw else {}
+    data = json.loads(raw, object_pairs_hook=unique_object) if raw else {}
     errors = module.audit(data, paths.runtime.as_posix(), 'bash') if isinstance(data, dict) else ['not an object']
     if errors:
         raise ValueError('Conductor hook settings differ; preserve them for manual review: ' + '; '.join(errors))
@@ -75,7 +77,7 @@ def register(paths, source, scopes):
     delivery = {}
     for key, value in desired.items():
         actual, _ = read(paths.target(key))
-        if key.startswith(('runtime/updater/', 'launcher')):
+        if key.startswith(('runtime/updater/', 'launcher', 'launch/')):
             old = previous['files'].get(key)
             if key.startswith('launcher') and actual is not None and (
                     old is None or digest(actual) != old['sha256']):
@@ -108,20 +110,23 @@ def prepare(paths, source, revision):
     changes = UpdatePlan(observed)
     for key, value in desired.items():
         current = observed.get(key, read(paths.target(key)))
-        if key not in state['files'] and current[0] is not None:
+        if key not in state['files'] and current[0] is not None and not (key.startswith('launch/') and current == value):
             raise ValueError(f'unmanaged file would be overwritten: {key}')
         observed[key] = current
         if current[0] != value[0] or (os.name != 'nt' and current[1] != value[1]):
             changes[key] = value
     for key in state['files'].keys() - desired.keys():
-        changes[key] = (None, 0o644)
+        if not key.startswith('launch/'):
+            changes[key] = (None, 0o644)
     new_state = dict(state, files=record(desired), revision=revision)
     if new_state != state:
         changes['state'] = (encode(new_state), 0o600)
+    from legacy import plan_legacy
+    plan_legacy(paths, changes)
     return changes
 
 
-def verify(paths):
+def verify(paths, scopes=None):
     """Execute installed public entrypoints, not merely syntax/marker checks."""
     for relative, args in (('updater/cli.py', ['--help']), ('memory/recall.py', ['--help']),
                            ('evidence/cli.py', ['--help'])):
@@ -129,8 +134,9 @@ def verify(paths):
                                 capture_output=True, timeout=20)
         if result.returncode != 0 or b'usage:' not in result.stdout.lower():
             raise ValueError(f'installed command smoke test failed: {relative} (exit {result.returncode})')
-    state = load_state(paths)
-    if 'claude' in state['scopes']:
+    if scopes is None:
+        scopes = load_state(paths)['scopes']
+    if 'claude' in scopes:
         settings_audit(paths)
         env = dict(os.environ, CLAUDE_CONFIG_DIR=str(paths.config))
         env.pop('BASH_ENV', None)

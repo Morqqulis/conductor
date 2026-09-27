@@ -3,6 +3,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 from pathlib import Path, PurePosixPath
 import stat
 import tempfile
@@ -55,15 +56,32 @@ class Paths:
     def target(self, key):
         fixed = {"state": self.runtime / "install-state.json", "language": self.runtime / "reply-language",
                  "settings": self.config / "settings.json", "claude-values": self.config / "CLAUDE.md",
+                 "cursor-settings": self.profile / '.cursor/hooks.json',
+                 "antigravity-settings": self.profile / '.gemini/config/hooks.json',
+                 "lesson-inbox": self.runtime / 'lessons.md',
+                 "gitconfig": self.profile / '.gitconfig',
+                 "gitconfig-xdg": self.profile / '.config/git/config',
                  "codex": self.profile / ".codex/AGENTS.md", "antigravity": self.profile / ".gemini/AGENTS.md",
                  "cursor": self.runtime / "adapters/cursor/conductor-core.mdc",
                  "launcher": self.profile / ".local/bin/conductor",
                  "launcher.cmd": self.profile / ".local/bin/conductor.cmd"}
         if key in fixed:
             return plain(fixed[key])
+        if isinstance(key, str) and re.fullmatch(r'launch/[a-f0-9]{64}\.cmd', key):
+            return plain(self.backups.parent / key)
         if not isinstance(key, str) or "\\" in key or ":" in key:
             raise ValueError("invalid managed path")
         parts = key.split("/")
+        if parts[0] == 'legacy':
+            from legacy import LEGACY_HASHES
+            relative = '/'.join(parts[1:])
+            if relative not in LEGACY_HASHES:
+                raise ValueError('invalid legacy snapshot path')
+            return plain(self.runtime.joinpath(*parts[1:]))
+        if len(parts) > 1 and parts[0] == 'lesson':
+            if any(not p or p in ('.', '..') for p in parts[1:]):
+                raise ValueError('invalid lesson snapshot path')
+            return plain(self.runtime.joinpath('lessons', *parts[1:]))
         if len(parts) < 2 or parts[0] != "runtime" or any(
                 not part or part.startswith(".") for part in parts):
             raise ValueError("invalid managed runtime path")
@@ -101,6 +119,7 @@ class Transaction:
         self.backup = paths.backups / uuid.uuid4().hex
 
     def apply(self, verify):
+        from recovery import begin, finish
         for key, before in self.expected.items():
             if read(self.paths.target(key)) != before:
                 raise ValueError(f"file changed before update: {key}")
@@ -114,6 +133,7 @@ class Transaction:
             raise ValueError('backup exceeds recovery size limit; no files updated')
         plain(self.backup).mkdir(parents=True, mode=0o700)
         write(self.backup / "snapshot.json", encoded, 0o600)
+        journal = begin(self.paths, self.backup, encoded)
         try:
             for key in sorted(self.changes, key=lambda key: (key == "state", key)):
                 if key == "state":
@@ -126,13 +146,16 @@ class Transaction:
                     raise ValueError(f"file changed during update: {key}")
                 data, mode = self.changes[key]
                 write(path, data, mode)
-                if read(path)[0] != data:
+                actual = read(path)
+                if actual[0] != data or (data is not None and os.name != 'nt' and actual[1] != mode):
                     raise ValueError(f"written file verification failed: {key}")
             if "state" not in self.changes:
                 verify()
+            finish(self.paths, journal)
         except (Exception, KeyboardInterrupt) as exc:
             try:
                 rollback(self.paths, self.backup)
+                finish(self.paths, journal)
             except (OSError, ValueError) as rollback_error:
                 raise ValueError(f"update failed ({exc}); rollback conflict: {rollback_error}; backup: {self.backup}") from exc
             raise ValueError(f"update failed ({exc}); restored previous files; backup: {self.backup}") from exc
@@ -140,9 +163,10 @@ class Transaction:
 
 
 def rollback(paths, backup):
+    from recovery import unique_object
     raw, _ = read(plain(backup) / "snapshot.json")
     try:
-        snapshot = json.loads(raw)
+        snapshot = json.loads(raw, object_pairs_hook=unique_object)
         if (snapshot["schema"], snapshot["config"], snapshot["profile"]) != (
                 1, str(paths.config), str(paths.profile)):
             raise ValueError("snapshot belongs to a different installation")
@@ -152,6 +176,10 @@ def rollback(paths, backup):
         for key, entry in snapshot["files"].items():
             path = paths.target(key)
             old = None if entry["before"] is None else base64.b64decode(entry["before"], validate=True)
+            # Immutable dispatch cache may be executing this rollback. Like backups,
+            # it survives removal; its content-addressed path is never reused for new bytes.
+            if key.startswith('launch/') and old is None:
+                continue
             current = read(path)
             mode = entry["mode"]
             if type(mode) is not int or mode < 0 or mode > 0o777:
@@ -169,5 +197,6 @@ def rollback(paths, backup):
         if read(path) != expected:
             raise ValueError(f"rollback conflict: {path}")
         write(path, old, mode)
-        if read(path)[0] != old:
+        actual = read(path)
+        if actual[0] != old or (old is not None and os.name != 'nt' and actual[1] != mode):
             raise ValueError(f"rollback verification failed: {path}")

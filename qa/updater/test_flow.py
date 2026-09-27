@@ -36,7 +36,7 @@ class FlowTests(unittest.TestCase):
         commit = self.git('rev-parse', 'HEAD')
         cli = importlib.import_module('cli')
         fetch = importlib.import_module('source').fetch
-        args = ['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update']
+        args = ['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update', '--skip-companions']
         before = self.paths.target('state').read_bytes()
         with patch.object(cli, 'fetch', side_effect=lambda dst, ref: fetch(dst, ref, remote=str(self.source))):
             with contextlib.redirect_stdout(io.StringIO()) as out:
@@ -73,3 +73,31 @@ class FlowTests(unittest.TestCase):
         result = subprocess.run(argv, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(b'acquired', result.stdout)
+
+    def test_current_conductor_still_syncs_companions_and_check_writes_nothing(self):
+        self.install(['global'])
+        cli = importlib.import_module('cli')
+        self.api.apply_update(self.paths, self.api.prepare(self.paths, self.source, 'a' * 40))
+        args = ['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update']
+        before = {p: p.read_bytes() for p in self.paths.profile.rglob('*') if p.is_file()}
+        with patch.object(cli, 'fetch', return_value={'source': self.source, 'commit': 'a' * 40}), \
+             patch.object(cli, 'sync', create=True, return_value=[]) as sync:
+            self.assertEqual(cli.main(args + ['--check']), 0)
+            self.assertEqual(sync.call_count, 1)
+            self.assertEqual(sync.call_args.args[1], 'check')
+            self.assertEqual({p: p.read_bytes() for p in self.paths.profile.rglob('*') if p.is_file()}, before)
+            sync.reset_mock()
+            self.assertEqual(cli.main(args), 0)
+            self.assertEqual(sync.call_count, 1)
+            self.assertEqual(sync.call_args.args[1], 'update')
+
+    def test_companion_failure_preserves_verified_conductor(self):
+        self.install(['global'])
+        cli = importlib.import_module('cli')
+        result = [dict(tool='graphify', status='FAILED', before='1', after='1', latest='2', detail='fixture failure')]
+        with patch.object(cli, 'fetch', return_value={'source': self.source, 'commit': 'a' * 40}), \
+             patch.object(cli, 'sync', create=True, return_value=result):
+            code = cli.main(['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update'])
+        self.assertEqual(code, 3)
+        self.assertEqual(self.api.load_state(self.paths)['revision'], 'a' * 40)
+        self.api.verify(self.paths)

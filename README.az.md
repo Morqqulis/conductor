@@ -95,48 +95,46 @@ standart seçim `all`-dır. PowerShell-də `-Scope claude/global/all` istifadə 
 `install-global.sh` daxili/uyğunluq addımı kimi qalır, onu ayrıca başlatmaq lazım deyil.
 Cursor qaydasını əvvəlki kimi əl ilə aktivləşdirmək lazımdır; quraşdırıcı yolunu göstərir.
 
-İlk quraşdırma mövcud qlobal qaydaları xəbərdarlıq və ehtiyat nüsxə ilə əvəz edir.
-Əlavə nüsxə `~/.local/state/conductor/installs/<id>/` altında saxlanılır (paylaşmayın).
-Bu, əl ilə bərpa üçündür, `conductor rollback` üçün deyil. Qeydiyyatlı fayllarda şəxsi
-dəyişiklik varsa, təkrar quraşdırma dayanır. Dərslər və layihə yaddaşı əvəz edilmir.
-Adi quraşdırıcı tranzaksiyalı deyil: dayanarsa, çıxışı və nüsxəni yoxlayın;
-onu başqa quraşdırıcı və ya `conductor update` ilə eyni vaxtda işlətməyin.
+İlk quraşdırma mövcud qlobal qayda faylını əvəz etməzdən əvvəl xəbərdarlıq edir və
+`~/.local/state/conductor/updates/<id>/` altında bərpa olunan nüsxə saxlayır.
+Qeydiyyatlı fayllardakı şəxsi dəyişikliklər təkrar quraşdırmanı dayandırır.
+Yad proqramlar və əmrlər əvəz edilmir. Dərslər, layihə yaddaşı və yad parametrlər qorunur.
 
-### İstənilən qovluqdan yeniləmə
+### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 
-Quraşdırıcı əmri `~/.local/bin` qovluğuna yerləşdirir (Windows-da həmçinin
-`conductor.cmd`). Əmr tapılmırsa, bu qovluğu PATH-a əlavə edin və ya tam yolu istifadə edin.
-Köhnə quraşdırma üçün vahid quraşdırıcını bir dəfə başladın; sonra:
+Qlobal əmr `~/.local/bin` daxilindədir (Windows: `conductor.cmd`).
+Lazımdırsa, bu qovluğu PATH-a əlavə edin. Köhnə quraşdırma üçün quraşdırıcını bir dəfə başladın.
 
 ```bash
+conductor install --language Azerbaijani
 conductor status
 conductor update --check
 conductor update
+conductor uninstall --dry-run
+conductor uninstall
 ```
 
-Python 3.10+, Git və Bash lazımdır. Yeniləmə rəsmi `main` budağını ayrıca müvəqqəti qovluğa
-yükləyir, iş repozitoriyanızı dəyişmir. `--ref vX.Y.Z` və ya tam commit identifikatoru konkret
-versiyanı seçir; bu CLI-dən əvvəlki versiyalar adi quraşdırıcı tələb edir. `--check` yükləyir
-və müqayisə edir, amma quraşdırılmış Conductor fayllarını dəyişmir.
+Bütün əmrlər cari layihənin qaydalarına deyil, istifadəçi profilinə təsir edir.
+Python 3.10+, Git və Bash lazımdır. Mənbə rəsmi repozitoridən müvəqqəti qovluğa yüklənir;
+`--ref vX.Y.Z` və ya tam commit versiyanı seçir. Saxlanmış dil dəyişmir.
+Cursor-un hazırlanmış qaydası yenə əl ilə aktivləşdirilməlidir.
 
-Yalnız qeydiyyata alınmış komponentlər yenilənir. Saxlanmış dil, dərslər, şəxsi Git,
-layihə qaydaları və digər alətlərin parametrləri əvəz edilmir. İdarə olunan faylı əl ilə
-dəyişmisinizsə, yeniləmə dayanır və həmin faylı göstərir: əvvəlcə dəyişikliklərinizi saxlayın
-və fərqi araşdırın. Məcburi üzərinə yazma yoxdur. Əlavə alətlər yenilənmir; dəyişmiş Cursor
-qaydasının hazırlanmış mətnini əvvəlki kimi əl ilə yerləşdirmək lazımdır.
+Quraşdırma, yeniləmə, silinmə və geri qaytarma vahid kilid və bərpa mexanizmindən istifadə
+edir. Fayllar yazmadan əvvəl və sonra yoxlanır; versiya icra yoxlamalarından sonra yazılır.
+Xəta öz dəyişikliklərini geri qaytarır. Qəfil dayanma sonrası növbəti dəyişdirən əmr əvvəlcə
+bərpa edir; status yarımçıq əməliyyatı göstərir. Quraşdırılmış CLI özü zədələnibsə, yüklənmiş
+quraşdırıcını təkrar başladın. Sonrakı şəxsi dəyişikliklər silinmir, bərpanı dayandırır.
+`update --check` quraşdırılmış məlumatları dəyişmir və bərpa etmir.
 
-Yazmadan əvvəl `~/.local/state/conductor/updates/` daxilində ehtiyat nüsxə yaradılır.
-Yoxlama uğursuz olarsa, əvvəlki fayllar bərpa olunur; qəfil dayanma sonrası
-`conductor rollback --backup "GÖSTƏRİLƏN_NÜSXƏ_YOLU"` işlədin. Sonrakı şəxsi dəyişikliklər
-silinmir, geri qaytarmanı dayandırır. Nüsxələr əvvəlki qaydaları saxlayır və şəxsi ola bilər;
-onları paylaşmayın. Conductor silinəndə də avtomatik silinmirlər. Yeniləmə bütün faylların
-vahid atomik əvəzlənməsi deyil: adi quraşdırıcını eyni vaxtda işlətməyin və sonda agent
-sessiyalarını yenidən başladın. Paralel update/rollback əmrləri bloklanır.
+Nüsxələr şəxsi məlumatdır və silinmədən sonra qalır. Açıq geri qaytarma:
+`conductor rollback --backup "GÖSTƏRİLƏN_NÜSXƏ_YOLU"`; silinmədən sonra tam mənbə
+nüsxəsindən silənin göstərdiyi Python əmrini işlədin. Windows CLI silinərkən çıxış kodunu
+qorumaq üçün nüsxələrin yanında kiçik, məzmununa görə adlandırılmış işəsalma fayllarını saxlayır.
+Bütün fayllar eyni anda əvəz edilmir; dəyişiklikdən sonra agent sessiyalarını yenidən başladın.
 
 ### Birlikdə quraşdırılan alətlər
 
-Quraşdırmanın [4/5] addımı — ayrıca kök skripti `install-companions.sh` — standart olaraq
-üç alət qoyur:
+Conductor quraşdırılması yoxlandıqdan sonra üç alət qoşulur:
 
 - [superpowers](https://github.com/obra/superpowers) — iş prosesi bacarıqları olan Claude
   Code plagini. Rəsmi plagin marketplace-indən quraşdırılır
@@ -151,20 +149,35 @@ Quraşdırmanın [4/5] addımı — ayrıca kök skripti `install-companions.sh`
 - [graphify](https://github.com/Graphify-Labs/graphify) — kod bazası üzrə bilik qrafı
   quran alət. PyPI-dakı `graphifyy` paketi mövcud `uv` və ya Python `venv` vasitəsilə ayrıca
   mühitə quraşdırılır; sistemin pip mühiti dəyişmir. Sonra Claude bacarığı qoşulur.
-  Codex üçün quraşdırıcı bacarığı qoşan ayrıca əmri göstərir.
+  Digər mühitlərdə bacarığın aktivləşdirilməsi ayrıca aparılır.
 
 Bayraqlar: `--skip-companions` bütün addımı atlayır (CI-nin izolyasiya olunmuş
 smoke-testi məhz belə edir); `--no-superpowers` yalnız plagindən imtina edir;
 `--keep-superpowers` uyğunluq üçün qəbul edilir və heç nə etmir — plagin onsuz da
 quraşdırılır.
 
-Mövcud işlək alətlər yenilənmədən istifadə olunur. Yeni fayllar Conductor runtime-dan
-kənarda saxlanır və `uninstall.sh` onları silmir. Köməkçi alətin xətası Conductor-un öz
-quraşdırılmasını dayandırmır: hər nəticədə səbəbi ilə `OK`, `SKIP`, `FAIL` və ya `INCOMPLETE`
-göstərilir. Sonuncu, məsələn, proqramın yükləndiyini, amma bağlantının hazır olmadığını
-bildirir. Əmr qovluğu PATH-da yoxdursa, dəqiq yol və lazım olan dəyişiklik göstərilir;
-shell profili avtomatik dəyişdirilmir. PATH düzəlişindən sonra terminalı və agenti yenidən
-başladın. Natamam mühit diaqnostika üçün saxlanır, təkrar cəhddə üzərinə yazılmır.
+Quraşdırma və təkrar quraşdırma RTK/Graphify-nin son sabit versiyalarını yoxlayır:
+olmayan alətlər quraşdırılır, Conductor-un idarə etdiyi nüsxələr yenilənir.
+`conductor update` Conductor özü aktual olsa da, yalnız mövcud alətləri yeniləyir.
+`--check` yalnız versiyaları göstərir; `--skip-companions` bu addımı açıq şəkildə ötürür.
+Superpowers avtomatik yenilənmir. Graphify layihə xəritələri yenidən qurulmur.
+
+uv ilə quraşdırılmış Graphify və Cargo ilə quraşdırılmış rəsmi RTK tanındıqda ayrıca,
+Conductor-un idarə etdiyi nüsxələrə keçilir. Köhnə proqramlar və menecer məlumatları dəyişmir.
+Yeni əmrlər `~/.local/share/conductor-companions/bin` qovluğunda saxlanır və PATH-da köhnə
+nüsxələrdən əvvəl gəlir. Sonrakı yeniləmələr yalnız idarə olunan nüsxəni dəyişir.
+Naməlum mənşə və ya şəxsi dəyişikliklər olan bağlantı faylları `FAILED` verir və qorunur.
+Bu fayllar runtime-dan kənardadır və Conductor silinəndə qalır.
+Xarici uv quraşdırmasının qeydini oxumaq üçün Python 3.11+ lazımdır.
+
+Hər alət öz nəticəsini və səbəbini göstərir. Çıxış `0` tələb olunan işin hazır olması,
+`1` Conductor xətası, `2` yanlış arqumentlər, `3` Conductor hazır olsa da əlavə alətlərin
+hazır olmaması, `130` isə kəsilmə deməkdir. Açıq ötürmə xəta sayılmır.
+PATH problemi olduqda lazım olan yol göstərilir. Windows istifadəçi PATH-ını saxlayır;
+Linux/Bash digər məzmunu qoruyaraq shell başlanğıc fayllarına kiçik işarələnmiş blok əlavə edir.
+Ehtiyat nüsxə yaradılır; geri qaytarma sonrakı şəxsi dəyişiklikləri əvəz etmir. Yeni PATH üçün
+yeni terminal açın və tətbiqləri yenidən başladın. Digər shell-lər ayrıca yoxlanmalıdır.
+RTK və Graphify bacarığının bağlantısı izolyasiyada hazırlanır və yad parametrlər qorunur.
 
 Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyalanacaq):
 
@@ -173,8 +186,7 @@ bash install-project.sh --repo "/d/layihə/yolu"
 ```
 
 Quraşdırmadan sonra Cursor və Antigravity-ni yenidən başladın (hook konfiqurasiyaları
-startda oxunur). Hər quraşdırıcı təkrar işə salınanda təhlükəsizdir və dəyişdirdiyi
-hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
+startda oxunur). Qlobal əməliyyatlar nüsxələri saxlayır; ziddiyyət təkrar quraşdırmanı dayandırır.
 
 ## Graphify xəritəsinin təhlükəsiz yenilənməsi
 
@@ -283,8 +295,9 @@ salınanda menyu göstərir və əvvəlki seçim artıq standart cavab kimi tək
 Enter basmaq kifayətdir, bayraqlara ehtiyac yoxdur. Dili istənilən istiqamətdə (rus
 dilinə geri qayıtmaq daxil) dəyişmək üçün quraşdırıcını yenidən işə salıb menyudan
 seçin. Seçim `~/.claude/conductor/reply-language` faylında saxlanılır, ona görə
-təkrar işə salınmalar heç nəyi sıfırlamır. Claude Code-u hər iki quraşdırıcı
-yeniləyir, Cursor, Antigravity və Codex qaydalarını `install-global.sh` yığır;
+təkrar işə salınmalar heç nəyi sıfırlamır. `install.sh` standart olaraq bütün qlobal
+mühitləri yeniləyir; `install-global.sh` əvvəlki komponentləri saxlayaraq qlobal
+adapterləri seçir;
 layihə adapterləri (`install-project.sh`) yadda saxlanmış seçimi səssiz tətbiq edir.
 Skriptlər və qeyri-interaktiv işə salınmalar üçün `--language <ad>` var — sualı ötürür.
 
@@ -328,28 +341,39 @@ başqa dildə terminlər əlavə `--query` ilə verilir. Yenilik yalnız uyğunl
 limitin aşılması uğurlu boş nəticə deyil, `PARTIAL` verir. Python yoxdursa, fayllarda birbaşa
 axtarış edilir. Yaddaş dəyişmir; yeni baza, xidmət və miqrasiya tələb olunmur.
 Dərslərə qulluq qaydaları dəyişməyib; axtarışı hər mesajda təkrarlamaq lazım deyil.
-Silməzdən əvvəl tam ehtiyat nüsxə yaradın: `--keep-lessons` dərsləri saxlayır,
-bütün şəxsi repozitorini, tarixçəni, skripti və layihə nüsxələrini deyil.
+Silmə şəxsi yaddaşı və naməlum faylları standart olaraq saxlayır. Bu, kompüter nasazlığına
+qarşı şəxsi repozitorinin ayrıca ehtiyat nüsxəsini əvəz etmir.
 
 ## Silinmə
 
-Bir əmrlə, əvvəlcədən baxışla:
+Quraşdırılmış CLI mənbə qovluğu tələb etmir:
 
 ```bash
-# əvvəlcə nəyin silinəcəyinə baxın (heç nəyi dəyişmir)
-bash uninstall.sh --dry-run --keep-lessons --sweep-roots "/d/projects,/d/top"
-
-# sonra həqiqətən silin
-bash uninstall.sh --keep-lessons --sweep-roots "/d/projects,/d/top"
+conductor uninstall --dry-run
+conductor uninstall
+# Bərpa olunan nüsxəni saxlayaraq dərsləri də açıq şəkildə silmək:
+conductor uninstall --remove-lessons
 ```
 
-`--keep-lessons` yaddaşın hər iki hissəsini — gələnlər jurnalını və təsnif edilmiş
-dərslər anbarını — İş masasına saxlayır; `--sweep-roots` göstərilən köklər
-altındakı repozitorilərdən köhnə versiyaların adapterlərini və git-kilidlərini təmizləyir.
-Dəyişdirilən hər konfiq ehtiyata alınır; yad hook-lar və qeydlər qorunur (özümüzünkülər
-sentinellərlə tanınır); qlobal `CLAUDE.md` heç vaxt silinmir. Təkrar işə salmaq
-təhlükəsizdir. Hissə-hissə əl ilə geri qaytarma: hər konfiqin yanında
-`*.bak-<vaxt möhürü>` nüsxələri var.
+Mənbədən `bash uninstall.sh` eyni mexanizmi istifadə edir.
+Dərslər standart olaraq əvvəlki yerində qalır; `--keep-lessons` bu rejimlə uyğundur.
+Şəxsi `CLAUDE.md`, yoxlama nəticələri, RTK, Graphify, Superpowers və layihə qaydaları qalır.
+Dəyişmiş idarə olunan fayl və ya manifesti olmayan naməlum quraşdırma silinmədən imtinaya
+səbəb olur. Nüsxələr `~/.local/state/conductor/updates/` daxilindədir.
+Silinmədən sonra `conductor` mövcud deyil: tam mənbə nüsxəsindən göstərilən bərpa əmrini
+istifadə edin. Köhnə ehtiyat nüsxələr avtomatik silinmir.
+
+Könüllü `bash uninstall.sh --sweep-roots "/d/projects,/d/top"` yalnız açıq göstərilən
+layihələri də təmizləyir; əvvəlcə `--dry-run` ilə baxın.
+
+Layihə faylları yalnız adına görə silinmir: tam məzmun məlum Conductor versiyasına
+uyğun olmalıdır (seçilmiş dil nəzərə alınır). Yad, dəyişdirilmiş və ya naməlum məzmun,
+keçidlər və qarışıq qovluqlar saxlanır, təmizləmə imtina bildirir. Məlum layihə
+faylları dəyişdirilməzdən əvvəl layihənin `.conductor-project-backups/` qovluğunda
+ehtiyat nüsxə yaradılır. Nüsxələrdə şəxsi parametrlər ola bilər; onları Git-ə əlavə etməyin.
+`install-project.sh --dry-run --repo <yol>` yazmadan planı göstərir.
+Silinmə vahid tranzaksiya deyil: layihədəki imtina artıq yerinə yetirilmiş qlobal
+addımları geri qaytarmır. Bu, qlobal tranzaksiyadan kənar ayrıca əməliyyatdır.
 
 ## Repozitorinin strukturu
 

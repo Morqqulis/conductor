@@ -1,263 +1,50 @@
 #!/usr/bin/env bash
-# One global Conductor installer: Claude Code, Codex, Antigravity and Cursor rule.
-#
-# Deploys the runtime tree, registers the four hooks in settings.json, installs the
-# global CLAUDE.md, installs the companion tools (superpowers, rtk, graphify), and proves
-# the result by running the session hook exactly the way the harness runs it. Safe to
-# re-run; every file it changes is backed up first.
-#
-#   ./install.sh                      full install (terminal menu picks the reply language;
-#                                     the previous choice is the default - just press Enter)
-#   ./install.sh --language English   set the reply language without the prompt (scripts)
-#   ./install.sh --skip-global-md     leave ~/.claude/CLAUDE.md alone
-#   ./install.sh --skip-companions    install nothing but Conductor itself
-#   ./install.sh --no-superpowers     install rtk and graphify, but not the superpowers plugin
-#   ./install.sh --scope claude      only Claude Code (default: all)
-#   ./install.sh --scope global      only Codex/Antigravity/Cursor adapters
+# Install Conductor GLOBALLY: Claude Code, Codex, Antigravity and Cursor rule.
+# One verified transaction preserves personal memory, settings and the chosen language.
+#   ./install.sh --language Russian   explicit language (otherwise prompt/saved choice)
+#   ./install.sh --skip-global-md     preserve personal CLAUDE.md
+#   ./install.sh --skip-companions    Conductor only
+#   ./install.sh --no-superpowers     skip the Superpowers plugin
+#   ./install.sh --scope all|claude|global   default: all
 set -euo pipefail
-
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# A bare environment may lack HOME; default it before set -u trips on the next line.
-HOME="${HOME:-${USERPROFILE:-}}"
-CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
-SETTINGS="$CLAUDE_HOME/settings.json"
-STAMP="$(date +%Y%m%d-%H%M%S)"
-SKIP_GLOBAL_MD=0
-SKIP_COMPANIONS=0
-NO_SUPERPOWERS=0
+PROFILE="${HOME:-${USERPROFILE:-}}"
+[ -n "$PROFILE" ] || { echo 'Install FAILED: no user profile' >&2; exit 1; }
+CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$PROFILE/.claude}"
 LANGUAGE=''
 LANGUAGE_SET=0
-SCOPE=all
-
+ARGS=()
 while [ $# -gt 0 ]; do
     case "$1" in
-        --language)         [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }
-                            LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
-        --language=*)       LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
-        --skip-global-md)   SKIP_GLOBAL_MD=1; shift ;;
-        --skip-companions)  SKIP_COMPANIONS=1; shift ;;
-        --no-superpowers)   NO_SUPERPOWERS=1; shift ;;
-        --scope)            [ $# -ge 2 ] || { echo '--scope needs all, claude or global' >&2; exit 2; }
-                            SCOPE="$2"; shift 2 ;;
-        --keep-superpowers) echo 'NOTE: --keep-superpowers is deprecated - superpowers is now installed by default; use --no-superpowers to opt out' >&2
-                            shift ;;
-        -h|--help)          sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
+        --language) [ $# -ge 2 ] || exit 2; LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
+        --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
+        --scope) [ $# -ge 2 ] || exit 2; ARGS+=(--scope "$2"); shift 2 ;;
+        --skip-global-md|--skip-companions|--no-superpowers) ARGS+=("$1"); shift ;;
+        --keep-superpowers) echo 'NOTE: --keep-superpowers is deprecated; Superpowers is enabled by default' >&2; shift ;;
+        -h|--help) sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
-case "$SCOPE" in all|claude|global) : ;; *) echo 'invalid --scope: use all, claude or global' >&2; exit 2 ;; esac
-
-die() { printf '\nInstall FAILED: %s\n' "$1" >&2; exit 1; }
-
-# Path form for arguments handed to a NATIVE program (python on Windows is native, this
-# shell is not). Converting here, once, keeps the installed paths a decision rather than a
-# side effect of MSYS argument rewriting. Off Windows there is no cygpath and the path is
-# already correct.
-winpath() {
-    if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
-}
-
-# shellcheck source=tools/reply-language.sh
+winpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
 . "$REPO/tools/reply-language.sh"
-# shellcheck source=tools/install-cli.sh
-. "$REPO/tools/install-cli.sh"
-
-# A bad --language value fails BEFORE any file is touched, like every other argument
-# error - including an explicitly empty one (--language= or --language ''), which must
-# never silently fall back to the saved choice or default.
 if [ "$LANGUAGE_SET" -eq 1 ]; then
     LANGUAGE="$(normalize_reply_language "$LANGUAGE")"
     validate_reply_language "$LANGUAGE" || exit 2
+else
+    saved="$(saved_reply_language "$CLAUDE_HOME")"
+    LANGUAGE="$(normalize_reply_language "$(prompt_reply_language "${saved:-Russian}")")"
+    validate_reply_language "$LANGUAGE" || exit 2
 fi
-
-echo '=== Conductor installer (bash) ==='
-
-# --- 0. Preflight ---------------------------------------------------------------------
-[ -f "$REPO/runtime/core.md" ] || die "run this from the conductor repo root (runtime/core.md not found next to install.sh)"
 PYTHON=''
 for candidate in "${CONDUCTOR_PYTHON:-}" python3 python; do
     [ -n "$candidate" ] || continue
-    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import json,sys; sys.exit(sys.version_info < (3, 10))' >/dev/null 2>&1; then
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys; sys.exit(sys.version_info < (3,10))' >/dev/null 2>&1; then
         PYTHON="$candidate"; break
     fi
 done
-[ -n "$PYTHON" ] || die "python3 is required to edit settings.json safely (it holds your model, plugins and other tools' hooks). Install Python, or add the hook entries by hand - see tools/settings-json.py."
-"$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 10))' || die 'Python 3.10+ is required'
-command -v git >/dev/null 2>&1 || die 'Git is required (on Windows, install Git for Windows with Git Bash)'
-canonical_config_home || die 'could not resolve the configuration directory'
-CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
-SETTINGS="$CLAUDE_HOME/settings.json"
-preflight_args=(--scope "$SCOPE")
-[ "$SKIP_GLOBAL_MD" -eq 0 ] || preflight_args+=(--skip-global-md)
-PYTHONIOENCODING=utf-8 "$PYTHON" -B "$(winpath "$REPO/tools/install-preflight.py")" \
-    --config "$(winpath "$CLAUDE_HOME")" --profile "$(winpath "$HOME")" \
-    "${preflight_args[@]}" || die 'preflight refused; installed files unchanged'
-if [ "$SCOPE" != claude ]; then
-    [ -f "$REPO/install-global.sh" ] || die 'global adapter installer is missing'
-fi
-
-install_adapters() {
-    local args=()
-    [ -z "$LANGUAGE" ] || args+=(--language "$LANGUAGE")
-    # The Claude stage already handled values; never overwrite its ORIGINAL backup.
-    if [ "$SCOPE" = all ] || [ "$SKIP_GLOBAL_MD" -eq 1 ]; then args+=(--skip-global-md); fi
-    bash "$REPO/install-global.sh" "${args[@]}"
-}
-
-install_companions() {
-    if [ "$SKIP_COMPANIONS" -eq 1 ]; then
-        echo '[4/5] companion tools skipped (--skip-companions)'
-    elif [ ! -f "$REPO/install-companions.sh" ]; then
-        echo '[4/5] WARNING: install-companions.sh missing - companion tools not installed'
-    elif [ "$NO_SUPERPOWERS" -eq 1 ]; then
-        bash "$REPO/install-companions.sh" --no-superpowers
-    else
-        bash "$REPO/install-companions.sh"
-    fi
-}
-
-if [ "$SCOPE" = global ]; then
-    install_adapters
-    install_companions
-    echo 'Global adapter installation complete; see individual companion results above.'
-    exit 0
-fi
-
-# --- 1. Runtime tree ------------------------------------------------------------------
-mkdir -p "$CONDUCTOR_DIR"
-cp -R "$REPO/runtime/." "$CONDUCTOR_DIR/"
-mkdir -p "$CONDUCTOR_DIR/memory"
-cp "$REPO/tools/migrate-lessons.sh" "$CONDUCTOR_DIR/memory/migrate-lessons.sh"
-chmod +x "$CONDUCTOR_DIR"/hooks/*.sh 2>/dev/null || true
-
-# core.md ships with a placeholder module base and is RENDERED here: a literal machine
-# path baked into the repo pointed every OTHER machine's playbook loads at a directory
-# that does not exist - silently. (Found by the A/B bench: agents disclosed the failed
-# loads mid-run.)
-CORE_BASE="$(winpath "$CONDUCTOR_DIR")"
-sed -i "s|__CONDUCTOR_DIR__|$CORE_BASE|g" "$CONDUCTOR_DIR/core.md"
-
-# Artifacts of retired mechanisms are removed from the LIVE tree, not just stopped being
-# shipped: the marker commit gate (v1.12) and the PowerShell hook layer both leave files
-# that keep being executed by configs written before this install.
-STALE=(
-    'hooks/pre-commit-gate.ps1' 'git-hooks' 'git-template'
-    'adapters/cursor/gate.ps1' 'adapters/antigravity/gate.ps1'
-    'hooks/session-start.ps1' 'hooks/lessons-inject.ps1'
-    'hooks/subagent-start.ps1' 'hooks/user-prompt.ps1'
-)
-stale_removed=0
-for rel in "${STALE[@]}"; do
-    if [ -e "$CONDUCTOR_DIR/$rel" ]; then
-        rm -rf "$CONDUCTOR_DIR/${rel:?}"
-        stale_removed=$((stale_removed + 1))
-    fi
-done
-echo "[1/5] runtime tree -> $CONDUCTOR_DIR (retired artifacts removed: $stale_removed)"
-echo "      optional verification evidence -> $(winpath "$CONDUCTOR_DIR/evidence/cli.py")"
-
-# --- 2. Hooks in settings.json --------------------------------------------------------
-# The command strings are invoked through bash: on Windows, Claude Code runs hook commands
-# through bash regardless of how they were written, which is what made the old backslash
-# paths arrive mangled ('C:\Users\...' became 'C:Users...') and the whole discipline layer
-# fail silently.
-#
-# cygpath -m produces the mixed form (C:/Users/...) that both bash and native callers
-# accept, so the command written into settings.json is the one we chose.
-HOOK_BASE="$(winpath "$CONDUCTOR_DIR")"
-SETTINGS_ARG="$(winpath "$SETTINGS")"
-SCRIPT_ARG="$(winpath "$REPO/tools/settings-json.py")"
-settings_backup_note=''
-if [ -f "$SETTINGS" ]; then
-    cp "$SETTINGS" "$SETTINGS.bak-$STAMP"
-    settings_backup_note=" (backup: settings.json.bak-$STAMP)"
-fi
-"$PYTHON" "$SCRIPT_ARG" install-hooks \
-    --file "$SETTINGS_ARG" --conductor-dir "$HOOK_BASE" --shell bash >/dev/null
-echo "[2/5] hooks registered in settings.json$settings_backup_note"
-
-# --- 3. Global CLAUDE.md --------------------------------------------------------------
-# The corpus is English by design and the reply language is ONE substituted token: a model
-# tends to reason in the language its instructions are written in, so the old Russian corpus
-# pulled the visible reasoning into Russian regardless of the chosen reply language.
-# The menu shows on EVERY run with the saved choice as its default (Enter keeps it; a piped
-# or otherwise non-interactive run keeps it too), so no flag is ever needed interactively
-# and a re-run never reverts the choice. --language skips the prompt for scripts.
-if [ "$SKIP_GLOBAL_MD" -eq 1 ]; then
-    # --skip-global-md leaves the FILE alone, but an explicit --language is still the
-    # user's machine-wide choice: silently discarding it would recreate the very
-    # silent-revert bug this flag pair fixed.
-    if [ -n "$LANGUAGE" ]; then
-        save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
-        echo "[3/5] global CLAUDE.md skipped (flag); reply language saved for later runs: $LANGUAGE"
-    else
-        echo '[3/5] global CLAUDE.md skipped (flag)'
-    fi
-else
-    if [ -z "$LANGUAGE" ]; then
-        saved="$(saved_reply_language "$CLAUDE_HOME")"
-        if [ -n "$saved" ] && ! validate_reply_language "$saved" 2>/dev/null; then
-            echo "      NOTE: ignoring invalid saved reply language in $(reply_language_file "$CLAUDE_HOME")" >&2
-            saved=''
-        fi
-        LANGUAGE="$(normalize_reply_language "$(prompt_reply_language "${saved:-Russian}")")"
-        validate_reply_language "$LANGUAGE" || die "unusable reply language"
-    fi
-    GLOBAL_MD="$CLAUDE_HOME/CLAUDE.md"
-    backup_note=''
-    if [ -f "$GLOBAL_MD" ]; then
-        cp "$GLOBAL_MD" "$GLOBAL_MD.bak-$STAMP"
-        backup_note=" (backup: CLAUDE.md.bak-$STAMP)"
-    fi
-    apply_reply_language "$LANGUAGE" "$REPO/deploy/global-CLAUDE.md" > "$GLOBAL_MD"
-    save_reply_language "$CLAUDE_HOME" "$LANGUAGE"
-    echo "[3/5] global CLAUDE.md installed, reply language: $LANGUAGE$backup_note"
-    # The file imports @RTK.md. A missing target is not an error - the rtk rule is written
-    # to sleep when rtk is absent - but a silent dangling import is worth one line.
-    if [ ! -f "$CLAUDE_HOME/RTK.md" ]; then
-        echo "        NOTE: ~/.claude/RTK.md not found - the '@RTK.md' import in CLAUDE.md will resolve to nothing until you add it."
-    fi
-fi
-
-# --- 4. Companion tools ----------------------------------------------------------------
-# Installing Conductor now installs the three tools it expects to work alongside. They are
-# user-level tools, not part of the runtime tree: the companion script reports one outcome
-# line per tool and always exits 0, so an unreachable third-party install can never fail an
-# install that has already deployed the runtime. uninstall.sh leaves all three in place.
-install_companions
-
-# --- 5. Smoke test: run the hook the way the harness will -----------------------------
-# Verifying the registered command string, not just the file, is deliberate: the failure
-# this catches is a hook that exists and works when run by hand while the harness invokes
-# a path that does not resolve.
-HOOK_CMD="$(
-    PYTHONIOENCODING=utf-8 "$PYTHON" - "$SETTINGS_ARG" <<'PY'
-import json, sys
-data = json.load(open(sys.argv[1], encoding="utf-8"))
-for entry in data.get("hooks", {}).get("SessionStart", []):
-    for hook in entry.get("hooks", []):
-        if "session-start.sh" in hook.get("command", ""):
-            print(hook["command"]); raise SystemExit(0)
-raise SystemExit("session-start hook not found in settings.json")
-PY
-)" || die "could not read back the registered hook command"
-
-OUT="$(eval "$HOOK_CMD")" || die "the registered SessionStart hook exited non-zero"
-OUT_BYTES="$(printf '%s' "$OUT" | wc -c | tr -d '[:space:]')"
-case "$OUT" in
-    *CONDUCTOR-CORE-v1-7f3a*) echo "[5/5] smoke test PASS (payload $OUT_BYTES bytes, limit 10000)" ;;
-    *) die "smoke test - the hook ran but its payload carries no core sentinel" ;;
-esac
-
-cli_scopes=(claude)
-[ "$SKIP_GLOBAL_MD" -eq 1 ] || cli_scopes+=(values)
-install_update_cli "${cli_scopes[@]}" || die 'could not register the update command'
-if [ "$SCOPE" = all ]; then
-    # --skip-global-md can leave LANGUAGE empty; carry the saved/default choice once.
-    if [ -z "$LANGUAGE" ]; then LANGUAGE="$(saved_reply_language "$CLAUDE_HOME")"; fi
-    install_adapters
-fi
-
-echo
-echo 'Conductor installed. Restart agent sessions; see individual companion results above.'
+[ -n "$PYTHON" ] || { echo 'Install FAILED: Python 3.10+ is required' >&2; exit 1; }
+command -v git >/dev/null 2>&1 || { echo 'Install FAILED: Git is required' >&2; exit 1; }
+if [ -n "${CONDUCTOR_SOURCE_REVISION:-}" ]; then ARGS+=(--revision "$CONDUCTOR_SOURCE_REVISION"); fi
+exec env PYTHONIOENCODING=utf-8 "$PYTHON" -B "$(winpath "$REPO/runtime/updater/cli.py")" \
+    --config "$(winpath "$CLAUDE_HOME")" --profile "$(winpath "$PROFILE")" \
+    install --source "$(winpath "$REPO")" --language "$LANGUAGE" "${ARGS[@]}"

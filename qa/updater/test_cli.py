@@ -96,7 +96,7 @@ class CliTests(unittest.TestCase):
         self.install('install-global.sh')
         launcher = self.home / '.local/bin/conductor'
         launcher.write_bytes(b'personal replacement')
-        self.run_command(['bash', ROOT / 'uninstall.sh', '--keep-lessons'])
+        self.run_command(['bash', ROOT / 'uninstall.sh', '--keep-lessons'], code=1)
         self.assertEqual(launcher.read_bytes(), b'personal replacement')
 
     @unittest.skipUnless(os.name == 'nt', 'Windows short-path aliases')

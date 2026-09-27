@@ -96,48 +96,46 @@ the default is `all`. PowerShell uses `-Scope claude/global/all`.
 `install-global.sh` remains an internal/compatibility stage, not a second required command.
 Cursor still requires manually activating its prepared rule; the installer prints its path.
 
-First installation replaces existing global rules with warnings and backups. An additional
-snapshot is saved under `~/.local/state/conductor/installs/<id>/` (keep it private).
-This is a manual-recovery copy, not input to `conductor rollback`. Reinstallation refuses
-manual changes to registered files. Lessons and project memory are not replaced.
-The regular installer is not transactional: after interruption inspect the output and
-snapshot; do not run it concurrently with another installer or `conductor update`.
+First installation warns before replacing an existing global rules file and saves a
+recoverable snapshot in `~/.local/state/conductor/updates/<id>/`. Reinstallation refuses
+manual changes to registered files. Unknown program files and commands are not overwritten.
+Lessons, project memory and foreign settings are preserved.
 
-### Update from any directory
+### Install, update and remove from any directory
 
-The installer delivers the command to `~/.local/bin` (also `conductor.cmd` on Windows).
-If it is not found, add that directory to PATH or use the full path. For an older installation,
-run the unified installer once; afterwards:
+The global command lives in `~/.local/bin` (`conductor.cmd` on Windows).
+Add that directory to PATH if needed. Older installations need one run of the installer.
 
 ```bash
+conductor install --language English
 conductor status
 conductor update --check
 conductor update
+conductor uninstall --dry-run
+conductor uninstall
 ```
 
-Requires Python 3.10+, Git and Bash. Updates fetch the official `main` into a separate temporary
-directory without changing your working repository. `--ref vX.Y.Z` or a full commit ID selects
-a particular version; releases predating this CLI require the regular installer.
-`--check` downloads and compares without changing installed Conductor files.
+All these commands act on the user profile, never the current project's rules.
+Python 3.10+, Git and Bash are required. Source comes from the official repository into a
+temporary directory; `--ref vX.Y.Z` or a full commit selects a version. The saved language
+is kept. Cursor's prepared rule still requires manual activation.
 
-Only registered components are updated. The saved language, lessons, private Git repository,
-project rules and other tools' settings are not replaced. A manually edited managed file
-stops the update and is named: preserve your edits and resolve the difference first.
-There is no force-overwrite option. Companions are not upgraded; an updated prepared Cursor
-rule still needs to be pasted manually.
+Install, update, uninstall and rollback share a process lock and recovery mechanism.
+Files are checked before and after writing; the revision is recorded after executable
+verification. A failed operation restores its own changes. After a crash, the next
+mutating command recovers first; status reports the unfinished operation. If the installed
+CLI itself is incomplete, rerun the downloaded installer. Later personal edits stop recovery
+instead of being overwritten. `update --check` never repairs or changes installed data.
 
-A backup is created before writing in `~/.local/state/conductor/updates/`. Failed checks
-restore prior files; after a crash use `conductor rollback --backup "PRINTED_BACKUP_PATH"`.
-Later user edits block rollback instead of being erased. Backups contain prior rules and
-may be private: do not publish them. They are not automatically deleted, including on
-uninstall. The update is not one atomic replacement of every file: do not run the regular
-installer concurrently, and restart agent sessions afterwards. Concurrent update/rollback
-commands are locked out.
+Snapshots are private and retained after uninstall. Explicit recovery uses
+`conductor rollback --backup "PRINTED_BACKUP_PATH"`; after uninstall, use the Python
+command printed by the uninstaller from a complete source copy. Windows retains small
+content-addressed dispatch files beside backups so removing the CLI preserves its exit code.
+The whole set of files is not replaced atomically; restart agent sessions after changes.
 
 ### Companion tools
 
-Step [4/5] of the install — a separate root script, `install-companions.sh` — installs
-three tools by default:
+After Conductor installation is verified, three tools are connected:
 
 - [superpowers](https://github.com/obra/superpowers) — a Claude Code plugin with workflow
   skills. Installed from the official plugin marketplace
@@ -152,19 +150,34 @@ three tools by default:
 - [graphify](https://github.com/Graphify-Labs/graphify) — a tool that builds a knowledge
   graph of a codebase. PyPI's `graphifyy` package is installed into an isolated environment
   using existing `uv` or Python `venv`; system pip is untouched. The Claude skill is then
-  connected. The installer prints a separate skill installation command for Codex.
+  connected. Skill activation in other environments is separate.
 
 Flags: `--skip-companions` skips the whole step (this is what the CI sandbox does in its
 smoke test); `--no-superpowers` opts out of the plugin only; `--keep-superpowers` is
 accepted for compatibility and does nothing — the plugin is installed anyway now.
 
-Existing working tools are reused without upgrading. New files live outside the Conductor
-runtime and survive `uninstall.sh`. A companion failure does not abort Conductor itself:
-each result says `OK`, `SKIP`, `FAIL` or `INCOMPLETE` with a reason. The latter can mean a
-download succeeded but wiring is not ready. If a command directory is missing from PATH,
-the exact location and required setting are printed; shell profiles are not rewritten.
-Restart the terminal and agent after configuring PATH. Partial environments remain for
-diagnosis and are not overwritten on retry.
+Install and reinstall check the latest stable RTK/Graphify releases: missing tools are
+installed and Conductor-managed copies are upgraded. `conductor update` upgrades only
+existing tools, even when Conductor itself is current. `--check` only reports versions;
+`--skip-companions` explicitly skips this step. Superpowers is not automatically upgraded.
+Graphify project maps are not rebuilt.
+
+Recognized uv installations of Graphify and official Cargo installations of RTK migrate
+to separate Conductor-managed copies. Original executables and manager stores stay unchanged.
+New commands live in `~/.local/share/conductor-companions/bin`, ahead of the old copies
+in PATH. Later updates replace only the managed copy. Unknown provenance or personally
+modified wiring reports `FAILED` and is preserved, not overwritten. All these files live
+outside Conductor runtime and survive its removal.
+Reading an external uv installation receipt requires Python 3.11+.
+
+Each tool reports its own result and reason. Exit `0` means the requested flow is ready,
+`1` a Conductor error, `2` invalid arguments, `3` verified Conductor but incomplete
+companions, and `130` interruption. Explicit skipping is not a failure.
+PATH problems include the required location. Windows persists the user PATH; Linux/Bash
+adds a small marked block to shell startup files, preserving other content. Changes are
+backed up; rollback refuses later personal edits. Open a new terminal and restart applications
+to inherit the new PATH. Other shells require separate verification.
+RTK and Graphify skill wiring is generated in isolation and merged without erasing foreign settings.
 
 Adapters for a specific project (the rules will be versioned along with it):
 
@@ -173,8 +186,7 @@ bash install-project.sh --repo "/d/path/to/project"
 ```
 
 After installation, restart Cursor and Antigravity (hook configs are read at startup).
-Every installer is safe to re-run and makes backup copies (`*.bak-<timestamp>`) of
-everything it changes.
+Global operations retain snapshots; a conflict stops repeated installation.
 
 ## Safe Graphify map updates
 
@@ -279,8 +291,9 @@ The language is chosen right in the terminal: on every run, both `install.sh` an
 answer — just press Enter, no flags needed. To switch the language in any direction
 (including back to Russian), simply re-run the installer and pick the menu item. The
 choice is stored in `~/.claude/conductor/reply-language`, so repeated runs reset nothing.
-Claude Code is updated by both installers; the Cursor, Antigravity and Codex rules are
-rebuilt by `install-global.sh`; project adapters (`install-project.sh`) silently apply the
+`install.sh` updates all global environments by default; `install-global.sh` selects
+global adapters while retaining previously installed components. Project adapters
+(`install-project.sh`) silently apply the
 saved choice. For scripts and non-interactive runs there is `--language <name>` — it
 skips the question.
 
@@ -325,28 +338,39 @@ in relevance. No matches means no unrelated recent fallback. Read failures and e
 budgets return `PARTIAL`, not a successful empty result. Without Python, search files
 directly. Memory stays unchanged; no new database, service or migration is needed.
 Lesson maintenance is unchanged; recall does not need to repeat on every message.
-Make a complete backup before uninstalling: `--keep-lessons` saves lessons,
-not the whole private repository, history, script or project snapshots.
+Uninstall preserves personal memory and unknown files by default. This does not replace
+a separate backup of the private repository against computer failure.
 
 ## Uninstalling
 
-One command, with a preview first:
+The installed CLI does not need the source directory:
 
 ```bash
-# first see what will be removed (changes nothing)
-bash uninstall.sh --dry-run --keep-lessons --sweep-roots "/d/projects,/d/top"
-
-# then actually remove
-bash uninstall.sh --keep-lessons --sweep-roots "/d/projects,/d/top"
+conductor uninstall --dry-run
+conductor uninstall
+# Explicitly remove lessons too, retaining a recoverable snapshot:
+conductor uninstall --remove-lessons
 ```
 
-`--keep-lessons` saves both parts of the memory — the inbox journal and the digested
-lesson store — to the Desktop; `--sweep-roots` additionally
-sweeps the adapters and git locks of older versions out of the repositories under the
-given roots. Every config being changed is backed up; foreign hooks and entries are
-preserved (our own are recognized by sentinels); the global `CLAUDE.md` is never deleted.
-Re-running is safe. Manual piece-by-piece rollback: the `*.bak-<timestamp>` backup copies
-sit next to each config.
+`bash uninstall.sh` from source uses the same mechanism.
+Lessons remain at their original location by default; `--keep-lessons` is compatible.
+Personal `CLAUDE.md`, verification results, RTK, Graphify, Superpowers and project rules
+remain. Modified managed files or an unrecognized installation without a manifest cause
+refusal without deletion. Backups live in `~/.local/state/conductor/updates/`.
+After removal `conductor` is unavailable: use the printed restoration command from a
+complete source copy. Old backups are never automatically deleted.
+
+Optional `bash uninstall.sh --sweep-roots "/d/projects,/d/top"` additionally cleans
+the explicitly named projects; preview it with `--dry-run` first.
+
+Project files are not removed by name alone: their complete content must match a known
+Conductor version (allowing the selected language). Foreign, modified or unknown content,
+links and mixed directories are preserved and cleanup reports refusal. Before changing
+known project files, originals are saved in `.conductor-project-backups/` inside the
+project. Backups may contain private settings; do not add them to Git.
+`install-project.sh --dry-run --repo <path>` previews the plan without writing.
+Removal is not one transaction: a project refusal does not undo global steps already
+performed. It is a separate operation, outside the global transaction.
 
 ## Repository layout
 

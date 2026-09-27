@@ -131,7 +131,8 @@ def prerequisites():
 
 
 def install(source, commit, shell, options):
-    if not (source / 'tools/install-preflight.py').is_file():
+    protocol = source / 'runtime/updater/install-protocol.json'
+    if not protocol.is_file() or json.loads(protocol.read_bytes()) != {'schema': 1}:
         raise ValueError('selected version predates the unified installer; use a newer version')
     env = {key: value for key, value in os.environ.items()
            if key not in ('BASH_ENV', 'ENV') and not key.startswith('BASH_FUNC_')}
@@ -139,23 +140,14 @@ def install(source, commit, shell, options):
     env['PYTHONIOENCODING'] = 'utf-8'
     # Children need the exact Python selected by the bootstrap, not a Store shim or older python3.
     env['CONDUCTOR_PYTHON'] = sys.executable
+    env['CONDUCTOR_SOURCE_REVISION'] = commit
     result = subprocess.run([shell, '--noprofile', '--norc', str(source / 'install.sh'), *options],
                             cwd=source, env=env)
-    if result.returncode:
+    if result.returncode not in (0, 3):
         raise ValueError(f'installer failed (exit {result.returncode}); see its diagnostics and backup path')
-    # Use the same shell path semantics as install.sh, including /c/... on Git Bash.
-    paths = subprocess.run([shell, '--noprofile', '--norc', '-c',
-                            'for p in "${CLAUDE_CONFIG_DIR:-${HOME:-$USERPROFILE}/.claude}" '
-                            '"${HOME:-$USERPROFILE}"; do '
-                            'if command -v cygpath >/dev/null 2>&1; then p=$(cygpath -m "$p") || exit; fi; '
-                            'printf "%s\\0" "$p"; done'], env=env, capture_output=True, check=True)
-    config, profile, _ = paths.stdout.decode('utf-8').split('\0')
-    receipt = subprocess.run([sys.executable, '-B', str(source / 'tools/install-receipt.py'),
-                              '--config', config, '--profile', profile, '--revision', commit], env=env)
-    if receipt.returncode:
-        raise ValueError('installed version could not be verified; inspect the diagnostics before updating')
     print(f'Installed from official commit {commit}. Use conductor update for later updates.')
     print('If conductor is not on PATH yet, use ~/.local/bin/conductor (Windows: conductor.cmd).')
+    return result.returncode
 
 
 def main(argv=None):
@@ -180,8 +172,8 @@ def main(argv=None):
             source = Path(temporary) / 'source'
             commit = acquire(source, args.ref)
             print(f'Official source: {commit}; installing without a repository clone.', flush=True)
-            install(source, commit, shell, options)
-        return 0
+            result = install(source, commit, shell, options)
+        return result
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, zipfile.BadZipFile, urllib.error.URLError) as exc:
         print(f'Conductor bootstrap FAILED: {exc}', file=sys.stderr)
         return 1

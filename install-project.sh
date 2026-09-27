@@ -19,10 +19,11 @@ TARGET="$PWD"
 TOOL='both'
 LANGUAGE=''
 LANGUAGE_SET=0
-STAMP="$(date +%Y%m%d-%H%M%S)"
+DRY_RUN=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        -n|--dry-run) DRY_RUN=1; shift ;;
         --repo)   [ $# -ge 2 ] || { echo "--repo needs a value" >&2; exit 2; }; TARGET="$2"; shift 2 ;;
         --repo=*) TARGET="${1#--repo=}"; shift ;;
         --tool)   [ $# -ge 2 ] || { echo "--tool needs a value" >&2; exit 2; }; TOOL="$2"; shift 2 ;;
@@ -70,47 +71,18 @@ winpath() {
     if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi
 }
 
-install_one() {  # install_one <tool> <config-dir> <rule-subpath> <source>
-    local tool="$1" cfg_dir="$2" rule_rel="$3" src="$4"
-    [ -f "$src" ] || { echo "adapter source not found: ${src#$REPO_SRC/} - run this from the conductor repo root" >&2; exit 1; }
-
-    local dest="$TARGET/$cfg_dir/$rule_rel"
-    mkdir -p "$(dirname "$dest")"
-    apply_reply_language "$LANGUAGE" "$src" > "$dest"
-    printf '%-12s rule installed: %s\n' "$tool" "${dest#$TARGET/}"
-
-    # Retired gate: the script it ran from, and its entry in the tool's hook config.
-    local gate_dir="$TARGET/$cfg_dir/conductor"
-    if [ -d "$gate_dir" ]; then
-        rm -rf "$gate_dir"
-        printf '%-12s retired gate script removed: %s\n' "$tool" "$cfg_dir/conductor"
-    fi
-    local hooks="$TARGET/$cfg_dir/hooks.json"
-    [ -f "$hooks" ] || return 0
-    grep -q conductor "$hooks" 2>/dev/null || return 0
-    if [ -z "$PYTHON" ]; then
-        printf '%-12s NOTE: %s holds a conductor entry but python3 is absent - remove it by hand\n' "$tool" "$cfg_dir/hooks.json"
-        return 0
-    fi
-    cp "$hooks" "$hooks.bak-$STAMP"
-    if [ "$tool" = 'antigravity' ]; then
-        "$PYTHON" "$(winpath "$REPO_SRC/tools/settings-json.py")" strip-key \
-            --file "$(winpath "$hooks")" --key conductor-commit-gate >/dev/null
-    else
-        "$PYTHON" "$(winpath "$REPO_SRC/tools/settings-json.py")" strip-hooks \
-            --file "$(winpath "$hooks")" >/dev/null
-    fi
-    printf '%-12s retired gate hook removed from %s (backup: hooks.json.bak-%s)\n' "$tool" "$cfg_dir/hooks.json" "$STAMP"
-}
-
 echo "=== Conductor project adapters -> $TARGET (reply language: $LANGUAGE) ==="
-if [ "$TOOL" = 'cursor' ] || [ "$TOOL" = 'both' ]; then
-    install_one cursor '.cursor' 'rules/conductor-core.mdc' "$REPO_SRC/adapters/cursor/conductor-core.mdc"
-fi
+[ -n "$PYTHON" ] || { echo '[REFUSED] Python is required for safe project artifact cleanup' >&2; exit 1; }
+project_args=(--repo "$(winpath "$TARGET")" --tool "$TOOL" --install --language "$LANGUAGE")
+[ "$DRY_RUN" -eq 0 ] || project_args+=(--dry-run)
+"$PYTHON" -B "$(winpath "$REPO_SRC/tools/project-artifacts.py")" "${project_args[@]}" || exit 1
 if [ "$TOOL" = 'antigravity' ] || [ "$TOOL" = 'both' ]; then
-    install_one antigravity '.agents' 'rules/conductor-core.md' "$REPO_SRC/adapters/antigravity/conductor-core.md"
     echo '             (set it to Always On in Antigravity: Customizations -> Rules)'
 fi
 
 echo
-echo 'Done. Restart the agent session in this project to pick up the rule.'
+if [ "$DRY_RUN" -eq 1 ]; then
+    echo 'Dry run complete - nothing was changed.'
+else
+    echo 'Done. Restart the agent session in this project to pick up the rule.'
+fi

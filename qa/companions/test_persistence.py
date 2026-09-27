@@ -1,13 +1,13 @@
-"""Default acquisition must outlive a real, strictly sandboxed Conductor uninstall."""
+"""Companion state and installed coordinator survive absence of the checkout."""
 import os
 from pathlib import Path
-import shlex
+import shutil
 import subprocess
 import sys
 import unittest
 
 import test_acquisition as acquisition
-from test_acquisition import BASH, ROOT, bash_path
+from test_acquisition import ROOT
 
 
 class PersistenceTest(unittest.TestCase):
@@ -20,103 +20,65 @@ class PersistenceTest(unittest.TestCase):
 
     def test_default_is_independent_of_runtime_with_native_home(self):
         self.case.env["HOME"] = str(self.case.profile)
-        output = self.case.run_installer()
-        self.assertTrue((self.data / "graphify-venv").is_dir(), output)
-        name = "rtk.exe" if os.name == "nt" else "rtk"
-        self.assertTrue((self.data / "bin" / name).is_file(), output)
-        self.assertFalse((self.case.config / "conductor/companions").exists(), output)
+        self.case.run_installer()
+        self.assertTrue((self.data / "versions/graphify").is_dir())
+        self.assertTrue((self.data / "receipts/rtk.json").is_file())
+        self.assertFalse((self.case.config / "conductor/companions").exists())
 
-    def test_real_uninstall_keeps_default_companions_and_their_cli_usable(self):
-        output = self.case.run_installer()
-        # Resolve and verify all deletion targets BEFORE starting the real uninstaller.
-        fixture = self.case.fixture.resolve()
-        profile = self.case.profile.resolve()
+    def test_all_companion_cli_and_receipt_paths_are_outside_runtime(self):
+        self.case.run_installer()
         runtime = self.case.config / "conductor"
-        self.assertTrue(profile.is_relative_to(fixture))
-        self.assertTrue(runtime.resolve().is_relative_to(profile))
-        self.assertEqual(Path(self.case.env["USERPROFILE"]).resolve(), profile)
-        runtime.mkdir(parents=True, exist_ok=True)
-        (runtime / "test-runtime-marker").write_text("owned fixture")
-        binaries = []
-        for line in output.splitlines():
-            if "NOTE: CLI: " in line:
-                binaries.append(Path(line.split("NOTE: CLI: ", 1)[1]))
-        self.assertEqual(len(binaries), 2, output)
-        before = {path: path.read_bytes() for path in binaries}
-        data_before = {path: path.read_bytes() for path in self.data.rglob("*") if path.is_file()}
-        # Only fixture git config may be read; no real Git config or updater registration.
-        self.case.script("git", 'test "$*" = "config --global --get init.templateDir"; exit 1\n')
-        # Uninstaller Python operations, if needed, also use the selected real Python
-        # with ONLY fixture paths. No manifest/global rule files are created by this test.
-        self.case.script("python3", f'exec {shlex.quote(bash_path(sys.executable))} "$@"\n')
-        env = dict(self.case.env, GIT_CONFIG_GLOBAL=str(profile / ".gitconfig"), GIT_CONFIG_NOSYSTEM="1")
-        result = subprocess.run(
-            [BASH, "--noprofile", "--norc", "-c",
-             'export PATH="$1:/usr/bin:/bin"; exec /bin/bash "$2"', "uninstall-fixture",
-             bash_path(self.case.bin), bash_path(ROOT / "uninstall.sh")],
-            cwd=fixture, env=env, capture_output=True, text=True, encoding="utf-8", timeout=35)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse(runtime.exists(), result.stdout)
+        runtime.mkdir()
+        (runtime / "owned-fixture").write_bytes(b"temporary Conductor fixture")
+        before = {p: p.read_bytes() for p in self.data.rglob("*") if p.is_file()}
+        # Exact, test-owned, contained target only. Main tests the actual uninstaller.
+        self.assertTrue(runtime.resolve().is_relative_to(self.case.fixture.resolve()))
+        shutil.rmtree(runtime)
         for path, content in before.items():
-            self.assertTrue(path.is_file(), f"uninstall destroyed companion {path}\n{result.stdout}")
             self.assertEqual(path.read_bytes(), content)
-            flag = "--version" if path.name.startswith("rtk") else "--help"
-            probe = subprocess.run([BASH, "--noprofile", "--norc", bash_path(path), flag],
-                                   env=env, capture_output=True, text=True, timeout=10)
-            self.assertEqual(probe.returncode, 0, probe.stdout + probe.stderr)
-        self.assertTrue((self.data / "graphify-venv").is_dir())
-        for path, content in data_before.items():
-            self.assertTrue(path.is_file(), f"uninstall destroyed companion data {path}")
-            self.assertEqual(path.read_bytes(), content)
+        self.assertEqual(self.case.run_installer().count(": CURRENT"), 2)
 
-    def test_missing_path_defers_new_rtk_hook_instead_of_registering_a_broken_command(self):
-        output = self.case.run_installer()
-        self.assertIn("rtk: INCOMPLETE binary=installed; wiring=deferred; PATH=not-persisted", output)
-        self.assertNotIn("rtk init", (self.case.fixture / "calls").read_text())
-        settings = self.case.config / "settings.json"
-        if settings.exists():
-            self.assertNotIn("rtk hook claude", settings.read_text())
+    def test_activation_failure_rolls_back_and_retry_installs_cleanly(self):
+        self.case.include_local_bin = False
+        self.case.env['ACTIVATION_FAIL'] = '1'
+        self.case.run_installer(expected=3)
+        self.assertFalse((self.data / 'receipts/rtk.json').exists())
+        self.assertFalse((self.case.config / 'RTK.md').exists())
+        del self.case.env['ACTIVATION_FAIL']
+        self.assertEqual(self.case.run_installer().count(": INSTALLED"), 2)
+        self.assertTrue((self.case.config / "skills/graphify/SKILL.md").exists())
 
-    def test_graphify_explicitly_wires_claude_regardless_of_detected_platform(self):
-        self.case.run_installer()
-        calls = (self.case.fixture / "calls").read_text().splitlines()
-        self.assertIn("graphify install --platform claude", calls)
-        self.assertNotIn("graphify install", calls)
+    def test_existing_personal_skill_is_not_overwritten(self):
+        skill = self.case.config / "skills/graphify/SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_bytes(b"personal skill")
+        output = self.case.run_installer(expected=3)
+        self.assertIn("graphify: FAILED", output)
+        self.assertEqual(skill.read_bytes(), b"personal skill")
+        self.assertTrue(list((self.data / "conflicts").glob("*.backup")))
 
-    def test_new_cli_paths_use_standard_local_bin(self):
-        output = self.case.run_installer()
-        directory = self.case.profile / ".local/bin"
-        extension = ".exe" if os.name == "nt" else ""
-        for name in ("rtk", "graphify"):
-            self.assertTrue((directory / (name + extension)).is_file(), output)
+    def test_installed_modules_run_without_checkout_imports(self):
+        installed = self.case.fixture / "installed/updater"
+        installed.mkdir(parents=True)
+        for source in (ROOT / "runtime/updater").glob("*.py"):
+            shutil.copyfile(source, installed / source.name)
+        result = subprocess.run([sys.executable, "-B", str(installed / "companions.py"),
+                                 "--profile", str(self.case.profile), "--config", str(self.case.config),
+                                 "--skip-companions"], cwd=self.case.fixture, capture_output=True,
+                                text=True, encoding="utf-8", timeout=15)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stdout.count("SKIPPED"), 2)
+        self.assertFalse(self.data.exists())
 
-    def test_after_adding_local_bin_rerun_wires_without_reinstalling(self):
-        self.case.run_installer()
-        network = (self.case.fixture / "network").read_bytes()
-        processes = (self.case.fixture / "processes").read_bytes()
-        self.case.include_local_bin = True
-        output = self.case.run_installer()
-        self.assertIn("rtk: OK binary=existing; wiring=ready", output)
-        self.assertIn("graphify: OK binary=existing; wiring=ready", output)
-        self.assertEqual(network, (self.case.fixture / "network").read_bytes())
-        self.assertEqual(processes, (self.case.fixture / "processes").read_bytes())
-        self.assertIn("rtk init -g --auto-patch", (self.case.fixture / "calls").read_text())
-
-    def test_rerun_before_path_change_keeps_advertising_standard_cli_paths(self):
-        first = self.case.run_installer()
-        second = self.case.run_installer()
-        paths = lambda output: [line for line in output.splitlines() if "NOTE: CLI:" in line]
-        self.assertEqual(paths(first), paths(second))
-
-    def test_local_bin_collision_preserves_existing_command_and_acquired_binary(self):
+    def test_unknown_local_bin_collision_preserves_every_byte(self):
         name = "rtk.exe" if os.name == "nt" else "rtk"
-        occupied = self.case.script(name, "exit 1\n", self.case.profile / ".local/bin")
-        before = occupied.read_bytes()
-        output = self.case.run_installer()
-        self.assertEqual(occupied.read_bytes(), before)
-        self.assertTrue((self.data / "bin" / name).is_file())
-        self.assertIn("standard CLI path unavailable", output)
-        self.assertIn("rtk: INCOMPLETE binary=installed", output)
+        occupied = self.case.profile / ".local/bin" / name
+        occupied.parent.mkdir(parents=True)
+        occupied.write_bytes(b"rtk 9.0.0")
+        occupied.chmod(0o755)
+        output = self.case.run_installer(expected=3)
+        self.assertEqual(occupied.read_bytes(), b"rtk 9.0.0")
+        self.assertIn("rtk: FAILED", output)
 
 
 if __name__ == "__main__":

@@ -57,38 +57,57 @@ which never fired even once in either arm (the scenario does not induce it).
 
 ## Requirements
 
-- `bash`, `git`, `python3` (needed by the installers — they edit JSON configs that
+- `bash`, `git`, Python 3.10+ (needed by the installers — they edit JSON configs that
   belong to other tools — and by the test-run journal at runtime: without python the
   journal silently records nothing, while the other hooks keep working)
-- Windows: the Git Bash that ships with git will do. Linux and macOS work with no caveats
+- Windows: Git for Windows with Git Bash; launch from ordinary PowerShell.
+  Windows and Linux are checked in CI; macOS has not been separately verified
 - [Claude Code](https://claude.com/claude-code) — installed and logged in
 - Cursor, Google Antigravity and/or OpenAI Codex — optional (the adapters install globally)
 
 ## Installation
 
-```bash
-git clone https://github.com/Morqqulis/conductor.git
-cd conductor
+**One global installer; no clone required.** It downloads the official source archive
+to a temporary directory, installs Conductor for Claude Code, Codex and Antigravity,
+prepares the Cursor rule, and installs Superpowers, RTK and Graphify.
 
-# 1. Claude Code: core, hooks, global CLAUDE.md (+smoke test; asks for the reply language)
-bash install.sh
+Windows, PowerShell:
 
-# 2. Cursor + Antigravity + Codex globally (offers the language saved earlier)
-bash install-global.sh
+```powershell
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Morqqulis/conductor/main/install.ps1')))
 ```
 
-Two side effects worth knowing about up front. In step [4/5] `install.sh` also installs
-three companion tools (see below) — it used to do the opposite and disable the superpowers
-plugin; now Conductor and superpowers are installed together on purpose.
-`install-global.sh` overwrites `~/.gemini/AGENTS.md` and `~/.codex/AGENTS.md`: if your own
-text was there, it is preserved in `*.bak-<stamp>`, and the installer warns about this
-loudly. To check the health of the installation at any time: `bash tools/doctor.sh`.
+Linux/macOS or Git Bash:
+
+```bash
+set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash
+```
+
+These commands execute code from the official repository. To inspect it first, download
+the script, read it and run it locally. Git and Python must already be installed; the
+bootstrap does not silently install them or change the system execution policy.
+Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved language,
+or defaults to Russian. Set it explicitly with `-Language English` in PowerShell or replace
+the pipeline's final `bash` with `bash -s -- --language English`.
+
+From a downloaded source directory, run **only** `bash install.sh`.
+`--scope claude` selects Claude Code, `--scope global` the other global adapters;
+the default is `all`. PowerShell uses `-Scope claude/global/all`.
+`install-global.sh` remains an internal/compatibility stage, not a second required command.
+Cursor still requires manually activating its prepared rule; the installer prints its path.
+
+First installation replaces existing global rules with warnings and backups. An additional
+snapshot is saved under `~/.local/state/conductor/installs/<id>/` (keep it private).
+This is a manual-recovery copy, not input to `conductor rollback`. Reinstallation refuses
+manual changes to registered files. Lessons and project memory are not replaced.
+The regular installer is not transactional: after interruption inspect the output and
+snapshot; do not run it concurrently with another installer or `conductor update`.
 
 ### Update from any directory
 
-Both installers deliver the command to `~/.local/bin` (also `conductor.cmd` on Windows).
+The installer delivers the command to `~/.local/bin` (also `conductor.cmd` on Windows).
 If it is not found, add that directory to PATH or use the full path. For an older installation,
-run the new installer for each required environment once; afterwards:
+run the unified installer once; afterwards:
 
 ```bash
 conductor status
@@ -127,25 +146,25 @@ three tools by default:
   to disable it; the policy is now the reverse: Conductor is the process spine, while
   superpowers supplies the skills on top of it.
 - [rtk](https://github.com/rtk-ai/rtk) — a Rust program that compresses terminal output
-  and thereby saves tokens. Installed with
-  `cargo install --git https://github.com/rtk-ai/rtk` when cargo is present; otherwise the
-  installer prints a loud SKIP and points you to a prebuilt binary on the releases page
-  (native Windows is supported). The wiring — the Claude Code hook and `~/.claude/RTK.md`
-  — is done by rtk itself via `rtk init -g`, which runs automatically when the wiring is
-  missing.
+  and thereby saves tokens. The installer downloads an official GitHub release binary
+  and verifies its SHA-256; neither Rust nor Cargo is required. Claude Code wiring
+  (the hook, `RTK.md` and its import) is created with `rtk init -g --auto-patch`.
 - [graphify](https://github.com/Graphify-Labs/graphify) — a tool that builds a knowledge
-  graph of a codebase. Installed with `uv tool install graphifyy` (the package is called
-  `graphifyy`, the command is `graphify`), falling back to `pip install graphifyy`; then
-  `graphify install` registers the `/graphify` skill if it is not registered yet.
+  graph of a codebase. PyPI's `graphifyy` package is installed into an isolated environment
+  using existing `uv` or Python `venv`; system pip is untouched. The Claude skill is then
+  connected. The installer prints a separate skill installation command for Codex.
 
 Flags: `--skip-companions` skips the whole step (this is what the CI sandbox does in its
 smoke test); `--no-superpowers` opts out of the plugin only; `--keep-superpowers` is
 accepted for compatibility and does nothing — the plugin is installed anyway now.
 
-Every failure is loud and never aborts the Conductor install: a tool that could not be
-installed prints a SKIP or FAIL line with the reason, and the installation carries on.
-Re-running is safe — whatever is already in place prints "OK already". `uninstall.sh` does
-not remove these three tools: they are user-level tools and live their own life.
+Existing working tools are reused without upgrading. New files live outside the Conductor
+runtime and survive `uninstall.sh`. A companion failure does not abort Conductor itself:
+each result says `OK`, `SKIP`, `FAIL` or `INCOMPLETE` with a reason. The latter can mean a
+download succeeded but wiring is not ready. If a command directory is missing from PATH,
+the exact location and required setting are printed; shell profiles are not rewritten.
+Restart the terminal and agent after configuring PATH. Partial environments remain for
+diagnosis and are not overwritten on retry.
 
 Adapters for a specific project (the rules will be versioned along with it):
 

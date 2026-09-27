@@ -9,12 +9,25 @@
 #
 #   ./install-companions.sh                    install all three
 #   ./install-companions.sh --no-superpowers   install rtk and graphify only
+# Python 3.10+ is needed only to acquire missing binaries. CONDUCTOR_PYTHON can
+# name its executable. CONDUCTOR_COMPANION_HOME overrides the owned install root
+# (default: $HOME/.local/share/conductor-companions, outside the removable runtime).
+# Acquired CLI entry points are exposed in $HOME/.local/bin without overwriting
+# existing commands. No shell profile is edited. RTK wiring waits until the command
+# is available on the caller's PATH; after adding it, rerun this installer.
 set -uo pipefail
 
 # A bare environment may lack HOME (proven by a skeptic round); default it before set -u bites.
 HOME="${HOME:-${USERPROFILE:-}}"
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 NO_SUPERPOWERS=0
+REPO="$(cd "$(dirname "$0")" && pwd)"
+COMPANION_HOME="${CONDUCTOR_COMPANION_HOME:-$HOME/.local/share/conductor-companions}"
+PYTHON=''
+RTK_BIN=''
+GRAPHIFY_BIN=''
+INITIAL_PATH="$PATH"
+CLI_PATH_READY=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -29,12 +42,14 @@ done
 ok_count=0
 skip_count=0
 fail_count=0
+incomplete_count=0
 
 outcome() {  # outcome <tool> <status line>
     printf '  %s: %s\n' "$1" "$2"
     case "$2" in
         OK*)   ok_count=$((ok_count + 1)) ;;
         SKIP*) skip_count=$((skip_count + 1)) ;;
+        INCOMPLETE*) incomplete_count=$((incomplete_count + 1)) ;;
         *)     fail_count=$((fail_count + 1)) ;;
     esac
 }
@@ -51,11 +66,74 @@ hint() {
     printf '%s' "$h"
 }
 
-tool_version() {  # tool_version <command>
-    local v
-    v="$("$1" --version 2>/dev/null | tr -d '\r' | head -n 1)"
-    [ -n "$v" ] || v='version unknown'
-    printf '%s' "$v"
+native_path() {
+    if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s\n' "$1"; fi
+}
+
+shell_path() {
+    if command -v cygpath >/dev/null 2>&1; then cygpath -u "$1"; else printf '%s\n' "$1"; fi
+}
+
+find_python() {
+    [ -n "$PYTHON" ] && return 0
+    local candidate
+    local -a candidates=(python3 python)
+    [ -z "${CONDUCTOR_PYTHON:-}" ] || candidates=("$CONDUCTOR_PYTHON")
+    for candidate in "${candidates[@]}"; do
+        [ -n "$candidate" ] || continue
+        candidate="$(shell_path "$candidate")"
+        if "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 10))' >/dev/null 2>&1; then
+            PYTHON="$candidate"; return 0
+        fi
+    done
+    return 1
+}
+
+working_binary() {  # working_binary <name> <probe flag> <candidate paths...>
+    local name="$1" probe="$2" candidate out
+    shift 2
+    for candidate in "$(command -v "$name" 2>/dev/null || true)" "$@"; do
+        [ -n "$candidate" ] || continue
+        candidate="$(shell_path "$candidate")"
+        [ -f "$candidate" ] || continue
+        if out="$("$candidate" "$probe" 2>/dev/null)" && [ -n "$out" ]; then
+            printf '%s\n' "$candidate"; return 0
+        fi
+    done
+    return 1
+}
+
+standard_cli() {  # stdout is a CLI path; a collision preserves both installations
+    local out=''
+    if out="$(PYTHONIOENCODING=utf-8 "$PYTHON" "$(native_path "$REPO/tools/companion-path.py")" \
+            --name "$1" --source "$(native_path "$2")" --bin-dir "$(native_path "$HOME/.local/bin")" 2>&1)"; then
+        shell_path "${out//$'\r'/}"
+    else
+        note "standard CLI path unavailable; using acquired path: $(hint "$out")" >&2
+        printf '%s\n' "$2"
+    fi
+}
+
+show_cli() {
+    local directory initial_binary
+    directory="$(dirname "$1")"
+    note "CLI: $(native_path "$1")"
+    CLI_PATH_READY=0
+    initial_binary="$(PATH="$INITIAL_PATH" command -v "$2" 2>/dev/null || true)"
+    if [ -n "$initial_binary" ] && [ "$initial_binary" -ef "$1" ]; then
+        CLI_PATH_READY=1
+    else
+        note "for future shells, add $(native_path "$directory") to PATH (profile unchanged)"
+    fi
+    export PATH="$directory:$PATH"
+}
+
+ready_outcome() {
+    if [ "$CLI_PATH_READY" -eq 1 ]; then
+        outcome "$1" "OK binary=$2; wiring=ready (Claude)"
+    else
+        outcome "$1" "INCOMPLETE binary=$2; wiring=ready; PATH=not-persisted (Claude)"
+    fi
 }
 
 # Both rtk and graphify write their wiring into the REAL profile home, whatever
@@ -70,7 +148,8 @@ sandboxed_home() {
     fi
     want="$CLAUDE_HOME"; ref="$real/.claude"
     if [ -d "$want" ] && [ -d "$ref" ]; then
-        [ "$(cd "$want" && pwd -P)" != "$(cd "$ref" && pwd -P)" ]
+        # File identity also recognizes Git Bash's /tmp mount alias on Windows.
+        ! [ "$want" -ef "$ref" ]
     else
         [ "$want" != "$ref" ]
     fi
@@ -181,123 +260,142 @@ install_superpowers() {
 
 # --- rtk -------------------------------------------------------------------------------
 install_rtk() {
-    local out=''
-    if command -v rtk >/dev/null 2>&1; then
-        outcome rtk "OK already ($(tool_version rtk))"
-    elif command -v cargo >/dev/null 2>&1; then
-        note 'building rtk from source with cargo - compiling, may take several minutes'
-        out="$(cargo install --git https://github.com/rtk-ai/rtk 2>&1)"
-        hash -r 2>/dev/null || true
-        if command -v rtk >/dev/null 2>&1; then
-            outcome rtk "OK installed ($(tool_version rtk))"
-        else
-            outcome rtk "FAIL cargo install left no rtk on PATH: $(hint "$out")"
+    local out='' state=existing
+    RTK_BIN="$(working_binary rtk --version "$HOME/.local/bin/rtk" "$HOME/.local/bin/rtk.exe" \
+        "$COMPANION_HOME/bin/rtk" "$COMPANION_HOME/bin/rtk.exe" "$HOME/.cargo/bin/rtk" "$HOME/.cargo/bin/rtk.exe")" || true
+    if [ -z "$RTK_BIN" ]; then
+        if ! find_python; then
+            outcome rtk 'FAIL binary=missing; acquisition requires Python 3.10+ (CONDUCTOR_PYTHON)'
             return 0
         fi
-    else
-        outcome rtk 'SKIP no rtk binary and no cargo to build one'
-        note 'install a prebuilt binary from https://github.com/rtk-ai/rtk/releases and add it to PATH (native Windows supported)'
-        return 0
+        note 'acquiring official RTK prebuilt with mandatory SHA-256 verification'
+        if ! out="$(PYTHONIOENCODING=utf-8 "$PYTHON" "$(native_path "$REPO/tools/companion-download.py")" \
+                --dest "$(native_path "$COMPANION_HOME/bin")" 2>&1)"; then
+            outcome rtk "FAIL binary=missing; $(hint "$out")"; return 0
+        fi
+        RTK_BIN="$(working_binary rtk --version "$(printf '%s' "$out" | tr -d '\r' | tail -n 1)")" || true
+        if [ -z "$RTK_BIN" ]; then
+            outcome rtk "FAIL binary=unusable after download; $(hint "$out")"; return 0
+        fi
+        state=installed
+        RTK_BIN="$(standard_cli rtk "$RTK_BIN")"
     fi
-    wire_rtk
+    show_cli "$RTK_BIN" rtk
+    wire_rtk "$state"
 }
 
 # rtk is only useful once it is wired: RTK.md next to the global CLAUDE.md (which imports
 # it) plus the hook that rewrites shell commands in settings.json. Both halves are checked,
 # because one without the other is a silent half-install.
 rtk_wired() {
-    [ -f "$CLAUDE_HOME/RTK.md" ] && grep -q 'rtk hook claude' "$CLAUDE_HOME/settings.json" 2>/dev/null
+    [ -s "$CLAUDE_HOME/RTK.md" ] && grep -q 'rtk hook claude' "$CLAUDE_HOME/settings.json" 2>/dev/null &&
+        grep -q '^@RTK\.md[[:space:]]*$' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null
 }
 
 rtk_wiring_missing() {
     local missing=''
-    [ -f "$CLAUDE_HOME/RTK.md" ] || missing='RTK.md'
+    [ -s "$CLAUDE_HOME/RTK.md" ] || missing='RTK.md'
     if ! grep -q 'rtk hook claude' "$CLAUDE_HOME/settings.json" 2>/dev/null; then
         missing="${missing:+$missing, }the rtk hook in settings.json"
+    fi
+    if ! grep -q '^@RTK\.md[[:space:]]*$' "$CLAUDE_HOME/CLAUDE.md" 2>/dev/null; then
+        missing="${missing:+$missing, }@RTK.md in CLAUDE.md"
     fi
     printf '%s' "$missing"
 }
 
 wire_rtk() {
+    local state="$1" out=''
     if sandboxed_home; then
-        note 'sandboxed home - skipping rtk init -g'
+        outcome rtk "INCOMPLETE binary=$state; wiring=skipped (sandboxed home)"
+        return 0
+    fi
+    # Upstream registers a bare `rtk hook claude`. The PATH added to this child
+    # process cannot make that command work in the user's next Claude session.
+    if [ "$CLI_PATH_READY" -ne 1 ]; then
+        outcome rtk "INCOMPLETE binary=$state; wiring=deferred; PATH=not-persisted (Claude)"
+        note 'rtk init not run; add the CLI directory to PATH and rerun the same Conductor installation command (existing hooks also need PATH)'
         return 0
     fi
     if rtk_wired; then
-        note 'wiring already in place (RTK.md + the rtk hook in settings.json)'
+        ready_outcome rtk "$state"
         return 0
     fi
-    rtk init -g >/dev/null 2>&1
-    if rtk_wired; then
-        note 'wiring installed by rtk init -g (RTK.md + the rtk hook in settings.json)'
+    if ! out="$("$RTK_BIN" init -g --auto-patch 2>&1)"; then
+        outcome rtk "INCOMPLETE binary=$state; wiring=failed: $(hint "$out")"
+    elif rtk_wired; then
+        ready_outcome rtk "$state"
     else
-        note "rtk init -g left the wiring incomplete - missing: $(rtk_wiring_missing)"
+        outcome rtk "INCOMPLETE binary=$state; wiring=missing: $(rtk_wiring_missing)"
     fi
 }
 
 # --- graphify --------------------------------------------------------------------------
 # The package is graphifyy (double y on purpose); the command it installs is graphify.
 install_graphify() {
-    local out=''
-    if command -v graphify >/dev/null 2>&1; then
-        outcome graphify 'OK already'
-    elif command -v uv >/dev/null 2>&1; then
-        out="$(uv tool install graphifyy 2>&1)"
-        hash -r 2>/dev/null || true
-        if command -v graphify >/dev/null 2>&1; then
-            outcome graphify 'OK installed (uv tool)'
-        else
-            outcome graphify "FAIL uv tool install graphifyy: $(hint "$out")"
-            return 0
+    local out='' state=existing uv='' uv_bin=''
+    local -a uv_args=()
+    GRAPHIFY_BIN="$(working_binary graphify --help "$HOME/.local/bin/graphify" "$HOME/.local/bin/graphify.exe" \
+        "$COMPANION_HOME/bin/graphify" "$COMPANION_HOME/bin/graphify.exe" \
+        "$COMPANION_HOME/graphify-venv/bin/graphify" "$COMPANION_HOME/graphify-venv/Scripts/graphify.exe")" || true
+    if [ -z "$GRAPHIFY_BIN" ] && command -v uv >/dev/null 2>&1; then
+        uv="$(command -v uv)"
+        if uv_bin="$("$uv" tool dir --bin 2>/dev/null)" && [ -n "$uv_bin" ]; then
+            uv_bin="$(shell_path "${uv_bin//$'\r'/}")"
+            GRAPHIFY_BIN="$(working_binary graphify --help "$uv_bin/graphify" "$uv_bin/graphify.exe")" || true
         fi
-    elif command -v pip >/dev/null 2>&1; then
-        local pip_ok=0
-        if out="$(pip install graphifyy 2>&1)"; then pip_ok=1; fi
-        hash -r 2>/dev/null || true
-        if command -v graphify >/dev/null 2>&1; then
-            outcome graphify 'OK installed (pip)'
-            note "installed with pip - if a new shell cannot find graphify, add pip's scripts directory to PATH"
-        elif [ "$pip_ok" -eq 1 ]; then
-            # pip succeeded but the command is not reachable: an honest PATH problem, not a
-            # failed install - saying FAIL over pip's own "Successfully installed" reads as
-            # a contradiction (a skeptic round caught exactly that).
-            outcome graphify 'OK installed (pip), but graphify is not on PATH yet'
-            note "add pip's scripts directory to PATH, then run 'graphify install' by hand"
-            return 0
-        else
-            outcome graphify "FAIL pip install graphifyy: $(hint "$out")"
-            return 0
-        fi
-    else
-        outcome graphify 'SKIP no uv or pip'
-        return 0
+        uv_args=(--uv "$(native_path "$uv")")
     fi
-    install_graphify_skill
+    if [ -z "$GRAPHIFY_BIN" ]; then
+        if ! find_python; then
+            outcome graphify 'FAIL binary=missing; acquisition requires Python 3.10+ (CONDUCTOR_PYTHON)'
+            return 0
+        fi
+        note 'installing graphifyy into an isolated environment (no system pip)'
+        if ! out="$(PYTHONIOENCODING=utf-8 "$PYTHON" "$(native_path "$REPO/tools/companion-python.py")" \
+                --dest "$(native_path "$COMPANION_HOME")" "${uv_args[@]}" 2>&1)"; then
+            outcome graphify "FAIL binary=missing; $(hint "$out")"; return 0
+        fi
+        GRAPHIFY_BIN="$(working_binary graphify --help "$(printf '%s' "$out" | tr -d '\r' | tail -n 1)")" || true
+        if [ -z "$GRAPHIFY_BIN" ]; then
+            outcome graphify "FAIL binary=unusable after install; $(hint "$out")"; return 0
+        fi
+        state=installed
+        GRAPHIFY_BIN="$(standard_cli graphify "$GRAPHIFY_BIN")"
+    fi
+    show_cli "$GRAPHIFY_BIN" graphify
+    note "Graphify wiring targets Claude only; optional Codex: \"$(native_path "$GRAPHIFY_BIN")\" install --platform codex"
+    install_graphify_skill "$state"
 }
 
-# `graphify install` writes the skill into the real ~/.claude/skills, so it takes the same
-# sandboxed-home guard as rtk.
+# Explicit Claude selection avoids Graphify's detected-platform default. It writes
+# into the real ~/.claude/skills, so it takes the same sandboxed-home guard as rtk.
 install_graphify_skill() {
+    local state="$1" out=''
     if sandboxed_home; then
-        note 'sandboxed home - skipping graphify install (the skill goes into the real home)'
+        outcome graphify "INCOMPLETE binary=$state; wiring=skipped (sandboxed home)"
         return 0
     fi
     if [ -f "$CLAUDE_HOME/skills/graphify/SKILL.md" ]; then
-        note 'skill already installed (skills/graphify/SKILL.md)'
+        ready_outcome graphify "$state"
         return 0
     fi
-    graphify install >/dev/null 2>&1
-    if [ -f "$CLAUDE_HOME/skills/graphify/SKILL.md" ]; then
-        note 'skill installed (skills/graphify/SKILL.md)'
+    if ! out="$("$GRAPHIFY_BIN" install --platform claude 2>&1)"; then
+        outcome graphify "INCOMPLETE binary=$state; wiring=failed: $(hint "$out")"
+    elif [ -f "$CLAUDE_HOME/skills/graphify/SKILL.md" ]; then
+        ready_outcome graphify "$state"
     else
-        note 'graphify install left no skills/graphify/SKILL.md - run "graphify install" by hand'
+        outcome graphify "INCOMPLETE binary=$state; wiring=missing skills/graphify/SKILL.md"
     fi
 }
+
+# Normalize native Windows HOME/override spelling before shell filesystem operations.
+COMPANION_HOME="$(shell_path "$COMPANION_HOME")"
 
 install_superpowers
 install_rtk
 install_graphify
 
-printf '  summary: %d ok, %d skipped, %d failed (companions are optional - none of this blocks Conductor)\n' \
-    "$ok_count" "$skip_count" "$fail_count"
+printf '  summary: %d ok, %d skipped, %d failed, %d incomplete (companions are optional - none of this blocks Conductor)\n' \
+    "$ok_count" "$skip_count" "$fail_count" "$incomplete_count"
 exit 0

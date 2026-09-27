@@ -56,39 +56,57 @@ düşməyib (ssenari onu induksiya etmir).
 
 ## Tələblər
 
-- `bash`, `git`, `python3` (quraşdırıcılara — onlar başqa alətlərə məxsus JSON
+- `bash`, `git`, Python 3.10+ (quraşdırıcılara — onlar başqa alətlərə məxsus JSON
   konfiqlərini redaktə edir — və icra zamanı test icraları jurnalına lazımdır: python
   olmadan jurnal səssizcə heç nə yazmır, qalan hook-lar işləyir)
-- Windows: git ilə gələn Git Bash kifayətdir. Linux və macOS heç bir qeyd-şərtsiz işləyir
+- Windows: Git Bash daxil olan Git for Windows; adi PowerShell-dən başlatmaq olar.
+  Windows və Linux CI-də yoxlanılır; macOS ayrıca yoxlanılmayıb
 - [Claude Code](https://claude.com/claude-code) — quraşdırılıb və daxil olunub
 - Cursor, Google Antigravity və/və ya OpenAI Codex — istəyə görə (adapterlər qlobal quraşdırılır)
 
 ## Quraşdırma
 
-```bash
-git clone https://github.com/Morqqulis/conductor.git
-cd conductor
+**Bir qlobal quraşdırıcı, klonlama tələb olunmur.** Rəsmi mənbə arxivini müvəqqəti
+qovluğa yükləyir, Conductor-u Claude Code, Codex və Antigravity üçün quraşdırır,
+Cursor qaydasını hazırlayır, həmçinin Superpowers, RTK və Graphify-ni quraşdırır.
 
-# 1. Claude Code: nüvə, hook-lar, qlobal CLAUDE.md (+smoke-test; cavab dilini soruşacaq)
-bash install.sh
+Windows, PowerShell:
 
-# 2. Cursor + Antigravity + Codex qlobal (yadda saxlanmış dili təklif edəcək)
-bash install-global.sh
+```powershell
+& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/Morqqulis/conductor/main/install.ps1')))
 ```
 
-Əvvəlcədən bilməyə dəyər iki yan təsir. `install.sh` [4/5] addımında üç əlavə alət də
-quraşdırır (aşağıya baxın) — əvvəllər o, əksinə, superpowers plaginini söndürürdü; indi
-Conductor və superpowers bilərəkdən birlikdə quraşdırılır. `install-global.sh`
-`~/.gemini/AGENTS.md` və `~/.codex/AGENTS.md` fayllarını yenidən yazır: orada öz mətniniz
-idisə, o, `*.bak-<vaxt möhürü>` nüsxəsində saxlanılır və quraşdırıcı bu barədə ucadan
-xəbərdarlıq edir. Quraşdırmanın sağlamlığını istənilən vaxt yoxlamaq:
-`bash tools/doctor.sh`.
+Linux/macOS və ya Git Bash:
+
+```bash
+set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash
+```
+
+Bu əmrlər rəsmi repozitoriyanın kodunu icra edir. Əvvəlcə yoxlamaq istəyirsinizsə,
+skripti yükləyin, oxuyun və yerli başladın. Git və Python əvvəlcədən quraşdırılmalıdır;
+yükləyici onları səssiz quraşdırmır və sistemin təhlükəsizlik siyasətini dəyişmir.
+Rus, ingilis və ya Azərbaycan dilini seçin. Terminal yoxdursa, saxlanmış dil,
+o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language Azerbaijani` əlavə edin
+və ya konveyerin son `bash` əmrini `bash -s -- --language Azerbaijani` ilə əvəz edin.
+
+Artıq yüklənmiş mənbə qovluğunda **yalnız** `bash install.sh` kifayətdir.
+`--scope claude` Claude Code-u, `--scope global` digər qlobal adapterləri seçir;
+standart seçim `all`-dır. PowerShell-də `-Scope claude/global/all` istifadə olunur.
+`install-global.sh` daxili/uyğunluq addımı kimi qalır, onu ayrıca başlatmaq lazım deyil.
+Cursor qaydasını əvvəlki kimi əl ilə aktivləşdirmək lazımdır; quraşdırıcı yolunu göstərir.
+
+İlk quraşdırma mövcud qlobal qaydaları xəbərdarlıq və ehtiyat nüsxə ilə əvəz edir.
+Əlavə nüsxə `~/.local/state/conductor/installs/<id>/` altında saxlanılır (paylaşmayın).
+Bu, əl ilə bərpa üçündür, `conductor rollback` üçün deyil. Qeydiyyatlı fayllarda şəxsi
+dəyişiklik varsa, təkrar quraşdırma dayanır. Dərslər və layihə yaddaşı əvəz edilmir.
+Adi quraşdırıcı tranzaksiyalı deyil: dayanarsa, çıxışı və nüsxəni yoxlayın;
+onu başqa quraşdırıcı və ya `conductor update` ilə eyni vaxtda işlətməyin.
 
 ### İstənilən qovluqdan yeniləmə
 
-Hər iki quraşdırıcı əmri `~/.local/bin` qovluğuna yerləşdirir (Windows-da həmçinin
+Quraşdırıcı əmri `~/.local/bin` qovluğuna yerləşdirir (Windows-da həmçinin
 `conductor.cmd`). Əmr tapılmırsa, bu qovluğu PATH-a əlavə edin və ya tam yolu istifadə edin.
-Köhnə quraşdırma üçün tələb olunan mühitin yeni quraşdırıcısını bir dəfə başladın; sonra:
+Köhnə quraşdırma üçün vahid quraşdırıcını bir dəfə başladın; sonra:
 
 ```bash
 conductor status
@@ -127,27 +145,26 @@ Quraşdırmanın [4/5] addımı — ayrıca kök skripti `install-companions.sh`
   söndürürdü; indi siyasət əksinədir: Conductor prosesin onurğasıdır, superpowers isə
   onun üstündə bacarıqlar verir.
 - [rtk](https://github.com/rtk-ai/rtk) — terminal çıxışını sıxaraq token qənaət edən Rust
-  proqramı. Sistemdə cargo varsa,
-  `cargo install --git https://github.com/rtk-ai/rtk` ilə quraşdırılır; yoxdursa,
-  quraşdırıcı ucadan SKIP sətri çap edir və reliz səhifəsindən hazır binar faylı
-  yükləməyi məsləhət görür (doğma Windows dəstəklənir). Bağlantını — Claude Code hook-u və
-  `~/.claude/RTK.md` — rtk özü `rtk init -g` əmri ilə qurur; bağlantı yoxdursa, əmr
-  avtomatik işə düşür.
+  proqramı. Quraşdırıcı hazır proqramı rəsmi GitHub relizindən yükləyir və SHA-256 ilə
+  yoxlayır; Rust və Cargo lazım deyil. Claude Code bağlantısı (hook, `RTK.md` və ona istinad)
+  `rtk init -g --auto-patch` əmri ilə yaradılır.
 - [graphify](https://github.com/Graphify-Labs/graphify) — kod bazası üzrə bilik qrafı
-  quran alət. `uv tool install graphifyy` ilə quraşdırılır (paketin adı `graphifyy`, əmr
-  isə `graphify`), ehtiyat variant — `pip install graphifyy`; sonra `graphify install`
-  `/graphify` bacarığını qeydiyyatdan keçirir, əgər o hələ qeydiyyatda deyilsə.
+  quran alət. PyPI-dakı `graphifyy` paketi mövcud `uv` və ya Python `venv` vasitəsilə ayrıca
+  mühitə quraşdırılır; sistemin pip mühiti dəyişmir. Sonra Claude bacarığı qoşulur.
+  Codex üçün quraşdırıcı bacarığı qoşan ayrıca əmri göstərir.
 
 Bayraqlar: `--skip-companions` bütün addımı atlayır (CI-nin izolyasiya olunmuş
 smoke-testi məhz belə edir); `--no-superpowers` yalnız plagindən imtina edir;
 `--keep-superpowers` uyğunluq üçün qəbul edilir və heç nə etmir — plagin onsuz da
 quraşdırılır.
 
-Hər uğursuzluq ucadan bildirilir və heç vaxt Conductor quraşdırmasını dayandırmır:
-quraşdırıla bilməyən alət səbəbi ilə birlikdə SKIP və ya FAIL sətri çap edir, quraşdırma
-isə davam edir. Təkrar işə salmaq təhlükəsizdir — artıq qoyulmuş alət üçün «OK already»
-yazılır. `uninstall.sh` bu üç aləti silmir: onlar istifadəçi səviyyəsindədir və öz
-həyatlarını yaşayır.
+Mövcud işlək alətlər yenilənmədən istifadə olunur. Yeni fayllar Conductor runtime-dan
+kənarda saxlanır və `uninstall.sh` onları silmir. Köməkçi alətin xətası Conductor-un öz
+quraşdırılmasını dayandırmır: hər nəticədə səbəbi ilə `OK`, `SKIP`, `FAIL` və ya `INCOMPLETE`
+göstərilir. Sonuncu, məsələn, proqramın yükləndiyini, amma bağlantının hazır olmadığını
+bildirir. Əmr qovluğu PATH-da yoxdursa, dəqiq yol və lazım olan dəyişiklik göstərilir;
+shell profili avtomatik dəyişdirilmir. PATH düzəlişindən sonra terminalı və agenti yenidən
+başladın. Natamam mühit diaqnostika üçün saxlanır, təkrar cəhddə üzərinə yazılmır.
 
 Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyalanacaq):
 

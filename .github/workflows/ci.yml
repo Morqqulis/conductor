@@ -49,6 +49,7 @@ jobs:
       - name: Trust-path behavior self-tests
         run: |
           python -B qa/companions-test.py
+          python -B -m unittest discover -s qa/companions -v
           bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
           bash qa/journal-report-test.sh
@@ -64,6 +65,9 @@ jobs:
 
       - name: Recoverable CLI updates
         run: python -B -m unittest discover -s qa/updater -v
+
+      - name: Unified first install and GitHub bootstrap
+        run: python -B -m unittest discover -s qa/bootstrap -v
 
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |

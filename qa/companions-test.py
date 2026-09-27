@@ -2,8 +2,8 @@
 """Run the real installer with external commands fenced into a temporary fixture.
 
 Run: python qa/companions-test.py -v
-Only claude's process boundary is simulated; status parsing and fallbacks are real.
-HOME/USERPROFILE are inherited unchanged. No real plugin or companion mutation runs.
+Only external process boundaries are simulated; status parsing and fallbacks are real.
+HOME/USERPROFILE and app data are isolated. No real plugin or companion mutation runs.
 """
 
 import os
@@ -52,6 +52,8 @@ class CompanionsTest(unittest.TestCase):
             config.mkdir()
             bin_dir = fixture / "bin"
             bin_dir.mkdir()
+            profile = fixture / "profile"
+            profile.mkdir()
             replies = []
             for index, reply in enumerate(listings, 1):
                 stdout, code, stderr = reply if isinstance(reply, tuple) else (reply, 0, "")
@@ -81,15 +83,19 @@ class CompanionsTest(unittest.TestCase):
             # Fence every install/wiring tool even if the production guard regresses.
             blocked = ('#!/bin/bash\n'
                        'if [ "${0##*/} $*" = "rtk --version" ]; then echo "rtk fixture"; exit 0; fi\n'
+                       'if [ "${0##*/} $*" = "graphify --help" ]; then echo "graphify fixture"; exit 0; fi\n'
                        'printf "%s %s\\n" "$0" "$*" >> "$COMPANIONS_FIXTURE/blocked"\n'
                        'echo "fixture: forbidden external mutation" >&2\nexit 97\n')
-            for tool in ("rtk", "graphify", "cargo", "uv", "pip", "pip3", "curl", "git", "npm", "npx"):
+            for tool in ("rtk", "graphify", "cargo", "uv", "pip", "pip3", "curl", "git", "npm", "npx", "python3", "python"):
                 (bin_dir / tool).write_text(blocked, encoding="utf-8", newline="\n")
             for script in bin_dir.iterdir():
                 script.chmod(0o755)
             env = {key: value for key, value in os.environ.items()
-                   if key not in ("BASH_ENV", "ENV") and not key.startswith("BASH_FUNC_")}
+                   if key not in ("BASH_ENV", "ENV") and not key.startswith(("BASH_FUNC_", "CONDUCTOR_"))}
             env.update(CLAUDE_CONFIG_DIR=bash_path(config),
+                       HOME=bash_path(profile), USERPROFILE=str(profile),
+                       APPDATA=str(profile / "AppData/Roaming"),
+                       LOCALAPPDATA=str(profile / "AppData/Local"),
                        COMPANIONS_FIXTURE=bash_path(fixture))
             result = subprocess.run(
                 [bash, "--noprofile", "--norc", "-c",
@@ -107,8 +113,9 @@ class CompanionsTest(unittest.TestCase):
             lines = re.findall(r"^  superpowers: (.*)$", result.stdout, re.MULTILINE)
             self.assertEqual(len(lines), 1, output)
             status = lines[0].split()[0]
-            totals = {"OK": "3 ok, 0 skipped, 0 failed", "FAIL": "2 ok, 0 skipped, 1 failed",
-                      "SKIP": "2 ok, 1 skipped, 0 failed"}
+            totals = {"OK": "1 ok, 0 skipped, 0 failed, 2 incomplete",
+                      "FAIL": "0 ok, 0 skipped, 1 failed, 2 incomplete",
+                      "SKIP": "0 ok, 1 skipped, 0 failed, 2 incomplete"}
             self.assertIn("summary: " + totals[status], output)
             return lines[0], calls, output
 

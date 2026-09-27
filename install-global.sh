@@ -16,6 +16,8 @@
 #   ./install-global.sh                       ask for the reply language (the choice saved
 #                                             by a previous run is offered as the default)
 #   ./install-global.sh --language Azerbaijani  set it without the prompt
+# Internal/legacy adapter stage. New installations use install.sh once for all agents.
+#   ./install-global.sh --skip-global-md       do not regenerate Claude values
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,12 +25,14 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 CLAUDE_HOME="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 LANGUAGE=''
 LANGUAGE_SET=0
+SKIP_GLOBAL_MD=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --language)   [ $# -ge 2 ] || { echo "--language needs a value" >&2; exit 2; }
                       LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
         --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
+        --skip-global-md) SKIP_GLOBAL_MD=1; shift ;;
         -h|--help)    sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
@@ -52,8 +56,9 @@ warn_foreign_rules() {  # warn_foreign_rules <path> (call AFTER backup)
 }
 
 PYTHON=''
-for candidate in python3 python; do
-    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import json' >/dev/null 2>&1; then
+for candidate in "${CONDUCTOR_PYTHON:-}" python3 python; do
+    [ -n "$candidate" ] || continue
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import json,sys; sys.exit(sys.version_info < (3, 10))' >/dev/null 2>&1; then
         PYTHON="$candidate"; break
     fi
 done
@@ -122,7 +127,9 @@ fi
 # reasoning into Russian regardless of the reply line, and an in-place patch of the
 # installed copy could never switch a language back.
 GLOBAL_MD="$CLAUDE_HOME/CLAUDE.md"
-if [ -f "$GLOBAL_MD" ]; then
+if [ "$SKIP_GLOBAL_MD" -eq 1 ]; then
+    echo '      global CLAUDE.md unchanged (handled by the caller or explicitly skipped)'
+elif [ -f "$GLOBAL_MD" ]; then
     backup "$GLOBAL_MD"
     apply_reply_language "$LANGUAGE" "$DEPLOY_MD" > "$GLOBAL_MD"
     echo "      global CLAUDE.md regenerated for $LANGUAGE (backup: CLAUDE.md.bak-$STAMP)"
@@ -196,7 +203,7 @@ fi
 [ -d "$TPL_ROOT" ] && rm -rf "$TPL_ROOT"
 
 cli_scopes=(global)
-[ ! -f "$GLOBAL_MD" ] || cli_scopes+=(values)
+if [ "$SKIP_GLOBAL_MD" -eq 0 ] && [ -f "$GLOBAL_MD" ]; then cli_scopes+=(values); fi
 install_update_cli "${cli_scopes[@]}" || die 'could not register the update command'
 
 echo

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Conductor installer for Claude Code.
+# One global Conductor installer: Claude Code, Codex, Antigravity and Cursor rule.
 #
 # Deploys the runtime tree, registers the four hooks in settings.json, installs the
 # global CLAUDE.md, installs the companion tools (superpowers, rtk, graphify), and proves
@@ -12,6 +12,8 @@
 #   ./install.sh --skip-global-md     leave ~/.claude/CLAUDE.md alone
 #   ./install.sh --skip-companions    install nothing but Conductor itself
 #   ./install.sh --no-superpowers     install rtk and graphify, but not the superpowers plugin
+#   ./install.sh --scope claude      only Claude Code (default: all)
+#   ./install.sh --scope global      only Codex/Antigravity/Cursor adapters
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,6 +28,7 @@ SKIP_COMPANIONS=0
 NO_SUPERPOWERS=0
 LANGUAGE=''
 LANGUAGE_SET=0
+SCOPE=all
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -35,12 +38,15 @@ while [ $# -gt 0 ]; do
         --skip-global-md)   SKIP_GLOBAL_MD=1; shift ;;
         --skip-companions)  SKIP_COMPANIONS=1; shift ;;
         --no-superpowers)   NO_SUPERPOWERS=1; shift ;;
+        --scope)            [ $# -ge 2 ] || { echo '--scope needs all, claude or global' >&2; exit 2; }
+                            SCOPE="$2"; shift 2 ;;
         --keep-superpowers) echo 'NOTE: --keep-superpowers is deprecated - superpowers is now installed by default; use --no-superpowers to opt out' >&2
                             shift ;;
         -h|--help)          sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
+case "$SCOPE" in all|claude|global) : ;; *) echo 'invalid --scope: use all, claude or global' >&2; exit 2 ;; esac
 
 die() { printf '\nInstall FAILED: %s\n' "$1" >&2; exit 1; }
 
@@ -70,15 +76,53 @@ echo '=== Conductor installer (bash) ==='
 # --- 0. Preflight ---------------------------------------------------------------------
 [ -f "$REPO/runtime/core.md" ] || die "run this from the conductor repo root (runtime/core.md not found next to install.sh)"
 PYTHON=''
-for candidate in python3 python; do
-    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import json' >/dev/null 2>&1; then
+for candidate in "${CONDUCTOR_PYTHON:-}" python3 python; do
+    [ -n "$candidate" ] || continue
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import json,sys; sys.exit(sys.version_info < (3, 10))' >/dev/null 2>&1; then
         PYTHON="$candidate"; break
     fi
 done
 [ -n "$PYTHON" ] || die "python3 is required to edit settings.json safely (it holds your model, plugins and other tools' hooks). Install Python, or add the hook entries by hand - see tools/settings-json.py."
+"$PYTHON" -c 'import sys; sys.exit(sys.version_info < (3, 10))' || die 'Python 3.10+ is required'
+command -v git >/dev/null 2>&1 || die 'Git is required (on Windows, install Git for Windows with Git Bash)'
 canonical_config_home || die 'could not resolve the configuration directory'
 CONDUCTOR_DIR="$CLAUDE_HOME/conductor"
 SETTINGS="$CLAUDE_HOME/settings.json"
+preflight_args=(--scope "$SCOPE")
+[ "$SKIP_GLOBAL_MD" -eq 0 ] || preflight_args+=(--skip-global-md)
+PYTHONIOENCODING=utf-8 "$PYTHON" -B "$(winpath "$REPO/tools/install-preflight.py")" \
+    --config "$(winpath "$CLAUDE_HOME")" --profile "$(winpath "$HOME")" \
+    "${preflight_args[@]}" || die 'preflight refused; installed files unchanged'
+if [ "$SCOPE" != claude ]; then
+    [ -f "$REPO/install-global.sh" ] || die 'global adapter installer is missing'
+fi
+
+install_adapters() {
+    local args=()
+    [ -z "$LANGUAGE" ] || args+=(--language "$LANGUAGE")
+    # The Claude stage already handled values; never overwrite its ORIGINAL backup.
+    if [ "$SCOPE" = all ] || [ "$SKIP_GLOBAL_MD" -eq 1 ]; then args+=(--skip-global-md); fi
+    bash "$REPO/install-global.sh" "${args[@]}"
+}
+
+install_companions() {
+    if [ "$SKIP_COMPANIONS" -eq 1 ]; then
+        echo '[4/5] companion tools skipped (--skip-companions)'
+    elif [ ! -f "$REPO/install-companions.sh" ]; then
+        echo '[4/5] WARNING: install-companions.sh missing - companion tools not installed'
+    elif [ "$NO_SUPERPOWERS" -eq 1 ]; then
+        bash "$REPO/install-companions.sh" --no-superpowers
+    else
+        bash "$REPO/install-companions.sh"
+    fi
+}
+
+if [ "$SCOPE" = global ]; then
+    install_adapters
+    install_companions
+    echo 'Global adapter installation complete; see individual companion results above.'
+    exit 0
+fi
 
 # --- 1. Runtime tree ------------------------------------------------------------------
 mkdir -p "$CONDUCTOR_DIR"
@@ -181,20 +225,7 @@ fi
 # user-level tools, not part of the runtime tree: the companion script reports one outcome
 # line per tool and always exits 0, so an unreachable third-party install can never fail an
 # install that has already deployed the runtime. uninstall.sh leaves all three in place.
-if [ "$SKIP_COMPANIONS" -eq 1 ]; then
-    echo '[4/5] companion tools skipped (--skip-companions)'
-elif [ ! -f "$REPO/install-companions.sh" ]; then
-    # CI runs with --skip-companions, so a checkout missing this file would otherwise
-    # sail through CI and die here for real users (set -e turns the 127 into an abort).
-    echo '[4/5] WARNING: install-companions.sh missing from this checkout - companion tools not installed'
-else
-    echo '[4/5] companion tools (superpowers, rtk, graphify)'
-    if [ "$NO_SUPERPOWERS" -eq 1 ]; then
-        bash "$REPO/install-companions.sh" --no-superpowers
-    else
-        bash "$REPO/install-companions.sh"
-    fi
-fi
+install_companions
 
 # --- 5. Smoke test: run the hook the way the harness will -----------------------------
 # Verifying the registered command string, not just the file, is deliberate: the failure
@@ -222,6 +253,11 @@ esac
 cli_scopes=(claude)
 [ "$SKIP_GLOBAL_MD" -eq 1 ] || cli_scopes+=(values)
 install_update_cli "${cli_scopes[@]}" || die 'could not register the update command'
+if [ "$SCOPE" = all ]; then
+    # --skip-global-md can leave LANGUAGE empty; carry the saved/default choice once.
+    if [ -z "$LANGUAGE" ]; then LANGUAGE="$(saved_reply_language "$CLAUDE_HOME")"; fi
+    install_adapters
+fi
 
 echo
-echo 'Done. Open a NEW Claude Code session - Conductor announces itself as: "Conductor: <type> | T<n>"'
+echo 'Conductor installed. Restart agent sessions; see individual companion results above.'

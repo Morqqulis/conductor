@@ -1,0 +1,76 @@
+Unified installer acceptance — 2026-09-27
+
+Scope: one default global install, GitHub ZIP bootstrap without checkout,
+owned-file preflight/backups, companion acquisition and RU/EN/AZ instructions.
+Existing rule bodies, project memory and evidence semantics were not changed.
+
+Main checks inspected on Windows:
+python -B -m unittest discover -s qa/bootstrap -v
+  Final run: 20 tests, OK, exit 0. Includes native Windows PowerShell 5.1, Git Bash,
+  failed download, argument/exit forwarding, archive traversal/link/collision bounds,
+  real installer from a ZIP, Unicode home with legacy parent output encoding,
+  saved language, all scopes, private memory and manual-change preservation.
+  Receipt checks were extended and the downloaded-archive case rerun: OK, exit 0.
+python -B -m unittest discover -s qa/updater -v
+  40 tests, OK, 3 platform/short-path skips, exit 0.
+python -B -m unittest discover -s qa/evidence -v
+  80 tests, OK, 3 platform skips, exit 0; reused after installer-only edits.
+bash qa/doctor-test.sh; bash qa/uninstall-test.sh
+  Both exit 0; uninstall 7/7. Real profile untouched.
+
+Linux container f49565f188ee, source mounted read-only:
+python3 -B -m unittest discover -s qa/bootstrap -v
+  Final run: 20 tests, OK, 3 Windows-only skips, exit 0.
+python3 -B -m unittest discover -s qa/updater -v
+  40 tests, OK, 4 Windows-only skips, exit 0.
+bash qa/lint.sh
+  PASS: core 9443/9500, contract 2998/3000, exit 0.
+
+Observed regressions and controls:
+- Windows PowerShell native stderr aborted Python candidate fallback.
+  Current test in isolated current copy: pass / own fix removed assertion-FAIL /
+  own fix restored pass. Current production test passes.
+- A downloaded commit was printed but not stored. New assertion failed with null
+  revision, then passed after installed-payload verification and receipt.
+- Linux copy modes differed despite identical bytes. Observational comparison
+  showed mode-only differences; receipt now normalizes owned modes before smoke.
+- Windows ZipInfo normalized a hostile test name before validation; raw fixture
+  corrected so the intended backslash actually reaches the parser.
+
+Live external boundaries (isolated task directories, NOT the user's installation):
+- Official Conductor archive downloaded for c113cc28b0327b9be592efa53897744fbf3cf102:
+  335 extracted files, no .git directory.
+- tools/companion-download.py downloaded an official checksum-verified RTK release;
+  downloaded executable --version returned rtk 0.50.0, exit 0.
+- tools/companion-python.py installed graphifyy 0.9.69 with uv into task-local
+  tool/cache directories; downloaded graphify --version returned 0.9.69, exit 0.
+  The command warned that existing user skills were older; they were not overwritten.
+
+Limits: macOS/native ARM not executed. Runtime-dependent third-party behavior can
+still fail and is reported per tool. First-install snapshots are manual recovery,
+not conductor rollback backups. Companion outcomes and final graph/publication
+evidence are appended below after integration; pending is not passing.
+
+Final companion integration (independently executed after code review):
+python -B -m unittest discover -s qa/companions -v
+  Windows: 40 tests, OK, exit 0. Linux: 40 tests, OK, exit 0.
+python -B qa/companions-test.py -v
+  Windows: 14 tests, OK, exit 0. Linux: 14 tests, OK, exit 0.
+Actual isolated Linux official RTK download + --version: rtk 0.50.0, exit 0.
+Actual isolated Windows wiring, official RTK 0.50.0 + Graphify 0.9.69:
+  both OK; settings hook, RTK.md and Claude Graphify skill exist; exit 0.
+Copying real Graphify console entrypoint to another user-bin directory preserves
+its isolated interpreter: --version returns 0.9.69, exit 0.
+Companions now live outside the removable runtime; actual sandbox uninstall
+preserves their data and usable commands. Acquired commands share ~/.local/bin.
+Missing PATH defers RTK hook registration; add the printed path, restart the shell
+and repeat the same installation command. Graphify explicitly targets Claude;
+the printed Codex skill command is optional. Existing tools are not upgraded.
+
+Empty HTTP-success response regression: Bash and PowerShell originally returned
+zero for an empty downloaded Python file. Both tests now reject it. Isolated
+CURRENT-copy control: pass / only own empty-file guards removed assertion-FAIL /
+guards restored pass. Main source and current tests retained throughout.
+Search retired cargo/system-pip commands in non-graph source: 0 hits.
+Foreign graph backup remains unchanged:
+B81699CD5431126F0B784454D2EB436BA311F47E174DFEC810FDB4BC76BF9F11.

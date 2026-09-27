@@ -1,0 +1,91 @@
+Graphify semantic refresh repair — 2026-09-27
+
+Status: verified and published to graphify-out; limitations below remain explicit.
+Baseline: commit 2def307; graph 1437 nodes / 2798 edges.
+Reproduction: the rejected previous CLI extraction cache contains only 7 CHANGELOG
+nodes versus 49 in the baseline, before build_merge. Several referenced files were
+misattributed to their own paths rather than to the document that mentioned them.
+The surviving cache also reuses generic ids across source files. The shrink guard
+correctly identified incomplete extraction; disabling it is not a repair.
+
+Repair scope: re-extract the six changed documents via Graphify's extraction skill,
+reconcile prior entities against actual current text, rebuild changed code using
+Graphify AST, then validate before replacing graph.json and its manifest/cache.
+No runtime rules, existing memory entries, installer behavior or global tool versions
+are changed. No forced shrink, HTML generation or full human report was performed.
+
+Replacement gate: tools/graphify-check.py (read-only; Python standard library).
+Invocation before Graphify cache/save/merge:
+  python tools/graphify-check.py --root . --graph <previous-graph.json>
+    --extraction <semantic.json> --review <reconciliation.json>
+The reconciliation has a sources object keyed by repo-relative document path;
+each entry contains source_sha256, retained/added ID arrays, and removed objects
+with id and a source-grounded reason. The gate checks provenance, stable identity,
+explicit removals, current bytes, ID collisions and endpoints; it cannot prove
+that a model's removal reason or interpretation is correct. Inspect those against
+the current source. AST-owned nodes are checked by the code extraction, not counted
+as semantic document entities. New document nodes cannot claim AST ownership.
+
+Executed proof:
+- Windows and Linux: python -B qa/graphify-check-test.py -v, 21 tests, OK, exit 0.
+- TDD: missing guard first failed an assertion; unscoped IDs and false AST ownership
+  were accepted before their guards, then rejected with the guards in place.
+- Isolated current test: pass / remove missing-entity check -> assertion FAIL /
+  restore check -> pass. The public graph was never involved in that mutation.
+- Saved rejected CLI cache: the new gate returned REJECTED/exit 1 before any merge.
+- bash qa/lint.sh: PASS, core 9450/9500, contract 2998/3000. git diff --check: exit 0.
+- Final AST preparation: 117 code files, failed_sources empty. Semantic cache save
+  and reload: all six refreshed sources hit; every prepared semantic ID survives.
+
+Second proven cause: Graphify 0.9.67 build_merge collapses document concepts whose
+labels are bare code filenames, even with dedup=False. This discards documentary
+identity and rationale; 13 old AST file nodes also incorrectly named README.en.md
+as their source. New install.ps1 changed the canonical install.sh file-node ID.
+tools/graphify-mentions.py now prepares the inputs: retain document IDs and context,
+make their reference labels explicit, link to the unique actual code file, repair
+AST provenance and rewire reviewed aliases. Ambiguous basenames are not guessed.
+It writes a separate directory and refuses to overwrite it; inputs are unchanged.
+
+Order for a future semantic refresh (the stock Graphify CLI is NOT patched):
+1. Extract changed documents with the extraction skill and inspect reconciliation.
+2. Run graphify-check.py against the prior graph, extraction and source-bound review.
+3. Extract current AST with Graphify, then prepare document mentions:
+   python tools/graphify-mentions.py --root . --graph <previous-graph.json>
+     --ast <ast.json> --semantic <semantic.json> --out <new-prepared-directory>
+4. Use the prepared graph and semantic data in Graphify build_merge with dedup=False;
+   check retention of every unremoved old semantic ID and all fresh semantic IDs,
+   source hashes and edge/hyperedge endpoints. Review edge removals separately.
+5. Save/reload the prepared semantic cache and successful manifest in staging,
+   verify there are no changed sources, then replace the public generated data.
+Do not clear a shrink guard or accept an extraction solely because it is larger.
+
+Actual-library negative control: the current build passed, then failed with the
+same Graphify #479 preservation error when ONLY mention preparation was removed;
+restoring that preparation passed. Nine unchanged-document identities would have
+been lost without it. No public file was used for this mutation test.
+
+Publication proof (after final test-file edit):
+- 1771 nodes, 3597 edges, 60 hyperedges; 49 documents, 117 code files.
+- SHA-256 matched current contents of all 166 detected sources after publication.
+- Lost unremoved semantic IDs: 0; missing/dangling endpoints: 0; all hyperedges resolve.
+- One obsolete HANDOFF report citation was explicitly replaced, not merged by name.
+  Three obsolete/unsupported old edges were reviewed and removed; other-source edges
+  and all nine reviewed prior document hyperedges were retained.
+- detect_incremental: new_total=0, no deleted files.
+- graph.json SHA-256: C340ACD03BDDDA6D2A8031B90ED836B3FA41CCF0EBF4EC05638F38C310754336.
+- Before the final test-only AST refresh, the real Graphify extract CLI ran twice
+  on staging with --no-cluster --max-workers 1, both exit 0, no document extraction.
+  The second result was byte-identical; the first serialized the raw edge format.
+  Read-only querying also worked on the published graph.
+- Copy verification covered graph, manifest, analysis, labels and cache; no old
+  caches or backups were deleted. The unrelated pre-existing backup stayed unchanged.
+
+Limits: the standard detector does not parse 21 unclassified repository files.
+Five JSON fixtures/configs have no AST nodes and stock CLI harmlessly queues them
+again even with an up-to-date manifest; this did not trigger document/LLM work.
+The AST extractor retains nine self-call edges (six already existed), including
+incorrect super() resolution, and labelled external endpoints without local paths.
+These are navigation limitations, not proven call semantics; read source to verify.
+No general upstream AST repair is claimed. Existing HTML/GRAPH_REPORT and cost.json
+were not refreshed; they remain historical. Subagent token usage is unavailable.
+The graph is a navigation aid, never a substitute for current source evidence.

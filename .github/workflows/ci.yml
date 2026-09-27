@@ -69,6 +69,9 @@ jobs:
       - name: Unified first install and GitHub bootstrap
         run: python -B -m unittest discover -s qa/bootstrap -v
 
+      - name: Graphify semantic update guard
+        run: python -B qa/graphify-check-test.py -v
+
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |
           SB="$(mktemp -d)"

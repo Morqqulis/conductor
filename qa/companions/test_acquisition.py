@@ -154,9 +154,13 @@ esac
 
     def test_new_binary_is_selected_outside_original_path(self):
         self.include_local_bin = False
+        # Force an alias even on hosts without Windows 8.3 short names.
+        (self.fixture / "parent").mkdir()
+        self.dest = self.fixture / "parent" / ".." / "owned tools"
+        self.env["CONDUCTOR_COMPANION_HOME"] = bash_path(self.dest)
         output = self.run_installer()
         self.assertEqual(output.count(": INSTALLED"), 2, output)
-        self.assertIn(str(self.dest), output)
+        self.assertIn(str(self.dest.resolve()), output)
 
     def test_native_python_path_and_non_ascii_destinations(self):
         self.dest = self.fixture / "инструменты с пробелом &"

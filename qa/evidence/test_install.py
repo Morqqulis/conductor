@@ -39,8 +39,9 @@ class InstallTests(unittest.TestCase):
                         GIT_CONFIG_GLOBAL=str(self.base / "gitconfig"), GIT_CONFIG_NOSYSTEM="1",
                         EVIDENCE_TEST_BIN=str(self.bin), EVIDENCE_TEST_PYTHON=str(Path(sys.executable).parent))
 
-    def install(self, script, language="Russian", missing_python=False):
+    def install(self, script, language="Russian", missing_python=False, expected=0):
         if missing_python:
+            self.env.pop("CONDUCTOR_PYTHON", None)
             for name in ("python3", "python"):
                 stub = self.bin / name
                 stub.write_text("#!/usr/bin/env bash\nexit 127\n", encoding="utf-8")
@@ -56,7 +57,7 @@ class InstallTests(unittest.TestCase):
             args.append("--skip-companions")
         result = subprocess.run(args, cwd=ROOT, env=self.env, stdin=subprocess.DEVNULL,
                                 capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=40)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         return result
 
     def prove_installed(self):
@@ -83,12 +84,17 @@ class InstallTests(unittest.TestCase):
         self.install("install.sh")
         self.prove_installed()
 
-    def test_global_missing_python_is_loud_not_fatal(self):
-        result = self.install("install-global.sh", missing_python=True)
-        self.assertIn("evidence", result.stdout + result.stderr)
-        self.assertIn("unavailable", result.stdout + result.stderr)
-        self.assertTrue((self.profile / ".codex" / "AGENTS.md").exists())
-        self.assertEqual(self.receipt.read_bytes(), b"old evidence\n")
+    def test_global_missing_python_refuses_before_any_user_file_changes(self):
+        rule = self.profile / ".codex" / "AGENTS.md"
+        rule.parent.mkdir()
+        rule.write_bytes(b"personal rules\n")
+        def snapshot():
+            return {str(p): p.read_bytes() for root in (self.profile, self.config, self.home)
+                    for p in root.rglob("*") if p.is_file()}
+        before = snapshot()
+        result = self.install("install-global.sh", missing_python=True, expected=1)
+        self.assertIn("Python", result.stderr)
+        self.assertEqual(snapshot(), before)
 
 
 if __name__ == "__main__":

@@ -176,6 +176,41 @@ Quraşdırmadan sonra Cursor və Antigravity-ni yenidən başladın (hook konfiq
 startda oxunur). Hər quraşdırıcı təkrar işə salınanda təhlükəsizdir və dəyişdirdiyi
 hər şeyin ehtiyat nüsxəsini (`*.bak-<vaxt möhürü>`) saxlayır.
 
+## Graphify xəritəsinin təhlükəsiz yenilənməsi
+
+Bu, işçi repozitoridə xəritəyə qulluq üçündür; quraşdırılmış qaydaları yeniləyən
+`conductor update` əmrindən ayrıdır. Repozitorinin kökündə, `uv` və Python 3.10+ ilə:
+
+```bash
+uv run --with graphifyy==0.9.67 python tools/graphify-update.py --root .
+```
+
+`uv` əvəzinə `graphifyy==0.9.67` quraşdırılmış Python 3.10+ mühitində
+`python tools/graphify-update.py --root .` işlətmək olar. Yalnız kod dəyişibsə, əmr bütün
+kodun AST-sini (sintaksis ağacını) lokal olaraq yenidən qurur, modelə müraciət etmir.
+
+Dəyişmiş sənədlər məna təhlili tələb edir: əmr `NEEDS_SEMANTIC`, `3` çıxış kodu və sorğu
+faylının yolunu qaytarır, dərc olunmuş xəritə fayllarını dəyişmir. Cari sessiyanın agenti
+Graphify bacarığından istifadə edərək sorğudakı faylları və əvvəlki qrafı oxuyur,
+ilkin ID-ləri, kənarları və hiperkənarları (bir neçə düyün arasındakı əlaqələri)
+uzlaşdırır, silinmələri mənbə mətninə əsasən izah edir. Sonra eyni əmri
+`--semantic FILE --review FILE` ilə təkrar işə salır. Bu giriş faylları təhlil edilən
+fayllar toplusundan kənarda və ya `graphify-out/.conductor/` altında olmalıdır.
+Faktiki təhlil promptunu saxlayan könüllü `--prompt-file FILE` mənbələrə və prompta bağlı
+semantik keşi aktivləşdirir. Yoxlamalar məna təhlilinin tamlığını avtomatik sübut etmir;
+bunu agent qiymətləndirməlidir.
+
+Eyni əmr məcburi yoxlamaları tətbiq edir, nəticəni ayrıca qovluqda hazırlayır, mənbələrin
+dəyişmədiyini yoxlayır və paralel icralar üçün əməliyyat sisteminin kilidindən istifadə edir.
+Xəta zamanı geri qaytarma aparılır; qəfil kəsilmədən sonra növbəti icra yarımçıq dərcetməni
+bərpa edir. Sonradan başqasının etdiyi dəyişikliklərlə ziddiyyət bərpanı dayandırır və
+məlumatları qoruyur. Qorumaları məcburi keçmək imkanı yoxdur. Xəritəyə yazan adi Graphify
+əmrlərini eyni vaxtda işlətməyin.
+
+Uğurlu dərcetməyədək əvvəlki xəritə saxlanır; ehtiyat nüsxələr və aralıq fayllar
+`graphify-out/.conductor/` altında yerləşir və Git üçün nəzərdə tutulmayıb. Bütün fayllar
+eyni anda dəyişmir, oxuma kilidlənmir: `graph.json` sonuncu əvəz olunur.
+
 ## Yoxlama nəticələrinin yaddaşı
 
 Hər iki quraşdırıcı könüllü `conductor/evidence/cli.py` alətini

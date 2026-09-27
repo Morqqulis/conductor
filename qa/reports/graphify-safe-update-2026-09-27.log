@@ -1,0 +1,62 @@
+Conductor safe map update — 2026-09-27
+
+Scope: one repository-maintenance command, tools/graphify-update.py. No upstream
+Graphify patches, hidden model/API calls, global rules or installer changes.
+Engine version exercised: graphifyy 0.9.67. Source content, adapter/shared-transaction
+implementation and Graphify version are checked before publication.
+
+Observed automated evidence (after final code edits):
+- python -B -m unittest discover -s qa/graph_refresh -v
+  Windows: 51 tests, 45 passed, 6 platform/privilege skips, exit 0 (49.331s).
+  Linux container: 51 tests, 50 passed, 1 Windows-only skip, exit 0 (55.814s).
+  Includes real Graphify extraction/export, full code-only update, semantic request,
+  identity/edge/hyperedge loss, explicitly reviewed deletion/shrink, stale review,
+  input mutation, failed extraction, OS locking, hard process exit, next-run recovery,
+  rollback conflicts, path traversal, symlink/junction rejection and bounded backups.
+- python -B qa/graphify-check-test.py -v
+  22/22 passed on Windows and Linux, exit 0; explicit deleted-document test added.
+- Negative control in isolated CURRENT copy: keep current test, disarm only semantic
+  identity-loss guard. PASS -> assertion FAIL (ValueError not raised) -> PASS.
+  The fixture has no incident edge, so a neighbouring guard cannot mask the omission.
+- bash qa/lint.sh: PASS, exit 0. Ordinary CLI invocation no longer creates bytecode
+  in shipped runtime. A generated transaction.pyc was quarantined in task scratch,
+  not deleted; runtime source was not changed.
+- CI YAML parsed with PyYAML in an isolated uv environment; new step installs pinned
+  graphifyy and runs the integration suite on both OSes. Initial parse using the
+  Graphify environment lacked PyYAML; this was a validation-environment issue.
+- git diff --check: exit 0. README RU/EN/AZ usage and HANDOFF reviewed for equivalence.
+
+Real repository pre-publication check:
+uv run --with graphifyy==0.9.67 python tools/graphify-update.py --root .
+returned NEEDS_SEMANTIC / exit 3 for CI YAML, HANDOFF and the three READMEs.
+Public graph SHA256 before/after was identical:
+C340ACD03BDDDA6D2A8031B90ED836B3FA41CCF0EBF4EC05638F38C310754336
+
+Publication and round trip (observed):
+- Same command with --semantic, --review and --prompt-file under the ignored staging
+  directory returned UPDATED / exit 0. Full AST: 125 code files. Five documents were
+  freshly reconciled: 287 nodes / 514 edges / 8 hyperedges. One removed HANDOFF
+  document-specific reference and its three relationships were source-reviewed;
+  the actual semantic guard implementation was not removed.
+- Published graph: 1973 nodes / 4051 edges / 61 hyperedges, 174 source hashes,
+  49 documents and 125 code files. Geometry and live source hashes checked after
+  publication; zero unexplained semantic-ID losses, zero uncovered documents.
+- Backup 9eb5c8fa2d5e406a92c75f36bf0509d6 contains the original graph bytes;
+  decoded SHA256 matches the pre-publication hash above. No pending journal remains.
+- Same ordinary command without semantic inputs returned UNCHANGED / exit 0;
+  all public files (including cache and nonmanaged artifacts) remained byte-identical.
+- Prompt-attributed semantic cache was written and reloaded by the command's guard.
+  Host-agent token usage is unavailable; no cost estimate is invented.
+- graphify explain handoff_graphify_safe_update --graph graphify-out/graph.json:
+  exit 0, HANDOFF.md L62-L65 resolved with 20 connections to the documented lifecycle.
+
+Limits: guards enforce recorded identity/relationship retention and source stability,
+not automatic semantic truth or completeness. Documents still require a host agent.
+graph.json switches last; the whole artifact family is not atomically switched and
+readers are not locked. Do not run raw Graphify writers concurrently. Later foreign
+edits block recovery rather than being overwritten. Recovery snapshots and staging
+remain local under ignored graphify-out/.conductor; no force bypass or auto-pruning.
+Managed files and serialized backup are bounded at 16 MiB; at most 2000 changed files.
+Existing upstream AST/query limitations in graphify-repair-2026-09-27.log remain.
+HTML and GRAPH_REPORT.md are not rebuilt and must not be treated as this run's output.
+The old foreign graph.json.bak-20260824-005724 remains untouched and unstaged.

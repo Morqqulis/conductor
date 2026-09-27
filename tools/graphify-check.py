@@ -32,9 +32,13 @@ def check(root, graph, extraction, review):
             if name in sources:
                 raise ValueError('duplicate canonical source')
             sources[name] = record
-            actual = hashlib.sha256((root / name).read_bytes()).hexdigest()
-            if actual != record.get('source_sha256'):
-                issue('source_changed', name)
+            if record.get('deleted'):
+                if (root / name).exists() or record.get('source_sha256') is not None:
+                    raise ValueError('deleted source must be absent, with a null hash')
+            else:
+                actual = hashlib.sha256((root / name).read_bytes()).hexdigest()
+                if actual != record.get('source_sha256'):
+                    issue('source_changed', name)
         except (OSError, ValueError) as exc:
             issue('invalid_source', f'{raw}: {exc}')
 
@@ -89,7 +93,9 @@ def check(root, graph, extraction, review):
             issue('review_mismatch', f'{name}: retained')
         if set(record.get('added', [])) != present - prior:
             issue('review_mismatch', f'{name}: added')
-        if not present:
+        if record.get('deleted') and (present or not prior):
+            issue('invalid_removal', f'{name}: document is not a complete deletion')
+        if not present and not record.get('deleted'):
             issue('empty_source', name)
 
     # Unchanged base entities are valid cross-document targets; omitted replaced

@@ -176,6 +176,39 @@ After installation, restart Cursor and Antigravity (hook configs are read at sta
 Every installer is safe to re-run and makes backup copies (`*.bak-<timestamp>`) of
 everything it changes.
 
+## Safe Graphify map updates
+
+This maintains the map in the working repository, separately from `conductor update`,
+which updates installed rules. From the repository root, with `uv` and Python 3.10+:
+
+```bash
+uv run --with graphifyy==0.9.67 python tools/graphify-update.py --root .
+```
+
+Instead of `uv`, use a Python 3.10+ environment with `graphifyy==0.9.67` and run
+`python tools/graphify-update.py --root .`. For code-only changes, the command rebuilds
+the full local AST (abstract syntax tree) for all code, without calling a model.
+
+Changed documents require semantic extraction: the command returns `NEEDS_SEMANTIC`,
+exit code `3` and a request file path, without changing published map files.
+The host agent using the Graphify skill reads the requested files and the previous graph,
+reconciles original IDs, edges and hyperedges (relationships among multiple nodes), and
+justifies removals against the source text. It then reruns the same command with
+`--semantic FILE --review FILE`. These input files must be outside the analyzed corpus
+or under `graphify-out/.conductor/`. Optional `--prompt-file FILE`, containing the actual
+extraction prompt, enables semantic caching attributed to sources and the prompt.
+The checks do not automatically prove semantic completeness; the agent must assess it.
+
+The same command applies mandatory guards, stages the result separately, checks source
+stability and uses an OS lock for concurrent invocations. Failures trigger rollback;
+after a hard interruption, the next invocation recovers the unfinished publication.
+A conflict with later foreign edits stops recovery and preserves data. There is no force
+bypass. Do not simultaneously run raw Graphify commands that write the map.
+
+The previous map is retained until successful publication; backups and staging files
+live under `graphify-out/.conductor/` and are not intended for Git. Files do not all switch
+atomically, and readers are not locked: `graph.json` switches last.
+
 ## Saved verification evidence
 
 Both installers deliver the optional `conductor/evidence/cli.py` under

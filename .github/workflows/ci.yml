@@ -72,6 +72,14 @@ jobs:
       - name: Graphify semantic update guard
         run: python -B qa/graphify-check-test.py -v
 
+      - name: Recoverable Graphify update (real engine and fault injection)
+        env:
+          PYTHONHASHSEED: '0'
+          PYTHONIOENCODING: utf-8
+        run: |
+          python -m pip install 'graphifyy==0.9.67'
+          python -B -m unittest discover -s qa/graph_refresh -v
+
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |
           SB="$(mktemp -d)"

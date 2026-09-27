@@ -6,6 +6,9 @@
 # Python bytecode from py_compile / test runs.
 __pycache__/
 
+# Staging, recovery snapshots and locks for the safe map updater.
+graphify-out/.conductor/
+
 # A/B bench artifacts - transcripts and scratch, never committed.
 qa/bench/work/
 qa/bench/transcripts/

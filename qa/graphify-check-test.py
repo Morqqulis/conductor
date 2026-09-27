@@ -129,6 +129,16 @@ class SemanticUpdateTests(unittest.TestCase):
         self.new['edges'] = [dict(source='guide_memory', target='guide_undo', source_file='guide.md')]
         self.reject('invalid_confidence')
 
+    def test_deleted_document_requires_absence_and_review_of_every_node(self):
+        (self.root / 'guide.md').unlink()
+        self.new['nodes'] = []
+        self.review['sources']['guide.md'].update(deleted=True, source_sha256=None, retained=[],
+            removed=[dict(id='guide_memory', reason='Document deleted'),
+                     dict(id='guide_undo', reason='Document deleted')])
+        self.assertEqual(self.run_check()[0], 0)
+        (self.root / 'guide.md').write_text('Still exists', encoding='utf-8')
+        self.reject('invalid_source')
+
 
 class DocumentaryMentionTests(unittest.TestCase):
     def prepare(self, base, ast, semantic):

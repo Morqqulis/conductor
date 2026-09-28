@@ -47,6 +47,62 @@ class CliTests(unittest.TestCase):
             args.append('--skip-companions')
         self.run_command(args)
 
+    def assert_language_rules(self, language):
+        saved = self.config / 'conductor/reply-language'
+        self.assertEqual(saved.read_text(encoding='utf-8').strip(), language)
+        rules = [self.config / 'CLAUDE.md', self.home / '.codex/AGENTS.md',
+                 self.home / '.gemini/AGENTS.md', self.config / 'conductor/adapters/cursor/conductor-core.mdc']
+        for path in rules:
+            with self.subTest(rule=path.name):
+                text = path.read_text(encoding='utf-8')
+                self.assertIn('Answer in ' + language, text)
+                self.assertRegex(text, r'(?is)internal reasoning[^.]{0,80}reply language')
+
+    def test_short_language_aliases_deliver_canonical_rules(self):
+        # Both entrypoints must use the same interpreter when sharing one installation.
+        self.env['CONDUCTOR_PYTHON'] = sys.executable
+        for entrypoint in ('shell', 'cli'):
+            for alias, expected in (('ru', 'Russian'), ('EN', 'English'), ('az', 'Azerbaijani')):
+                with self.subTest(entrypoint=entrypoint, alias=alias):
+                    if entrypoint == 'shell':
+                        self.install('install.sh', alias)
+                    else:
+                        self.run_command([sys.executable, '-B', ROOT / 'runtime/updater/cli.py',
+                                          '--config', self.config, '--profile', self.home,
+                                          'install', '--source', ROOT, '--language', alias,
+                                          '--skip-companions'])
+                    self.assert_language_rules(expected)
+            # Reinstallation without a language must retain the canonical saved choice.
+            with self.subTest(entrypoint=entrypoint, saved=True):
+                self.run_command(['bash', ROOT / 'install.sh', '--skip-companions'])
+                self.assert_language_rules('Azerbaijani')
+
+    def test_shell_language_aliases_keep_full_names_and_validation(self):
+        script = ('source "$1"; language="$(normalize_reply_language "$2")"; '
+                  'validate_reply_language "$language" || exit 2; printf "%s" "$language"')
+        for value, expected in ((' ru ', 'Russian'), ('eN', 'English'), ('AZ', 'Azerbaijani'),
+                                ('Russian', 'Russian'), ('English', 'English'),
+                                ('Azerbaijani', 'Azerbaijani'), ('French', 'French')):
+            with self.subTest(value=value):
+                result = self.run_command(['bash', '-c', script, 'language-test',
+                                          (ROOT / 'tools/reply-language.sh').as_posix(), value])
+                self.assertEqual(result.stdout, expected)
+        for value in ('', ' ', 'en; echo unsafe', '../ru', 'a' * 31):
+            with self.subTest(invalid=value):
+                self.run_command(['bash', '-c', script, 'language-test',
+                                  (ROOT / 'tools/reply-language.sh').as_posix(), value], code=2)
+
+    def test_project_language_alias_preserves_global_choice(self):
+        self.install('install-global.sh', 'English')
+        project = self.home / 'project'
+        project.mkdir()
+        self.run_command(['bash', ROOT / 'install-project.sh', '--repo', project, '--language', 'az'])
+        for relative in ('.cursor/rules/conductor-core.mdc', '.agents/rules/conductor-core.md'):
+            text = (project / relative).read_text(encoding='utf-8')
+            self.assertTrue('Answer in Azerbaijani' in text, relative)
+            self.assertIn('Internal reasoning follows the reply language.', text)
+        self.assertEqual((self.config / 'conductor/reply-language').read_text().strip(), 'English')
+
     def test_global_installer_delivers_command_from_any_directory_in_three_languages(self):
         for language in ('Russian', 'English', 'Azerbaijani'):
             with self.subTest(language=language):

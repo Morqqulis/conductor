@@ -87,8 +87,9 @@ These commands execute code from the official repository. To inspect it first, d
 the script, read it and run it locally. Git and Python must already be installed; the
 bootstrap does not silently install them or change the system execution policy.
 Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved language,
-or defaults to Russian. Set it explicitly with `-Language English` in PowerShell or replace
-the pipeline's final `bash` with `bash -s -- --language English`.
+or defaults to Russian. Set it explicitly with `-Language en` in PowerShell or replace
+the pipeline's final `bash` with `bash -s -- --language en`.
+Codes: `ru` for Russian, `en` for English, `az` for Azerbaijani.
 
 From a downloaded source directory, run **only** `bash install.sh`.
 `--scope claude` selects Claude Code, `--scope global` the other global adapters;
@@ -104,10 +105,10 @@ Lessons, project memory and foreign settings are preserved.
 ### Install, update and remove from any directory
 
 The global command lives in `~/.local/bin` (`conductor.cmd` on Windows).
-Add that directory to PATH if needed. Older installations need one run of the installer.
+Add that directory to PATH if needed.
 
 ```bash
-conductor install --language English
+conductor install --language en
 conductor status
 conductor update --check
 conductor update
@@ -132,6 +133,31 @@ Snapshots are private and retained after uninstall. Explicit recovery uses
 command printed by the uninstaller from a complete source copy. Windows retains small
 content-addressed dispatch files beside backups so removing the CLI preserves its exit code.
 The whole set of files is not replaced atomically; restart agent sessions after changes.
+
+### Upgrading an older installation
+
+If `conductor status` lists installed components, use `conductor update`.
+If the command is not found, check `~/.local/bin` and PATH first. If the CLI is not installed,
+run the installer above; do not uninstall Conductor or remove its memory beforehand.
+
+The same installer automatically migrates old installations without
+`~/.claude/conductor/install-state.json`, including the first PowerShell releases and
+later Bash releases. No Git history clone or separate `install-global.sh` run is needed:
+the installer includes a catalogue of complete historical file checksums. For a custom
+location, set the original `CLAUDE_CONFIG_DIR` first; it does not search your entire disk.
+
+A recoverable snapshot is created before writing. Lessons, unrelated settings and existing
+components are retained; known obsolete hooks are replaced. The language comes from the
+saved choice or recognized old rules. If they disagree, choose explicitly with
+`--language ru`, `en` or `az` (PowerShell: `-Language`). A personal or modified `CLAUDE.md`
+stays in place and is not enrolled as a Conductor-managed file.
+
+Migration does not force overwrites: modified program files or other agents' rules that
+cannot be verified as historical Conductor files stop replacement with
+`unmanaged file would be overwritten`. Keep them for manual comparison; do not delete
+memory or registration to bypass the safeguard. A corrupt registration is not treated as
+a legacy installation. After migration, use normal `conductor update` and
+`conductor uninstall`; rollback restores the old files using the printed backup path.
 
 ### Companion tools
 
@@ -286,23 +312,21 @@ commit when forgotten. The installers clean out its leftovers.
 
 ## Where the reply language is switched
 
-The language is chosen right in the terminal: on every run, both `install.sh` and
-`install-global.sh` show a menu with the previous choice already filled in as the default
-answer — just press Enter, no flags needed. To switch the language in any direction
-(including back to Russian), simply re-run the installer and pick the menu item. The
-choice is stored in `~/.claude/conductor/reply-language`, so repeated runs reset nothing.
-`install.sh` updates all global environments by default; `install-global.sh` selects
-global adapters while retaining previously installed components. Project adapters
-(`install-project.sh`) silently apply the
-saved choice. For scripts and non-interactive runs there is `--language <name>` — it
-skips the question.
+Choose with `conductor install --language en`, replacing `en` with `ru` or `az` as needed.
+The full names `Russian`, `English` and `Azerbaijani` remain supported. Short codes are
+case-insensitive and are expanded to full language names before rules are written.
+Use `-Language en` in the PowerShell bootstrap and `--language en` in Bash installers.
+Without an explicit option, `install.sh` offers a menu with the saved choice; Enter keeps it.
+The CLI without a language option and `conductor update` retain the saved choice in
+`~/.claude/conductor/reply-language`; inspect it with `conductor status`.
+Project `install-project.sh` inherits that language; its `--language` changes only the project.
+Restart agent sessions after changing languages; manually apply the prepared Cursor rule.
 
-The rules themselves are deliberately written entirely in English. The reason: the model
-reasons in the language its instructions are written in, and a Russian rule corpus dragged
-the visible reasoning into Russian even when a different reply language was selected. Both
-the replies and the visible reasoning (the "thinking" block) follow the chosen language —
-the reasoning language is set by a separate explicit line in the rules, and the lint
-checks that it is present.
+The language controls agent behavior, not CLI translation: commands and option names
+stay the same. Shared rules are written in English but explicitly instruct agents to use
+the selected language for both replies and visible reasoning ("thinking", if the environment
+shows it). Installation checks verify that the language instruction reaches the rules;
+they do not test every model's actual responses. CLI diagnostic messages may remain English.
 
 The language in the rule files is a single phrase, «Answer in Russian», which the
 installers substitute when copying. Editing it by hand in the repository masters is not

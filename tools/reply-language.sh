@@ -26,8 +26,17 @@ saved_reply_language() {
     printf '%s' "$line"
 }
 
-# normalize_reply_language <name> -> the name with surrounding whitespace trimmed
-normalize_reply_language() { printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'; }
+# normalize_reply_language <name-or-code> -> full language name, with whitespace trimmed
+normalize_reply_language() {
+    local name
+    name="$(printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    case "$name" in
+        [rR][uU]) printf 'Russian' ;;
+        [eE][nN]) printf 'English' ;;
+        [aA][zZ]) printf 'Azerbaijani' ;;
+        *) printf '%s' "$name" ;;
+    esac
+}
 
 # validate_reply_language <name> -> 0 if usable; else reason on stderr, return 1.
 # The name is substituted into rule files, so it is validated as a name, not trusted as input.
@@ -59,7 +68,7 @@ prompt_reply_language() {
         echo '  1 - Русский'
         echo '  2 - Azərbaycanca'
         echo '  3 - English'
-        echo '  or type a language name in English (e.g. Azerbaijani)'
+        echo '  or type ru / en / az, or a full language name (e.g. Azerbaijani)'
     } >&2
     read -r -p "Choice [$default]: " answer || answer=''
     case "$(printf '%s' "$answer" | tr -d '[:space:]')" in

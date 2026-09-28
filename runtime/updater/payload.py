@@ -11,7 +11,10 @@ from transaction import plain, read
 
 def language(paths):
     raw, _ = read(paths.target('language'))
-    value = raw.decode('utf-8').strip() if raw is not None else 'Russian'
+    if raw is None:
+        from migration import inferred_language
+        return inferred_language(paths)
+    value = raw.decode('utf-8-sig').strip()
     if not re.fullmatch(r'[A-Za-z](?:[A-Za-z -]{0,28}[A-Za-z])?', value):
         raise ValueError('invalid saved reply language; repair reply-language before updating')
     return value

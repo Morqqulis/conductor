@@ -53,7 +53,7 @@ def main(argv=None):
     setup.add_argument('--revision', help=argparse.SUPPRESS)
     setup.add_argument('--ref', default='main')
     setup.add_argument('--scope', choices=['all', 'claude', 'global'], default='all')
-    setup.add_argument('--language')
+    setup.add_argument('--language', help='reply language: ru, en, az or a full name (e.g. Russian)')
     setup.add_argument('--skip-global-md', action='store_true')
     setup.add_argument('--skip-companions', action='store_true')
     setup.add_argument('--no-superpowers', action='store_true')

@@ -27,14 +27,6 @@ while [ $# -gt 0 ]; do
 done
 winpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s' "$1"; fi; }
 . "$REPO/tools/reply-language.sh"
-if [ "$LANGUAGE_SET" -eq 1 ]; then
-    LANGUAGE="$(normalize_reply_language "$LANGUAGE")"
-    validate_reply_language "$LANGUAGE" || exit 2
-else
-    saved="$(saved_reply_language "$CLAUDE_HOME")"
-    LANGUAGE="$(normalize_reply_language "$(prompt_reply_language "${saved:-Russian}")")"
-    validate_reply_language "$LANGUAGE" || exit 2
-fi
 PYTHON=''
 for candidate in "${CONDUCTOR_PYTHON:-}" python3 python; do
     [ -n "$candidate" ] || continue
@@ -43,6 +35,16 @@ for candidate in "${CONDUCTOR_PYTHON:-}" python3 python; do
     fi
 done
 [ -n "$PYTHON" ] || { echo 'Install FAILED: Python 3.10+ is required' >&2; exit 1; }
+if [ "$LANGUAGE_SET" -eq 1 ]; then
+    LANGUAGE="$(normalize_reply_language "$LANGUAGE")"
+else
+    # Pre-CLI PowerShell installs stored the choice in rules, not reply-language.
+    # Use the same full-content recognizer as the transactional installer.
+    saved="$("$PYTHON" -B -c 'import sys; sys.path.insert(0, sys.argv[1]); from payload import language; from transaction import Paths; print(language(Paths(sys.argv[2], sys.argv[3])))' \
+        "$(winpath "$REPO/runtime/updater")" "$(winpath "$CLAUDE_HOME")" "$(winpath "$PROFILE")")"
+    LANGUAGE="$(normalize_reply_language "$(prompt_reply_language "$saved")")"
+fi
+validate_reply_language "$LANGUAGE" || exit 2
 command -v git >/dev/null 2>&1 || { echo 'Install FAILED: Git is required' >&2; exit 1; }
 if [ -n "${CONDUCTOR_SOURCE_REVISION:-}" ]; then ARGS+=(--revision "$CONDUCTOR_SOURCE_REVISION"); fi
 exec env PYTHONIOENCODING=utf-8 "$PYTHON" -B "$(winpath "$REPO/runtime/updater/cli.py")" \

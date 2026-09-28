@@ -51,7 +51,9 @@ def _files(paths, changes):
             if before[0] is None:
                 continue
             actual = hashlib.sha256(before[0].replace(b'\r\n', b'\n')).hexdigest()
-            if actual != known:
+            from migration import recognizes
+            historical_key = ('runtime/' if relative.startswith('hooks/') else 'legacy/') + relative
+            if actual != known and not recognizes(historical_key, before[0], paths):
                 raise ValueError('unknown or modified content')
         except (OSError, ValueError) as exc:
             _warn(path, str(exc))

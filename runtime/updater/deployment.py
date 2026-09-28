@@ -7,6 +7,7 @@ import re
 
 from installation import UpdatePlan, encode, load_state, prepare, record, verify
 from legacy import plan_legacy
+from migration import retire_settings
 from payload import payload
 from recovery import unique_object
 from transaction import Transaction, read
@@ -30,6 +31,7 @@ def settings_object(raw):
 
 
 def prepare_install(paths, source, scopes, reply, skip_values, revision):
+    reply = {'ru': 'Russian', 'en': 'English', 'az': 'Azerbaijani'}.get(reply.lower(), reply)
     if not re.fullmatch(r'[A-Za-z](?:[A-Za-z -]{0,28}[A-Za-z])?', reply):
         raise ValueError('invalid reply language')
     if revision is not None and not re.fullmatch(r'[a-f0-9]{40}', revision):
@@ -41,6 +43,14 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
         observed = prepare(paths, source, previous['revision']).expected
     else:
         observed = {key: read(paths.target(key)) for key in ('state', 'language', 'settings')}
+    migrating = observed['state'][0] is None
+    if migrating:
+        from migration import discover, keep_personal_values
+        previous = discover(paths, observed)
+        migrating = bool(previous['files'])
+        if migrating:
+            skip_values = skip_values or keep_personal_values(paths, observed, previous['files'])
+            print(f'Legacy migration: recognized {len(previous["files"])} files; transaction backup required.')
     selected = set(previous['scopes']) | set(scopes)
     if not skip_values and ('claude' in selected or read(paths.target('claude-values'))[0] is not None):
         selected.add('values')
@@ -59,7 +69,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
     for key, value in desired.items():
         current = observed.setdefault(key, read(paths.target(key)))
         if key not in previous['files'] and current[0] is not None and current[0] != value[0]:
-            if key not in ('codex', 'antigravity', 'claude-values', 'cursor'):
+            if migrating or key != 'claude-values':
                 raise ValueError(f'unmanaged file would be overwritten: {key}')
             print(f'WARNING: replacing existing {paths.target(key)}; verified transaction backup will preserve it.')
         stage(key, value)
@@ -72,6 +82,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
         raw, mode = observed['settings']
         value = settings_object(raw)
         before = encode(value)
+        retire_settings(value, paths, observed)
         try:
             helper.install(value, paths.runtime.as_posix(), 'bash')
         except SystemExit as exc:
@@ -85,7 +96,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
             if raw is None:
                 continue
             value = settings_object(raw)
-            changed = helper.strip(value)
+            changed = retire_settings(value, paths, observed) + helper.strip(value)
             gate = value.get('conductor-commit-gate')
             if key == 'antigravity-settings' and isinstance(gate, dict) and helper.owns_hook(gate):
                 del value['conductor-commit-gate']

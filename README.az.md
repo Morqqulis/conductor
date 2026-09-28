@@ -86,8 +86,9 @@ Bu əmrlər rəsmi repozitoriyanın kodunu icra edir. Əvvəlcə yoxlamaq istəy
 skripti yükləyin, oxuyun və yerli başladın. Git və Python əvvəlcədən quraşdırılmalıdır;
 yükləyici onları səssiz quraşdırmır və sistemin təhlükəsizlik siyasətini dəyişmir.
 Rus, ingilis və ya Azərbaycan dilini seçin. Terminal yoxdursa, saxlanmış dil,
-o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language Azerbaijani` əlavə edin
-və ya konveyerin son `bash` əmrini `bash -s -- --language Azerbaijani` ilə əvəz edin.
+o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language az` əlavə edin
+və ya konveyerin son `bash` əmrini `bash -s -- --language az` ilə əvəz edin.
+Kodlar: `ru` — rus dili, `en` — ingilis dili, `az` — Azərbaycan dili.
 
 Artıq yüklənmiş mənbə qovluğunda **yalnız** `bash install.sh` kifayətdir.
 `--scope claude` Claude Code-u, `--scope global` digər qlobal adapterləri seçir;
@@ -103,10 +104,10 @@ Yad proqramlar və əmrlər əvəz edilmir. Dərslər, layihə yaddaşı və yad
 ### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 
 Qlobal əmr `~/.local/bin` daxilindədir (Windows: `conductor.cmd`).
-Lazımdırsa, bu qovluğu PATH-a əlavə edin. Köhnə quraşdırma üçün quraşdırıcını bir dəfə başladın.
+Lazımdırsa, bu qovluğu PATH-a əlavə edin.
 
 ```bash
-conductor install --language Azerbaijani
+conductor install --language az
 conductor status
 conductor update --check
 conductor update
@@ -131,6 +132,31 @@ Nüsxələr şəxsi məlumatdır və silinmədən sonra qalır. Açıq geri qayt
 nüsxəsindən silənin göstərdiyi Python əmrini işlədin. Windows CLI silinərkən çıxış kodunu
 qorumaq üçün nüsxələrin yanında kiçik, məzmununa görə adlandırılmış işəsalma fayllarını saxlayır.
 Bütün fayllar eyni anda əvəz edilmir; dəyişiklikdən sonra agent sessiyalarını yenidən başladın.
+
+### Köhnə quraşdırmadan keçid
+
+`conductor status` quraşdırılmış komponentləri göstərirsə, `conductor update` işlədin.
+Əmr tapılmırsa, əvvəlcə `~/.local/bin` və PATH-ı yoxlayın. CLI hələ quraşdırılmayıbsa,
+yuxarıdakı quraşdırıcını başladın; əvvəlcədən Conductor-u və ya yaddaşını silmək lazım deyil.
+
+Eyni quraşdırıcı `~/.claude/conductor/install-state.json` olmayan köhnə quraşdırmaları,
+ilk PowerShell və sonrakı Bash versiyaları daxil olmaqla, avtomatik keçirir. Git tarixçəsini
+klonlamaq və ya ayrıca `install-global.sh` işlətmək lazım deyil: köhnə faylların tam
+yoxlama cəmləri kataloqu quraşdırıcıya daxildir. Fərqli yer istifadə etmisinizsə, əvvəlki
+`CLAUDE_CONFIG_DIR` dəyərini təyin edin; bütün diskdə axtarış aparılmır.
+
+Yazmadan əvvəl bərpa edilə bilən nüsxə yaradılır. Dərslər, kənar parametrlər və əvvəlki
+komponentlər saxlanılır; tanınan köhnəlmiş qoşulmalar əvəz edilir. Dil saxlanmış seçimdən
+və ya tanınan köhnə qaydalardan götürülür. Seçimlər ziddiyyətlidirsə, dili açıq göstərin:
+`--language ru`, `en` və ya `az` (PowerShell: `-Language`). Şəxsi və ya dəyişdirilmiş
+`CLAUDE.md` yerində qalır və Conductor-un idarə etdiyi fayl kimi qeydiyyata alınmır.
+
+Keçid məcburi əvəzləmə deyil: dəyişdirilmiş proqram faylları və ya digər agentlərin
+köhnə Conductor faylı kimi təsdiqlənməyən qaydaları olduqda əvəzləmə
+`unmanaged file would be overwritten` xətası ilə dayanır. Onları əl ilə müqayisə üçün
+saxlayın; qorumanı keçmək üçün yaddaşı və qeydiyyatı silməyin. Zədələnmiş qeydiyyat köhnə
+quraşdırma hesab edilmir. Keçiddən sonra adi `conductor update` və `conductor uninstall`
+işlədin; geri qaytarma göstərilən nüsxə yolu ilə əvvəlki faylları bərpa edir.
 
 ### Birlikdə quraşdırılan alətlər
 
@@ -290,22 +316,21 @@ Quraşdırıcılar onun qalıqlarını təmizləyir.
 
 ## Cavab dili harada dəyişdirilir
 
-Dil birbaşa terminalda seçilir: həm `install.sh`, həm də `install-global.sh` hər işə
-salınanda menyu göstərir və əvvəlki seçim artıq standart cavab kimi təklif olunur —
-Enter basmaq kifayətdir, bayraqlara ehtiyac yoxdur. Dili istənilən istiqamətdə (rus
-dilinə geri qayıtmaq daxil) dəyişmək üçün quraşdırıcını yenidən işə salıb menyudan
-seçin. Seçim `~/.claude/conductor/reply-language` faylında saxlanılır, ona görə
-təkrar işə salınmalar heç nəyi sıfırlamır. `install.sh` standart olaraq bütün qlobal
-mühitləri yeniləyir; `install-global.sh` əvvəlki komponentləri saxlayaraq qlobal
-adapterləri seçir;
-layihə adapterləri (`install-project.sh`) yadda saxlanmış seçimi səssiz tətbiq edir.
-Skriptlər və qeyri-interaktiv işə salınmalar üçün `--language <ad>` var — sualı ötürür.
+Seçim üçün `conductor install --language az` işlədin; lazım olduqda `az` yerinə `ru` və ya
+`en` yazın. `Russian`, `English`, `Azerbaijani` tam adları da dəstəklənir. Qısa kodlarda
+böyük-kiçik hərf fərqi yoxdur; qaydalar yazılmazdan əvvəl kodlar tam dil adlarına çevrilir.
+PowerShell yükləyicisində `-Language az`, Bash quraşdırıcılarında `--language az` işlədin.
+Parametr verilmədikdə `install.sh` saxlanmış seçimlə menyu göstərir; Enter onu saxlayır.
+Dil parametri olmayan CLI və `conductor update` əvvəlki seçimi saxlayır. Seçim
+`~/.claude/conductor/reply-language` faylındadır; `conductor status` ilə yoxlamaq olar.
+Layihə üçün `install-project.sh` bu dili götürür; onun `--language` parametri yalnız layihəni dəyişir.
+Dili dəyişdikdən sonra agent sessiyalarını yenidən başladın; hazırlanmış Cursor qaydasını əl ilə tətbiq edin.
 
-Qaydaların özü qəsdən bütövlükdə ingiliscə yazılıb. Səbəb: model təlimatlarının
-yazıldığı dildə düşünür və rusca qaydalar korpusu, cavab dili başqa seçiləndə belə,
-görünən düşünməni rus dilinə çəkirdi. Seçilmiş dildə həm cavablar, həm də görünən
-düşünmə («thinking» bloku) aparılır — düşünmə dilini qaydalardakı ayrıca açıq sətir
-təyin edir və lint onun mövcudluğunu yoxlayır.
+Dil CLI tərcüməsinə deyil, agentlərin işinə aiddir: əmrlər və parametr adları dəyişmir.
+Ortaq qaydalar ingiliscə yazılsa da, agentlərə həm cavablar, həm də görünən düşünmə
+(mühit göstərirsə, «thinking») üçün seçilmiş dildən istifadə etməyi açıq bildirir.
+Quraşdırma yoxlamaları dil göstərişinin qaydalara çatmasını yoxlayır, hər modelin faktiki
+cavablarını deyil. CLI-nin xidməti mesajları ingiliscə qala bilər.
 
 Qayda fayllarında dil bir ifadədir: «Answer in Russian» — quraşdırıcılar kopyalayarkən
 orada dilin adını əvəz edir. Repozitoridəki etalonlarda bu ifadəni əl ilə dəyişmək

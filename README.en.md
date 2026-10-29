@@ -52,6 +52,17 @@ A default install changes only your user profile, never your projects:
 The Cursor rule is prepared but switched on by hand. `--skip-companions` declines the extra
 tools; `--skip-global-md` keeps your personal `CLAUDE.md`.
 
+**Session environment guard.** Before every command the assistant runs in Bash (the command
+line), Claude Code inserts the conversation's helper files
+`~/.claude/session-env/<session>/(setup|sessionstart|cwdchanged|filechanged)-hook-N.sh`.
+Plugins such as Codex append their lines there at every conversation start. Once the text grows
+past about 8 KB, Git for Windows Bash cuts commands short and each one fails with "unexpected
+EOF". At every start Conductor removes repeated lines in these files of the current
+conversation — only when all of them hold nothing but simple `NAME=value` lines, otherwise it
+touches nothing — and warns when the text is still above 6 KB. What it did goes to
+`~/.claude/conductor/session-env.log`; uninstalling keeps that log even with `--remove-lessons`,
+so delete `session-env.log*` by hand if you want it gone.
+
 ## What it costs
 
 The rules are text the assistant reads, and reading text uses your plan's limits.

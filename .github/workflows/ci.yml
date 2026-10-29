@@ -57,6 +57,7 @@ jobs:
           bash qa/journal-report-test.sh
           python -B qa/test-run-journal-test.py
           python -B qa/memory-test.py
+          python -B -m unittest discover -s qa/session_env -v
           python -B qa/lesson-recall-test.py
           python -B qa/memory-restore-test.py
           python -B qa/safe-undo-test.py

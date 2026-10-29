@@ -52,6 +52,17 @@ Standart quraşdırma layihələri deyil, yalnız istifadəçi profilinizi dəyi
 Cursor üçün qayda hazırlanır, amma əl ilə aktivləşdirilir. `--skip-companions` əlavə
 alətlərdən imtina edir, `--skip-global-md` şəxsi `CLAUDE.md` faylınızı saxlayır.
 
+**Sessiya mühitinin qorunması.** Köməkçinin Bash-da (əmr sətrində) işə saldığı hər əmrin
+əvvəlinə Claude Code söhbətin xidməti fayllarını
+`~/.claude/session-env/<sessiya>/(setup|sessionstart|cwdchanged|filechanged)-hook-N.sh` əlavə edir.
+Codex kimi plaginlər hər söhbətin başlanğıcında ora öz sətirlərini yazır. Mətn təxminən 8 KB-dan
+böyük olanda Git for Windows Bash əmrləri kəsir və hər biri «unexpected EOF» xətası ilə dayanır.
+Hər başlanğıcda Conductor cari söhbətin bu fayllarında təkrarlanan sətirləri silir — yalnız
+hamısı sadə `AD=dəyər` sətirlərindən ibarət olduqda, əks halda heç nəyə toxunmur — və mətn yenə
+də 6 KB-dan böyükdürsə, xəbərdarlıq edir. Görülən iş `~/.claude/conductor/session-env.log`
+faylına yazılır; Conductor silinəndə bu jurnal hətta `--remove-lessons` ilə də qalır, lazım olsa
+`session-env.log*` fayllarını əl ilə silin.
+
 ## Bu neçəyə başa gəlir
 
 Qaydalar köməkçinin oxuduğu mətndir, oxunan mətn isə planınızın limitlərindən istifadə edir.

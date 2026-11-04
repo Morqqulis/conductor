@@ -134,7 +134,10 @@ in predictable kinds:
 - English words inside a reply written in another language (commit, branch, merge, push,
   hook, pipeline, release, tag, fork, deploy);
 - abbreviations (CI, PR, API, CLI, JSON, PATH);
-- commands, flags, file and folder names, tool and product names;
+- everyday programming words that only programmers know: function, method, test, string,
+  empty string, variable, null, exit code, error message text;
+- commands, flags, file and folder names, tool and product names: say in plain words what
+  the file or command is for ("`src/parsePrice.js`, the file that reads prices");
 - Conductor's own labels that reach the user: the Step 0 line ("Conductor: debug | T2"),
   tier names, status tokens (DONE, DONE_WITH_CONCERNS, BLOCKED, NEEDS_CONTEXT).
 

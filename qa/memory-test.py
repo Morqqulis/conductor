@@ -175,10 +175,14 @@ class MemoryTest(unittest.TestCase):
         text = reminder()
         self.assertIn("Reply in Azerbaijani, in plain everyday words", text)
         self.assertIn("in the sentence where it first appears", text)
+        # Without a usable saved choice the reminder defers to the rules' language; it must
+        # never invite the model to switch to the language of the prompt.
         (self.home / "reply-language").write_text("Rus$(touch x)\n", encoding="utf-8")
-        self.assertIn("Reply in the user's language", reminder())
+        self.assertIn("Reply in the language your rules set", reminder())
         (self.home / "reply-language").unlink()
-        self.assertIn("Reply in the user's language", reminder())
+        text = reminder()
+        self.assertIn("Reply in the language your rules set", text)
+        self.assertNotIn("user's language", text)
 
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")

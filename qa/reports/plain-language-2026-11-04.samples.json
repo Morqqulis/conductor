@@ -1,0 +1,954 @@
+[
+ {
+  "round": "old",
+  "replies": [
+   {
+    "blind_id": 0,
+    "label": "old3",
+    "run_cost_usd": 0.29130220000000007,
+    "turns": 8,
+    "latin_words_outside_code": 0,
+    "status_glossed": false,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": false
+     },
+     {
+      "term": "тесты",
+      "explained": false
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "строка",
+      "explained": true
+     },
+     {
+      "term": "метод",
+      "explained": false
+     },
+     {
+      "term": ".toFixed",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": false
+     },
+     {
+      "term": "NaN",
+      "explained": true
+     },
+     {
+      "term": "не-строка",
+      "explained": false
+     },
+     {
+      "term": "входные данные",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": false
+     },
+     {
+      "term": "tests/parsePrice.test.js",
+      "explained": false
+     },
+     {
+      "term": "код выхода 0",
+      "explained": false
+     },
+     {
+      "term": "вызывается",
+      "explained": false
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": false
+     }
+    ],
+    "unexplained": 13,
+    "total": 17,
+    "judge_cost_usd": 0.079456
+   },
+   {
+    "blind_id": 2,
+    "label": "old2",
+    "run_cost_usd": 0.3186234,
+    "turns": 8,
+    "latin_words_outside_code": 0,
+    "status_glossed": false,
+    "terms": [
+     {
+      "term": "`npm test`",
+      "explained": false
+     },
+     {
+      "term": "тесты",
+      "explained": false
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "`parsePrice`",
+      "explained": true
+     },
+     {
+      "term": "`$`",
+      "explained": true
+     },
+     {
+      "term": "`cartTotal`",
+      "explained": true
+     },
+     {
+      "term": "`\"012.503.00\"`",
+      "explained": true
+     },
+     {
+      "term": "`15.5`",
+      "explained": true
+     },
+     {
+      "term": "метод",
+      "explained": false
+     },
+     {
+      "term": "`toFixed`",
+      "explained": true
+     },
+     {
+      "term": "ввод",
+      "explained": false
+     },
+     {
+      "term": "`\"abc\"`",
+      "explained": false
+     },
+     {
+      "term": "пустая строка",
+      "explained": false
+     },
+     {
+      "term": "`null`",
+      "explained": false
+     },
+     {
+      "term": "`tests/cart.test.js`",
+      "explained": true
+     },
+     {
+      "term": "копия проекта",
+      "explained": true
+     },
+     {
+      "term": "`cartTotal(...).toFixed is not a function`",
+      "explained": true
+     },
+     {
+      "term": "не-текстовый ввод",
+      "explained": false
+     },
+     {
+      "term": "код",
+      "explained": false
+     },
+     {
+      "term": "`src/parsePrice.js`",
+      "explained": true
+     },
+     {
+      "term": "`formatTotal`",
+      "explained": false
+     },
+     {
+      "term": "вызывается",
+      "explained": false
+     },
+     {
+      "term": "Влияние",
+      "explained": false
+     },
+     {
+      "term": "Риски",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": false
+     }
+    ],
+    "unexplained": 15,
+    "total": 25,
+    "judge_cost_usd": 0.079263
+   },
+   {
+    "blind_id": 4,
+    "label": "old1",
+    "run_cost_usd": 0.359027,
+    "turns": 9,
+    "latin_words_outside_code": 3,
+    "status_glossed": false,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": false
+     },
+     {
+      "term": "тесты зелёные",
+      "explained": false
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "$",
+      "explained": true
+     },
+     {
+      "term": "строка",
+      "explained": false
+     },
+     {
+      "term": "метод",
+      "explained": false
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": false
+     },
+     {
+      "term": "tests/parsePrice.test.js",
+      "explained": false
+     },
+     {
+      "term": "копия проекта",
+      "explained": true
+     },
+     {
+      "term": "git",
+      "explained": false
+     },
+     {
+      "term": ".gitignore",
+      "explained": false
+     },
+     {
+      "term": "откат через git",
+      "explained": false
+     },
+     {
+      "term": "formatTotal",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": false
+     }
+    ],
+    "unexplained": 12,
+    "total": 16,
+    "judge_cost_usd": 0.064743
+   }
+  ]
+ },
+ {
+  "round": "new1",
+  "replies": [
+   {
+    "blind_id": 1,
+    "label": "new1",
+    "run_cost_usd": 0.3604718,
+    "turns": 9,
+    "latin_words_outside_code": 1,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "тесты",
+      "explained": false
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "`parsePrice`",
+      "explained": true
+     },
+     {
+      "term": "`\"$12.50\"`",
+      "explained": true
+     },
+     {
+      "term": "`\"12.50\"` (текст, а не число)",
+      "explained": true
+     },
+     {
+      "term": "`cartTotal`",
+      "explained": true
+     },
+     {
+      "term": "строки (склеивал как строки)",
+      "explained": true
+     },
+     {
+      "term": "`0 + \"12.50\" + \"3.00\"` / `\"012.503.00\"`",
+      "explained": true
+     },
+     {
+      "term": "метод",
+      "explained": false
+     },
+     {
+      "term": "`toFixed`",
+      "explained": true
+     },
+     {
+      "term": "`src/parsePrice.js`",
+      "explained": false
+     },
+     {
+      "term": "ввод / неправильный ввод",
+      "explained": true
+     },
+     {
+      "term": "не-текст",
+      "explained": false
+     },
+     {
+      "term": "`\"$abc\"`",
+      "explained": true
+     },
+     {
+      "term": "`tests/parsePrice.test.js`",
+      "explained": true
+     },
+     {
+      "term": "`$` (знак)",
+      "explained": true
+     },
+     {
+      "term": "копия проекта",
+      "explained": true
+     },
+     {
+      "term": "`toFixed is not a function`",
+      "explained": false
+     },
+     {
+      "term": "папка проекта",
+      "explained": false
+     },
+     {
+      "term": "система версий git",
+      "explained": false
+     },
+     {
+      "term": "откатить правку",
+      "explained": false
+     },
+     {
+      "term": "штатными средствами",
+      "explained": false
+     },
+     {
+      "term": "`/tmp/claude-0/.../scratchpad/orig.js`",
+      "explained": false
+     },
+     {
+      "term": "`parsePrice.js`",
+      "explained": false
+     },
+     {
+      "term": "npm test",
+      "explained": false
+     },
+     {
+      "term": "\"1,000\"",
+      "explained": false
+     },
+     {
+      "term": "`formatTotal`",
+      "explained": true
+     },
+     {
+      "term": "Риски",
+      "explained": true
+     },
+     {
+      "term": "Влияние",
+      "explained": true
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     }
+    ],
+    "unexplained": 14,
+    "total": 30,
+    "judge_cost_usd": 0.084119
+   },
+   {
+    "blind_id": 3,
+    "label": "new3",
+    "run_cost_usd": 0.2611104,
+    "turns": 5,
+    "latin_words_outside_code": 0,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "тест / тесты",
+      "explained": true
+     },
+     {
+      "term": "зелёные (о тестах)",
+      "explained": false
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": true
+     },
+     {
+      "term": "склеивались ('012.503.00')",
+      "explained": true
+     },
+     {
+      "term": "toFixed is not a function",
+      "explained": true
+     },
+     {
+      "term": "пустая строка",
+      "explained": false
+     },
+     {
+      "term": "'$abc'",
+      "explained": true
+     },
+     {
+      "term": "null",
+      "explained": false
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     }
+    ],
+    "unexplained": 5,
+    "total": 13,
+    "judge_cost_usd": 0.070683
+   },
+   {
+    "blind_id": 5,
+    "label": "new2",
+    "run_cost_usd": 0.2843204,
+    "turns": 7,
+    "latin_words_outside_code": 0,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "тесты",
+      "explained": true
+     },
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "Функция",
+      "explained": false
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": true
+     },
+     {
+      "term": "пустая строка",
+      "explained": false
+     },
+     {
+      "term": "tests/parsePrice.test.js",
+      "explained": true
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     }
+    ],
+    "unexplained": 4,
+    "total": 11,
+    "judge_cost_usd": 0.072475
+   }
+  ]
+ },
+ {
+  "round": "new2",
+  "replies": [
+   {
+    "blind_id": 0,
+    "label": "v2_2",
+    "run_cost_usd": 0.3368952,
+    "turns": 9,
+    "latin_words_outside_code": 196,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "bug",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": true
+     },
+     {
+      "term": "\"$12.50\"",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": false
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "\"$abc\"",
+      "explained": true
+     },
+     {
+      "term": "git",
+      "explained": true
+     },
+     {
+      "term": "version-control",
+      "explained": false
+     },
+     {
+      "term": "tests/parsePrice.test.js",
+      "explained": true
+     },
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "exit code 0",
+      "explained": true
+     },
+     {
+      "term": "Changed",
+      "explained": false
+     },
+     {
+      "term": "Verified",
+      "explained": false
+     },
+     {
+      "term": "Risks",
+      "explained": false
+     },
+     {
+      "term": "Impact",
+      "explained": false
+     },
+     {
+      "term": "formatTotal",
+      "explained": true
+     },
+     {
+      "term": "Status",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     },
+     {
+      "term": "pass",
+      "explained": false
+     }
+    ],
+    "unexplained": 9,
+    "total": 20,
+    "judge_cost_usd": 0.065955
+   },
+   {
+    "blind_id": 1,
+    "label": "v2_1",
+    "run_cost_usd": 0.244478,
+    "turns": 5,
+    "latin_words_outside_code": 5,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "\"$12.50\" → 12.5",
+      "explained": true
+     },
+     {
+      "term": "not a valid price",
+      "explained": true
+     },
+     {
+      "term": "expected a string",
+      "explained": true
+     },
+     {
+      "term": "null",
+      "explained": true
+     },
+     {
+      "term": "мусор (в значении неверные данные)",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": false
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": true
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     },
+     {
+      "term": "tests/cart.test.js",
+      "explained": true
+     }
+    ],
+    "unexplained": 3,
+    "total": 12,
+    "judge_cost_usd": 0.069803
+   },
+   {
+    "blind_id": 2,
+    "label": "v2_3",
+    "run_cost_usd": 0.2670286,
+    "turns": 6,
+    "latin_words_outside_code": 3,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": false
+     },
+     {
+      "term": "\"$12.50\"",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": true
+     },
+     {
+      "term": "0 + \"12.50\" + \"3.00\"",
+      "explained": true
+     },
+     {
+      "term": "\"012.503.00\"",
+      "explained": true
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "toFixed is not a function",
+      "explained": false
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "\"abc\"",
+      "explained": true
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": false
+     },
+     {
+      "term": "null",
+      "explained": false
+     },
+     {
+      "term": "\"1,000.00\"",
+      "explained": true
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     }
+    ],
+    "unexplained": 5,
+    "total": 15,
+    "judge_cost_usd": 0.064851
+   }
+  ]
+ },
+ {
+  "round": "new3",
+  "replies": [
+   {
+    "blind_id": 0,
+    "label": "v3_2",
+    "run_cost_usd": 0.27161599999999997,
+    "turns": 7,
+    "latin_words_outside_code": 0,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "formatTotal",
+      "explained": true
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "\"$12.50\"",
+      "explained": true
+     },
+     {
+      "term": "'012.503.00'",
+      "explained": true
+     },
+     {
+      "term": "toFixed is not a function",
+      "explained": true
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": true
+     },
+     {
+      "term": "\"abc\"",
+      "explained": true
+     },
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": true
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     },
+     {
+      "term": "Изменено / Проверено / Риски / Влияние / Статус (блок text)",
+      "explained": true
+     },
+     {
+      "term": "text (метка блока кода)",
+      "explained": false
+     },
+     {
+      "term": "ввод",
+      "explained": false
+     }
+    ],
+    "unexplained": 2,
+    "total": 13,
+    "judge_cost_usd": 0.064111
+   },
+   {
+    "blind_id": 1,
+    "label": "v3_1",
+    "run_cost_usd": 0.25502179999999997,
+    "turns": 6,
+    "latin_words_outside_code": 0,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "тест / тесты",
+      "explained": true
+     },
+     {
+      "term": "функция",
+      "explained": false
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": true
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "код выхода 0",
+      "explained": false
+     },
+     {
+      "term": "ошибка формата",
+      "explained": false
+     },
+     {
+      "term": "ошибка типа",
+      "explained": false
+     },
+     {
+      "term": "src/cartTotal.js",
+      "explained": false
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     },
+     {
+      "term": "tests/cart.test.js",
+      "explained": false
+     }
+    ],
+    "unexplained": 6,
+    "total": 12,
+    "judge_cost_usd": 0.072375
+   },
+   {
+    "blind_id": 2,
+    "label": "v3_3",
+    "run_cost_usd": 0.31096039999999997,
+    "turns": 9,
+    "latin_words_outside_code": 0,
+    "status_glossed": true,
+    "terms": [
+     {
+      "term": "npm test",
+      "explained": true
+     },
+     {
+      "term": "parsePrice",
+      "explained": true
+     },
+     {
+      "term": "toFixed",
+      "explained": true
+     },
+     {
+      "term": "cartTotal",
+      "explained": false
+     },
+     {
+      "term": "src/parsePrice.js",
+      "explained": false
+     },
+     {
+      "term": "tests/parsePrice.test.js",
+      "explained": true
+     },
+     {
+      "term": "код завершения 0",
+      "explained": true
+     },
+     {
+      "term": "formatTotal",
+      "explained": true
+     },
+     {
+      "term": "DONE",
+      "explained": true
+     },
+     {
+      "term": "строка (пустая строка)",
+      "explained": false
+     }
+    ],
+    "unexplained": 3,
+    "total": 10,
+    "judge_cost_usd": 0.062631
+   }
+  ]
+ }
+]

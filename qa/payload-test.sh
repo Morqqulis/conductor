@@ -9,6 +9,9 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../runtime/hooks/payload.sh
 . "$ROOT/runtime/hooks/payload.sh" || { echo "payload-test: cannot source payload.sh" >&2; exit 2; }
 PYTHON="$(command -v python3 || command -v python)" || { echo "payload-test: Python required" >&2; exit 2; }
+# The decoder below must read and print UTF-8 on every OS; Windows consoles default to a
+# legacy code page that would mangle the non-ASCII cases.
+export PYTHONIOENCODING=utf-8
 
 fails=0
 check() {  # check <label> <input-text> <expected-decoded-text>

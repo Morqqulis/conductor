@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -454,7 +455,11 @@ class SettingsJsonTest(unittest.TestCase):
         self.assertEqual(run_tool("install-hooks", "--file", self.path, "--conductor-dir", tricky).returncode, 0)
         entry = read_json(self.path)["hooks"]["SessionStart"][0]["hooks"][0]["command"]
         self.assertTrue(entry.startswith("bash "), entry)
-        echoed = subprocess.run(["bash", "-c", "printf '%s\\n' " + entry[len("bash "):]],
+        # shutil.which, not a bare "bash": on Windows CreateProcess finds the System32 WSL
+        # stub before Git Bash on PATH.
+        bash = shutil.which("bash")
+        self.assertIsNotNone(bash, "bash is required for this test")
+        echoed = subprocess.run([bash, "-c", "printf '%s\\n' " + entry[len("bash "):]],
                                 capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(echoed.stdout.rstrip("\n"), f"{tricky}/hooks/session-start.sh")
         audit = run_tool("audit-hooks", "--file", self.path, "--conductor-dir", tricky, "--shell", "bash")

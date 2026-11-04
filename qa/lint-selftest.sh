@@ -141,6 +141,12 @@ expect_fail "clear-result rule line removed" \
     "clear-result rule missing in deploy/global-CLAUDE.md" \
     deploy/global-CLAUDE.md
 
+# --- case 9b: term-explanation rule removed ------------------------------------------
+sed -i 's/in the sentence where it/somewhere near where it/' "$WORK/adapters/core-body.md"
+expect_fail "term-explanation rule removed from the digest body" \
+    "term-explanation rule (explain each term where it first appears) missing in adapters/core-body.md" \
+    adapters/core-body.md
+
 # --- case 10: Cyrillic injected into the deploy corpus -------------------------------
 printf '\nПроверка связи.\n' >> "$WORK/deploy/global-CLAUDE.md"
 expect_fail "Cyrillic text injected into deploy/global-CLAUDE.md" \

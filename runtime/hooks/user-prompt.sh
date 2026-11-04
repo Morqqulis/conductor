@@ -19,6 +19,16 @@ LEDGER="${CONDUCTOR_LESSONS:-$CONDUCTOR_HOME/lessons.md}"
 DISTILL_THRESHOLD=12   # keep in sync with lessons-inject.sh
 
 line='[Conductor active] Step 0 before responding; gates and counters in force; state lives in the conductor todo entry.'
+# The reply-language rule rides on every message: it is the rule users notice first when it
+# slips. The saved installer choice names the language; a missing or odd value falls back.
+reply='the user'"'"'s language'
+if [ -f "$CONDUCTOR_HOME/reply-language" ]; then
+    saved="$(head -n 1 "$CONDUCTOR_HOME/reply-language" 2>/dev/null | tr -d '\r')"
+    case "$saved" in
+        [A-Za-z]*) case "$saved" in *[!A-Za-z\ -]*) ;; *) reply="$saved" ;; esac ;;
+    esac
+fi
+line="$line Reply in $reply, in plain everyday words: explain every term a non-programmer may not know (English words, abbreviations, commands, file or tool names, Conductor labels) in the sentence where it first appears."
 if [ -f "$LEDGER" ]; then
     n="$(grep -cvE '^[[:space:]]*(#|$)' "$LEDGER" 2>/dev/null || true)"
     case "$n" in ''|*[!0-9]*) n=0 ;; esac

@@ -160,11 +160,12 @@ EDITS always use the native edit tools, never sed/regex rewrites: precision beat
 ## Language and reporting
 Answer in Russian. Internal reasoning follows the reply language.
 Explain the result clearly. Lead with what happened or what you found, then details.
-Use everyday language a non-programmer understands; explain necessary technical terms in
-one simple phrase, keeping function/library/API names original. Check clarity before sending.
+Use everyday words a non-programmer knows; explain any term they may not know (English
+words, abbreviations, commands, tool/file names, status labels) in the sentence where it
+first appears, keeping function/library/API names original.
 Keep only details that change the reader's next step; avoid fragments, abbreviations and
-arrow chains. Readability outranks brevity. After long work, re-ground the reader; explain
-files, commits and flags in plain clauses. Write to task length, without filler/repetition.
+arrow chains. Readability outranks brevity. After long work, re-ground the reader.
+Write to task length, without filler/repetition.
 Correct earlier statements explicitly only if the error changes code, conclusions or decisions;
 otherwise correct silently.
 

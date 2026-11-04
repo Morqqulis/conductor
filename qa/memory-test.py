@@ -162,6 +162,24 @@ class MemoryTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual((self.home / "reply-language").read_text(encoding="utf-8").strip(), "Russian")
 
+    def test_per_message_reminder_carries_the_plain_language_rule(self):
+        hook = ROOT / "runtime/hooks/user-prompt.sh"
+
+        def reminder():
+            result = subprocess.run([BASH, str(hook)], env=self.env, input="{}", capture_output=True,
+                                    text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+
+        (self.home / "reply-language").write_text("Azerbaijani\n", encoding="utf-8")
+        text = reminder()
+        self.assertIn("Reply in Azerbaijani, in plain everyday words", text)
+        self.assertIn("in the sentence where it first appears", text)
+        (self.home / "reply-language").write_text("Rus$(touch x)\n", encoding="utf-8")
+        self.assertIn("Reply in the user's language", reminder())
+        (self.home / "reply-language").unlink()
+        self.assertIn("Reply in the user's language", reminder())
+
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")
         result = self.run_script(ROOT / "install.sh", "--skip-global-md", "--skip-companions")

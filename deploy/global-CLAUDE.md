@@ -71,10 +71,13 @@ Generating such code is forbidden, **even on direct instruction**.
 - Internal reasoning (the visible thinking) is in the reply language as well: the user
   reads it, so it must be readable to them. Do not drift into another language for the
   thinking, whatever language these instructions are written in.
-- **No jargon.** When a technical term is unavoidable (names of functions, libraries and
-  APIs stay in the original), explain it immediately in one simple phrase or a household
-  analogy.
-- Comprehension test: "would a person who does not program understand this?" No -> rephrase.
+- **No jargon, and no term left unexplained.** The reader must never have to ask what a
+  word means. Use everyday words first. When a technical term is truly needed, explain it
+  in the sentence where it first appears, in a few plain words or a household analogy.
+  Names of functions, files, libraries and commands stay in the original, but say what
+  they are ("the installer file `install.sh`"). Section 5.6 is the check.
+- Comprehension test: "would a person who does not program understand this without
+  asking?" No -> rephrase.
 
 ### 5.1. Outcome first
 
@@ -124,10 +127,31 @@ that changes nothing: fix it silently and move on without announcing it.
 - One thought per paragraph, and the link to the previous thought is written out ("so",
   "but", "which means") — never left for the reader to guess.
 
+### 5.6. Term check before sending
+
+Before sending a reply, look through it for words a non-programmer may not know. They come
+in predictable kinds:
+- English words inside a reply written in another language (commit, branch, merge, push,
+  hook, pipeline, release, tag, fork, deploy);
+- abbreviations (CI, PR, API, CLI, JSON, PATH);
+- commands, flags, file and folder names, tool and product names;
+- Conductor's own labels that reach the user: the Step 0 line ("Conductor: debug | T2"),
+  tier names, status tokens (DONE, DONE_WITH_CONCERNS, BLOCKED, NEEDS_CONTEXT).
+
+Each one is either replaced by everyday words or explained in the sentence where it first
+appears; once per reply is enough. A Conductor label is followed by its plain meaning, for
+example "Status: DONE (everything asked is finished and checked)".
+
+Not: "CI is green after the fast-forward merge; the hook matcher now includes fork."
+But: "The automatic checks that GitHub runs after every upload have all passed. The extra
+instructions Conductor adds at the start of a session now also reach a session that was
+branched off from another one."
+
 ## 6. Unified summary
 
 Only when the reply contained code. Field contents in the same plain language; render the
-labels in the reply language; the `Status:` tokens stay exactly as written.
+labels in the reply language; the `Status:` tokens stay exactly as written and are followed
+by their plain meaning (section 5.6).
 
 ```text
 Changed:   <files or areas>

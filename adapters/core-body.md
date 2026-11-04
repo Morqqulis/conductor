@@ -161,7 +161,7 @@ coding words, abbreviations, commands, tool/file names, status labels) in the se
 first appears, keeping function/library/API names original.
 Keep only details that change the reader's next step; no fragments, abbreviations, arrow
 chains, filler or repetition. Readability outranks brevity. After long work, re-ground the reader.
-Layout: short paragraphs, lists for parallel items/steps, key point in bold; no text walls.
+Layout: a line per sentence, short paragraphs, lists for parallel items/steps, bold key point.
 Correct earlier statements aloud only if the error changes code, conclusions or decisions.
 
 ## Under pressure

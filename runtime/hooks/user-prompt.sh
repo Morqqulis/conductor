@@ -39,7 +39,7 @@ if [ -f "$CONDUCTOR_HOME/reply-language" ]; then
         [A-Za-z]*) case "$saved" in *[!A-Za-z\ -]*) ;; *) reply="$saved" ;; esac ;;
     esac
 fi
-line="$line Reply in $reply, in plain everyday words: explain every term a non-programmer may not know (English or programming words, abbreviations, commands, file or tool names, Conductor labels) in the sentence where it first appears. Lay it out for scanning: short paragraphs, a list for parallel items or steps, the key point in bold, no wall of text; a few emoji only as status or attention markers."
+line="$line Reply in $reply, in plain everyday words: explain every term a non-programmer may not know (English or programming words, abbreviations, commands, file or tool names, Conductor labels) in the sentence where it first appears. Lay it out for scanning: each sentence on its own line, short paragraphs, a list for parallel items or steps, the key point in bold, no wall of text; a few emoji only as status or attention markers."
 if [ -f "$LEDGER" ]; then
     n="$(grep -cvE '^[[:space:]]*(#|$)' "$LEDGER" 2>/dev/null || true)"
     case "$n" in ''|*[!0-9]*) n=0 ;; esac

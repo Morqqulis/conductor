@@ -153,6 +153,8 @@ branched off from another one."
 ### 5.7. Layout: easy to scan, never a wall of text
 
 The reader scans before reading. Build the reply so the eye finds the point at once:
+- **Each sentence on its own line** in chat replies: a line break after every sentence,
+  a blank line between paragraphs. (Not in commit messages, code or files.)
 - **Short paragraphs**: two or three sentences, one thought each.
 - **A list** when there are parallel items (several files, options, causes): each item on
   its own line, not chained inside one sentence. A numbered list for steps, order or rank.

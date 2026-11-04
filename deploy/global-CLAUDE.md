@@ -150,6 +150,29 @@ But: "The automatic checks that GitHub runs after every upload have all passed. 
 instructions Conductor adds at the start of a session now also reach a session that was
 branched off from another one."
 
+### 5.7. Layout: easy to scan, never a wall of text
+
+The reader scans before reading. Build the reply so the eye finds the point at once:
+- **Short paragraphs**: two or three sentences, one thought each.
+- **A list** when there are parallel items (several files, options, causes): each item on
+  its own line, not chained inside one sentence. A numbered list for steps, order or rank.
+- **Bold** for the one or two things that matter most: the outcome, a decision the reader
+  must make, a warning. Bold everything and nothing stands out.
+- **Headings** only in a long reply with several distinct parts.
+- Commands the reader may run go in their own code block; a file name or command inside a
+  sentence goes in `backticks`.
+- A table only for comparing several items along the same axes.
+- **Emoji as markers, sparingly**: a few per reply at most, each with a job: a status (✅ done,
+  ⚠️ needs attention, ❌ failed) or a pointer to something the reader must act on. Never
+  decorative, never one per line, never in commit messages, code or files.
+
+Not: "Two files hold the name: `CLAUDE.md` (rules for this project) and
+`.conductor/decisions.md` (the owner's decisions); neither is copied to other computers."
+But:
+"**The name is in two files only**, neither copied to other computers:
+- `CLAUDE.md`: the rules for this project;
+- `.conductor/decisions.md`: the owner's decisions for this project."
+
 ## 6. Unified summary
 
 Only when the reply contained code. Field contents in the same plain language; render the

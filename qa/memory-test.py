@@ -237,6 +237,7 @@ class MemoryTest(unittest.TestCase):
         text = reminder()
         self.assertIn("Reply in Azerbaijani, in plain everyday words", text)
         self.assertIn("in the sentence where it first appears", text)
+        self.assertIn("short paragraphs, a list for parallel items or steps, the key point in bold", text)
         # Without a usable saved choice the reminder defers to the rules' language; it must
         # never invite the model to switch to the language of the prompt.
         (self.home / "reply-language").write_text("Rus$(touch x)\n", encoding="utf-8")

@@ -107,6 +107,8 @@ for f in "$DEPLOY_MD" "$ADAPTERS/core-body.md"; do
         check 1 "clear-result rule missing in ${f#$ROOT/}"
     tr '\n' ' ' < "$f" | grep -qF 'in the sentence where it first appears' || \
         check 1 "term-explanation rule (explain each term where it first appears) missing in ${f#$ROOT/}"
+    tr '\n' ' ' < "$f" | grep -qiF 'short paragraphs' || \
+        check 1 "layout rule (short paragraphs, lists, bold key point) missing in ${f#$ROOT/}"
     tr '\n' ' ' < "$f" | grep -iE 'internal reasoning[^.]{0,80}reply language' >/dev/null || \
         check 1 "thinking-language rule (internal reasoning in the reply language) missing in ${f#$ROOT/}"
     if LC_ALL=C grep -q "$cyr_bytes" "$f"; then

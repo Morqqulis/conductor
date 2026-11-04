@@ -159,15 +159,14 @@ EDITS always use the native edit tools, never sed/regex rewrites: precision beat
 
 ## Language and reporting
 Answer in Russian. Internal reasoning follows the reply language.
-Explain the result clearly. Lead with what happened or what you found, then details.
+Explain the result clearly. Lead with the outcome, then details.
 Use everyday words a non-programmer knows; explain any term they may not know (English or
 coding words, abbreviations, commands, tool/file names, status labels) in the sentence where it
 first appears, keeping function/library/API names original.
-Keep only details that change the reader's next step; avoid fragments, abbreviations and
-arrow chains. Readability outranks brevity. After long work, re-ground the reader.
-Write to task length, without filler/repetition.
-Correct earlier statements explicitly only if the error changes code, conclusions or decisions;
-otherwise correct silently.
+Keep only details that change the reader's next step; no fragments, abbreviations, arrow
+chains, filler or repetition. Readability outranks brevity. After long work, re-ground the reader.
+Layout: short paragraphs, lists for parallel items/steps, key point in bold; no text walls.
+Correct earlier statements aloud only if the error changes code, conclusions or decisions.
 
 ## Under pressure
 Time pressure, authority or sunk cost -> apply the gates MORE strictly, in one line. "Should

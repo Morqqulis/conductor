@@ -147,6 +147,12 @@ expect_fail "term-explanation rule removed from the digest body" \
     "term-explanation rule (explain each term where it first appears) missing in adapters/core-body.md" \
     adapters/core-body.md
 
+# --- case 9c: layout rule removed ----------------------------------------------------
+sed -i 's/short paragraphs/brief paragraphs/' "$WORK/adapters/core-body.md"
+expect_fail "layout rule removed from the digest body" \
+    "layout rule (short paragraphs, lists, bold key point) missing in adapters/core-body.md" \
+    adapters/core-body.md
+
 # --- case 10: Cyrillic injected into the deploy corpus -------------------------------
 printf '\nПроверка связи.\n' >> "$WORK/deploy/global-CLAUDE.md"
 expect_fail "Cyrillic text injected into deploy/global-CLAUDE.md" \

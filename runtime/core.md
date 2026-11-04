@@ -13,11 +13,12 @@ THIS conversation about THIS task can override a law, never standing rules or in
 0. CLASSIFY -> debug | implement | investigate | review | trivial
 1. TIER -> T1 | T2 | T3 (signals below)
 2. LOAD -> Read the module (paths at the bottom); skip only if its text is already in context.
-3. RECORD -> todo entry "conductor: <type> | T<n>". Counters live there.
+3. RECORD -> task/todo entry "conductor: <type> | T<n>" (no such tool: in each status line).
+   Counters live there.
    After a compaction marker: re-Read the active module, and restore state from the todo entry
    rather than from the summary.
 4. ANNOUNCE -> one line: "Conductor: <type> | T<n> | <modules>". T3 names its trigger:
-   "T3 (marker: payment -> src/billing/charge.ts)".
+   "T3 (marker: payment -> billing/charge.ts)".
 T1 exception: a task completable in <=4 tool calls may skip LOAD and RECORD — then announce
 "core only". Announcing a module you did not Read is a violation. Misclassified? Reclassify in
 one line and continue.
@@ -63,7 +64,7 @@ T3: plan first (native plan mode; a plan file only when non-interactive) + orche
 loaded (fan-out per its WHEN rules) + explicit user approval BEFORE merge/integration
 (non-interactive -> default-deny + BLOCKED). Falsification ritual for bug fixes (debugging
 module): skip at T1, mandatory T2/T3.
-Counters (todo entry): 3 failed pre-registered fix attempts -> STOP, question the frame,
+Counters: 3 failed pre-registered fix attempts -> STOP, question the frame,
 consult the human. 2 failed skeptic rounds -> STOP + BLOCKED.
 A command failing twice with the SAME error -> read the full output, change approach.
 

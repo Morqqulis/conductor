@@ -18,7 +18,7 @@ methods.md RUN-BEFORE-JUDGING AUDIT: reading alone does not complete it.
    For cross-module questions, run probes.md#hidden-coupling on the target — its findings are
    candidate-list entries too.
    The list is the branch input — every input MEASURED, never estimated:
-   - more than 20 candidate files OR measured volume over 1500 lines (bash: `wc -l`;
+   - more than 20 candidate files AND measured volume over 1500 lines (bash: `wc -l`;
      PS: `Get-Content <files> | Measure-Object -Line`) -> load orchestration.md and fan out;
    - at or under the threshold, read inline; batched/parallel self-reads are the NORMAL
      path here, not an evasion — a modern context holds this much comfortably.
@@ -32,7 +32,7 @@ methods.md RUN-BEFORE-JUDGING AUDIT: reading alone does not complete it.
 - "this framework usually…" / "typically this means…" -> priors are not evidence; open the
   file (for library behavior: current docs / context7, not memory).
 - About to read any file NOT on the enumeration list -> add it to the list BEFORE reading.
-  The threshold re-evaluates on every addition: the moment the list exceeds 20 files or the
+  The threshold re-evaluates on every addition: the moment the list exceeds 20 files and the
   measured volume exceeds 1500 lines, apply the fan-out rule — mid-investigation, not only
   at step 1.
 

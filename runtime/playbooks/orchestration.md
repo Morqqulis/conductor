@@ -1,13 +1,13 @@
 # Orchestration Playbook
 
-Load trigger: enumeration artifact >20 files or >1500 measured lines; >=3 independent
+Load trigger: enumeration artifact >20 files and >1500 measured lines; >=3 independent
 subtasks; any T3; or tempted to read serially "just to be sure".
 
 ## Cost model (why these rules generalize)
 Delegate large independent scopes to reduce main-session context, not to multiply small tasks.
 
 ## WHEN (machine proxies, never judgment)
-- Investigation: the enumeration artifact exceeds 20 files or 1500 measured lines
+- Investigation: the enumeration artifact exceeds both 20 files and 1500 measured lines
   (thresholds live in investigating.md; the two files move together).
 - Parallel work: >=3 subtasks independent by proxy — they share no write-files AND no
   output->input dependency. Doubt about independence resolves TOWARD dispatch.

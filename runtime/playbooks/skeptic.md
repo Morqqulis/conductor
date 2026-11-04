@@ -62,7 +62,8 @@ four-token default: end with exactly one of DONE (verified) | BLOCKED (refuted o
 
 ## Inline mode (no subagents; also serves review classification when /code-review is
 unavailable, regardless of subagent availability)
-In a SEPARATE message from the one that wrote the code: re-read the diff against the core
+Own work: in a SEPARATE message from the one that wrote it; another's diff (review): at
+once. Re-read the diff against the core
 claim->evidence table and verification.md, and produce the same verdict-per-line
 format, then apply the same resolution rules. Never verify in the same message that implemented.
 

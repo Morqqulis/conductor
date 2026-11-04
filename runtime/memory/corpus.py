@@ -105,7 +105,12 @@ class Corpus:
     def add_curated(self, path, text):
         # Legacy consolidated stores may hold several lessons in one document.
         lines = text.splitlines()
-        starts = [i for i, line in enumerate(lines) if re.match(r"^#{1,2}\s+", line)]
+        starts, fenced = [], False
+        for i, line in enumerate(lines):
+            if re.match(r"^\s{0,3}(```|~~~)", line):
+                fenced = not fenced
+            elif not fenced and re.match(r"^#{1,2}\s+", line):
+                starts.append(i)
         if not starts or starts[0] != 0:
             starts.insert(0, 0)
         for start, end in zip(starts, starts[1:] + [len(lines)]):

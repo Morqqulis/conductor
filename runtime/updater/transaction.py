@@ -22,22 +22,26 @@ def plain(path):
     return path.resolve()
 
 
-def read(path):
+LIMIT = 16 * 1024 * 1024
+
+
+def read(path, limit=LIMIT):
+    """Bounded, link-refusing read shared by every transactional layer (installer, companions)."""
     path = plain(path)
     try:
         info = path.lstat()
     except FileNotFoundError:
         return None, 0o644
-    if not stat.S_ISREG(info.st_mode) or info.st_size > 16 * 1024 * 1024:
+    if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
         raise ValueError(f"not a bounded regular file: {path}")
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     with os.fdopen(os.open(path, flags | getattr(os, "O_BINARY", 0)), "rb") as stream:
         opened = os.fstat(stream.fileno())
         if (info.st_dev, info.st_ino) != (opened.st_dev, opened.st_ino):
             raise ValueError(f"file changed while opening: {path}")
-        data = stream.read(16 * 1024 * 1024 + 1)
+        data = stream.read(limit + 1)
         after = os.fstat(stream.fileno())
-        if len(data) > 16 * 1024 * 1024 or (info.st_size, info.st_mtime_ns) != (
+        if len(data) > limit or (info.st_size, info.st_mtime_ns) != (
                 after.st_size, after.st_mtime_ns):
             raise ValueError(f"file changed while reading: {path}")
     return data, stat.S_IMODE(info.st_mode)

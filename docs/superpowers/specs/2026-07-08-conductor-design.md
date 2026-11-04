@@ -398,7 +398,7 @@ A/B benchmark completed (measurement isolation).
 
 ## Deployment record
 
-- **2026-07-09**: Conductor v1.3 LIVE. Runtime at `C:\Users\Dee\.claude\conductor\`; hooks
+- **2026-07-09**: Conductor v1.3 LIVE. Runtime at `C:\Users\<user>\.claude\conductor\`; hooks
   (SessionStart, SubagentStart, and v1.2's UserPromptSubmit + PreToolUse commit gate) in
   `~/.claude/settings.json` via `install.ps1` (forward-slash paths — hooks execute through
   bash on Windows, which eats backslashes; discovered via live-probe transcript). Global

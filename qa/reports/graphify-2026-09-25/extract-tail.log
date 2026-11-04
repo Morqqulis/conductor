@@ -2,142 +2,142 @@ Partial progress log retained from the running session; includes the complete te
 Process exit code observed: 0
 [graphify extract] chunk 8/32 done
 [graphify extract] chunk 10/32 done
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/MENTOR-NOTES.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/MENTOR-NOTES.md'; the file was not dispatched for extraction
   _scs(
 [graphify extract] chunk 12/32 done
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/specs/2026-07-08-conductor-design.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/specs/2026-07-08-conductor-design.md'; the file was not dispatched for extraction
   _scs(
 [graphify extract] chunk 13/32 done
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/conductor-core.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/conductor-core.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/header.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/antigravity/header.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/conductor-core.mdc'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/conductor-core.mdc'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/header.mdc'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'adapters/cursor/header.mdc'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/core.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/core.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/lessons-inject.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/lessons-inject.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/payload.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/payload.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/session-start.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/session-start.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/subagent-start.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/subagent-start.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/test-run-journal.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/test-run-journal.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/user-prompt.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/hooks/user-prompt.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/debugging.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/debugging.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/distill.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/distill.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/implementing.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/implementing.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/investigating.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/investigating.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/methods.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/methods.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/orchestration.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/orchestration.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/skeptic.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/playbooks/skeptic.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/snippets/probes.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/snippets/probes.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/subagent-contract.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'runtime/subagent-contract.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/reply-language.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/reply-language.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/sweep-git-gate.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'tools/sweep-git-gate.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/arm-conductor-settings.template.json'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/arm-conductor-settings.template.json'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/env.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/env.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/load.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/config/load.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/pool.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/pool.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/users.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/db/users.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/index.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/index.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/invoice.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/invoice.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/login.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/login.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/stats.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/routes/stats.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/server.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/http/server.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/auth.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/auth.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/billing.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/billing.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/report.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/breadth-trap/services/report.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/make-breadth.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/make-breadth.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/overescalation-trap/src/auth/LoginForm.tsx'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/overescalation-trap/src/auth/LoginForm.tsx'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/package.json'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/package.json'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/cartTotal.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/cartTotal.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/parsePrice.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/src/parsePrice.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/tests/cart.test.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/rootcause-trap/tests/cart.test.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/package.json'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/package.json'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/src/slugify.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/src/slugify.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/tests/slugify.test.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/thrash-trap/tests/slugify.test.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/package.json'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/package.json'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/src/parseDuration.js'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/fixtures/verify-trap/src/parseDuration.js'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/run.sh'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/run.sh'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/scenarios.tsv'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/bench/scenarios.tsv'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitattributes'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitattributes'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitignore'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file '.gitignore'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'CHANGELOG.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'CHANGELOG.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.az.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.az.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'README.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/RED-TEAM-NOTES.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/RED-TEAM-NOTES.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/archive/CLAUDE.pre-conductor.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/archive/CLAUDE.pre-conductor.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/research/2026-07-08-superpowers-dissection.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/research/2026-07-08-superpowers-dissection.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-08-conductor-v1.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-08-conductor-v1.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-09-portability.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'docs/superpowers/plans/2026-07-09-portability.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-report.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-report.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-evidence.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-evidence.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-grades.tsv'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/baseline-grades.tsv'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-evidence.md'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-evidence.md'; the file was not dispatched for extraction
   _scs(
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-grades.tsv'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'qa/reports/ab-v2/conductor-grades.tsv'; the file was not dispatched for extraction
   _scs(
 [graphify extract] chunk 14/32 done
 [graphify extract] chunk 17/32 done
 [graphify extract] chunk 18/32 done
-C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'C:/Users/Dee/.claude/settings.json'; the file was not dispatched for extraction
+C:\Users\<user>\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.py:2684: RuntimeWarning: semantic cache skipped out-of-scope source_file 'C:/Users/<user>/.claude/settings.json'; the file was not dispatched for extraction
   _scs(
 [graphify extract] chunk 20/32 done
 [graphify extract] chunk 22/32 done
@@ -147,7 +147,7 @@ C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.p
 [graphify extract] chunk 31/32 done
 [graphify extract] chunk 32/32 done
 [graphify] WARNING: dropped 155 out-of-scope node(s) attributed to file(s) not dispatched for extraction: .gitattributes, .gitignore, GRAPH_REPORT.md, LICENSE, LoginForm.tsx (+71 more). The model mis-attributed them to another corpus file; they were excluded from the graph (#1895).
-[graphify extract] dropped 149 out-of-scope item(s) attributed to 80 file(s) not dispatched this run: .conductor/ledger.md, C:/Users/Dee/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/evidence, CLAUDE copy.md, RTK.md, adapters/antigravity/, adapters/antigravity/gate.ps1, adapters/cursor/, adapters/cursor/gate.ps1, backup-push.sh, cartTotal.js, conductor/core.md, conductor/crossmodel.conf, conductor/lessons.md, core, core-body, core.md, env.js, graphify-out/, hooks.json, install-antigravity.ps1, install-cursor.ps1, install-git-gate.ps1, install-global.ps1, install.ps1, lessons-inject.ps1, lessons.md, lessons/INDEX.md, memory/migrate-lessons.sh, memory/project_conductor_deployed.md, playbooks/debugging.md, playbooks/distill.md, playbooks/implementing.md, playbooks/investigating.md, playbooks/methods.md, playbooks/orchestration.md, playbooks/skeptic.md, playbooks/verification.md, pre-commit-gate.ps1, qa/fixtures/make-breadth.ps1, qa/fixtures/overescalation-trap/src/auth/LoginForm.tsx, qa/fixtures/rootcause-trap/src/cartTotal.js, qa/fixtures/rootcause-trap/src/parsePrice.js, qa/fixtures/rootcause-trap/tests/cart.test.js, qa/fixtures/thrash-trap/src/slugify.js, qa/fixtures/thrash-trap/tests/slugify.test.js, qa/fixtures/verify-trap/src/parseDuration.js, qa/home-probe/settings.json, qa/lint.ps1, qa/run-benchmark.ps1, qa/run-benchmark.sh, qa/scenarios/scenarios.psd1, reviewing.md, runtime/, runtime/git-hooks/post-commit, runtime/git-hooks/post-merge, runtime/git-hooks/pre-commit, runtime/git-hooks/pre-merge-commit, runtime/hooks/pre-commit-gate.ps1, runtime/hooks/session-start.ps1, runtime/hooks/subagent-start.ps1, settings-json.py, settings.json, snippets/probes.md, src/auth/LoginForm.tsx, src/parsePrice.js, subagent-contract, subagent-contract.md, superpowers, test-run-journal.sh, uninstall.ps1, ~/.claude/RTK.md, ~/.claude/conductor/git-template, ~/.claude/conductor/lessons.md, ~/.claude/conductor/lessons/, ~/.claude/conductor/playbooks/debugging.md, ~/.claude/conductor/playbooks/investigating.md, ~/.claude/skills/graphify/SKILL.md, ~/.cursor/hooks.json, ~/.gemini/AGENTS.md, ~/.gemini/config/hooks.json
+[graphify extract] dropped 149 out-of-scope item(s) attributed to 80 file(s) not dispatched this run: .conductor/ledger.md, C:/Users/<user>/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/evidence, CLAUDE copy.md, RTK.md, adapters/antigravity/, adapters/antigravity/gate.ps1, adapters/cursor/, adapters/cursor/gate.ps1, backup-push.sh, cartTotal.js, conductor/core.md, conductor/crossmodel.conf, conductor/lessons.md, core, core-body, core.md, env.js, graphify-out/, hooks.json, install-antigravity.ps1, install-cursor.ps1, install-git-gate.ps1, install-global.ps1, install.ps1, lessons-inject.ps1, lessons.md, lessons/INDEX.md, memory/migrate-lessons.sh, memory/project_conductor_deployed.md, playbooks/debugging.md, playbooks/distill.md, playbooks/implementing.md, playbooks/investigating.md, playbooks/methods.md, playbooks/orchestration.md, playbooks/skeptic.md, playbooks/verification.md, pre-commit-gate.ps1, qa/fixtures/make-breadth.ps1, qa/fixtures/overescalation-trap/src/auth/LoginForm.tsx, qa/fixtures/rootcause-trap/src/cartTotal.js, qa/fixtures/rootcause-trap/src/parsePrice.js, qa/fixtures/rootcause-trap/tests/cart.test.js, qa/fixtures/thrash-trap/src/slugify.js, qa/fixtures/thrash-trap/tests/slugify.test.js, qa/fixtures/verify-trap/src/parseDuration.js, qa/home-probe/settings.json, qa/lint.ps1, qa/run-benchmark.ps1, qa/run-benchmark.sh, qa/scenarios/scenarios.psd1, reviewing.md, runtime/, runtime/git-hooks/post-commit, runtime/git-hooks/post-merge, runtime/git-hooks/pre-commit, runtime/git-hooks/pre-merge-commit, runtime/hooks/pre-commit-gate.ps1, runtime/hooks/session-start.ps1, runtime/hooks/subagent-start.ps1, settings-json.py, settings.json, snippets/probes.md, src/auth/LoginForm.tsx, src/parsePrice.js, subagent-contract, subagent-contract.md, superpowers, test-run-journal.sh, uninstall.ps1, ~/.claude/RTK.md, ~/.claude/conductor/git-template, ~/.claude/conductor/lessons.md, ~/.claude/conductor/lessons/, ~/.claude/conductor/playbooks/debugging.md, ~/.claude/conductor/playbooks/investigating.md, ~/.claude/skills/graphify/SKILL.md, ~/.cursor/hooks.json, ~/.gemini/AGENTS.md, ~/.gemini/config/hooks.json
 [graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'adapters/core-body.md'.
 [graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'adapters/core-body.md'.
 [graphify] note: node 'adapters_core_body' was extracted twice from 'adapters/core-body.md' under different labels — keeping 'core-body.md', dropping 'Core Body (Shared Conductor Rules)'.
@@ -248,7 +248,7 @@ C:\Users\Dee\AppData\Roaming\uv\tools\graphifyy\Lib\site-packages\graphify\llm.p
 [graphify] note: node 'qa_reports_ab_v2_baseline_evidence' was extracted twice from 'qa/reports/ab-v2/baseline-evidence.md' under different labels — keeping 'Baseline Arm Evidence Report', dropping 'qa/reports/ab-v2/baseline-evidence.md'.
 [graphify] note: node 'qa_reports_ab_v2_conductor_evidence' was extracted twice from 'qa/reports/ab-v2/conductor-evidence.md' under different labels — keeping 'Conductor Arm Evidence Report', dropping 'qa/reports/ab-v2/conductor-evidence.md'.
 [graphify] Deduplicated 23 node(s) (23 exact).
-[graphify extract] wrote C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\graph.json: 829 nodes, 1435 edges, 62 communities
-[graphify extract] wrote C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\.graphify_analysis.json
+[graphify extract] wrote C:\Users\<user>\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\graph.json: 829 nodes, 1435 edges, 62 communities
+[graphify extract] wrote C:\Users\<user>\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild\graphify-out\.graphify_analysis.json
 [graphify extract] tokens: 2,068,329 in / 494,776 out, est. cost (~claude-cli): $0.0000
-[graphify extract] next: run `graphify cluster-only C:\Users\Dee\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild` to generate GRAPH_REPORT.md and name communities
+[graphify extract] next: run `graphify cluster-only C:\Users\<user>\AppData\Local\Temp\conductor-graphify-2229042acd81484da3956939a58811cf\cli-rebuild` to generate GRAPH_REPORT.md and name communities

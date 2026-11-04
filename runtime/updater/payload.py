@@ -36,12 +36,14 @@ def payload(source, paths, scopes, reply):
         result[key] = (raw, 0o755 if relative.endswith('.sh') else 0o644)
 
     folders = ['evidence', 'memory', 'updater']
+    # Memory is shared by every agent on the machine (Codex reads it through AGENTS.md), so
+    # its maintenance utility ships with every scope, not only with the Claude runtime.
+    add('runtime/memory/migrate-lessons.sh', 'tools/migrate-lessons.sh')
     if 'claude' in scopes:
         folders += ['hooks', 'playbooks', 'snippets']
         add('runtime/core.md', 'runtime/core.md',
             lambda s: s.replace('__CONDUCTOR_DIR__', paths.runtime.as_posix()))
         add('runtime/subagent-contract.md', 'runtime/subagent-contract.md')
-        add('runtime/memory/migrate-lessons.sh', 'tools/migrate-lessons.sh')
     for folder in folders:
         root = source / 'runtime' / folder
         if not root.is_dir():

@@ -156,6 +156,18 @@ class RecallTests(unittest.TestCase):
         self.assertEqual({item["line"] for item in data["candidates"]}, {3, 7})
         self.assertTrue(all(item["source"] == str(path.absolute()) for item in data["candidates"]))
 
+    def test_headings_inside_fenced_code_do_not_split_a_lesson(self):
+        path = self.lesson("fenced.md", "# Shell quoting\n- date: 2026-09-26\n"
+                           "Use the probe below.\n```bash\n# not a heading: comment\n"
+                           "grep -n fencetoken file\n```\nAfter the block.\n")
+        data = self.run_cli("--query", "fencetoken")
+        self.assertEqual(len(data["candidates"]), 1)
+        self.assertEqual(data["candidates"][0]["source"], str(path.absolute()))
+        # `line` is where the term matched; the title must come from the real heading, not
+        # from the commented line inside the fence.
+        self.assertEqual(data["candidates"][0]["line"], 6)
+        self.assertEqual(data["candidates"][0]["title"], "Shell quoting")
+
     @unittest.skipUnless(os.name == "nt", "Windows case-insensitive aliases")
     def test_alias_is_readable_without_resolving_before_link_check(self):
         path = self.lesson("alias.md", "# Python Windows\nUse native paths.\n")

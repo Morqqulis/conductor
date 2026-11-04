@@ -176,7 +176,7 @@ AGENTS.md нет. Это отличается от наличия команды
 ### Рабочие копии
 
 Временные резервные копии и промежуточные материалы этой задачи находятся в
-`C:/Users/Dee/AppData/Local/Temp/conductor-graphify-2229042acd81484da3956939a58811cf`:
+`C:/Users/<user>/AppData/Local/Temp/conductor-graphify-2229042acd81484da3956939a58811cf`:
 `graphify-out-before`, `cli-incomplete-before-restore`, `cli-rebuild`,
 `live-before-russian`, `audit_graph.py`.
 Временные каталоги не являются долгосрочным архивом; проверенные итоговые артефакты

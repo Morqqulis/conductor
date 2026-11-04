@@ -12,3 +12,7 @@ graphify-out/.conductor/
 # A/B bench artifacts - transcripts and scratch, never committed.
 qa/bench/work/
 qa/bench/transcripts/
+
+# Graphify state files hold the machine-specific repository root and interpreter path.
+graphify-out/.graphify_root
+graphify-out/.graphify_python

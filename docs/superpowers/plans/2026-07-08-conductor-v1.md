@@ -4,7 +4,7 @@
 
 **Goal:** Build, QA-validate, and deploy Conductor — the autonomous behavior system for Opus 4.8 that replaces superpowers — per spec `docs/superpowers/specs/2026-07-08-conductor-design.md`.
 
-**Architecture:** Repo holds the source of truth (`runtime/` tree + `qa/` harness); deployment copies `runtime/` to `C:\Users\Dee\.claude\conductor\` and registers two hooks (SessionStart, SubagentStart) in `~/.claude/settings.json`. QA runs headless `claude -p --model opus` sessions in isolated `CLAUDE_CONFIG_DIR` homes for baseline/conductor A/B.
+**Architecture:** Repo holds the source of truth (`runtime/` tree + `qa/` harness); deployment copies `runtime/` to `C:\Users\<user>\.claude\conductor\` and registers two hooks (SessionStart, SubagentStart) in `~/.claude/settings.json`. QA runs headless `claude -p --model opus` sessions in isolated `CLAUDE_CONFIG_DIR` homes for baseline/conductor A/B.
 
 **Tech Stack:** Markdown (runtime artifacts), PowerShell 7 (hooks, lint, QA runner), Node.js (QA fixtures), Claude Code headless CLI.
 
@@ -18,7 +18,7 @@
 - Iron Laws appear ONLY in core.md (caps-lock scarcity law); playbooks get at most one absolute each, no caps-lock walls.
 - Every playbook branch keys on an observable predicate (string/count/exit code/path), never "feels risky".
 - Runtime tree contains NO build/QA artifacts; QA artifacts live only under `qa/`.
-- Windows literal absolute paths inside runtime files (`C:\Users\Dee\...`); the Read tool does not expand `~`.
+- Windows literal absolute paths inside runtime files (`C:\Users\<user>\...`); the Read tool does not expand `~`.
 - Commit after every task (repo already initialized, branch `main`).
 
 ---
@@ -60,7 +60,7 @@ git add .gitignore runtime qa && git commit -m "chore: scaffold runtime and qa t
 - Create: `runtime/core.md`
 
 **Interfaces:**
-- Produces: the always-on core injected by the SessionStart hook; references playbook paths under `C:\Users\Dee\.claude\conductor\playbooks\`; defines the four status tokens and Step 0 protocol every other artifact assumes.
+- Produces: the always-on core injected by the SessionStart hook; references playbook paths under `C:\Users\<user>\.claude\conductor\playbooks\`; defines the four status tokens and Step 0 protocol every other artifact assumes.
 
 - [ ] **Step 1: Write `runtime/core.md` with the exact content of Appendix A** (no edits — Appendix A IS the implementation; its rationalization table is v1 seeds, updated later in Task 11 only where baseline evidence exists).
 - [ ] **Step 2: Verify budget**: `(Get-Item runtime\core.md).Length` → expected ≤ 9500. Verify sentinel: `Select-String -Path runtime\core.md -Pattern 'CONDUCTOR-CORE-v1-7f3a' -Quiet` → True.
@@ -460,17 +460,17 @@ for ($i = 1; $i -le $Reps; $i++) {
 
 ### Task 14: Deploy to live environment
 
-- [ ] **Step 1:** Final copy `runtime\*` → `C:\Users\Dee\.claude\conductor\` (staged copy already exists; this syncs post-QA wording).
-- [ ] **Step 2:** Backup then edit `C:\Users\Dee\.claude\settings.json`: backup to `settings.json.pre-conductor.bak`; merge into the existing JSON (preserve all existing keys):
+- [ ] **Step 1:** Final copy `runtime\*` → `C:\Users\<user>\.claude\conductor\` (staged copy already exists; this syncs post-QA wording).
+- [ ] **Step 2:** Backup then edit `C:\Users\<user>\.claude\settings.json`: backup to `settings.json.pre-conductor.bak`; merge into the existing JSON (preserve all existing keys):
 ```json
 {
   "hooks": {
     "SessionStart": [
       { "matcher": "startup|resume|clear|compact",
-        "hooks": [ { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\Dee\\.claude\\conductor\\hooks\\session-start.ps1", "timeout": 10 } ] }
+        "hooks": [ { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\<user>\\.claude\\conductor\\hooks\\session-start.ps1", "timeout": 10 } ] }
     ],
     "SubagentStart": [
-      { "hooks": [ { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\Dee\\.claude\\conductor\\hooks\\subagent-start.ps1", "timeout": 10 } ] }
+      { "hooks": [ { "type": "command", "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\<user>\\.claude\\conductor\\hooks\\subagent-start.ps1", "timeout": 10 } ] }
     ]
   }
 }
@@ -489,7 +489,7 @@ If `pwsh` is absent from PATH (`Get-Command pwsh`), substitute `powershell` in b
 ### Task 15: Close-out
 
 - [ ] **Step 1:** Write `docs/superpowers/specs/2026-07-08-conductor-design.md` → append a short `## Deployment record` section (date, deployed paths, QA report link, known gaps from Task 13 Step 4 if any).
-- [ ] **Step 2:** Update memory: `C:\Users\Dee\.claude\projects\c--Users-Dee-Desktop------------\memory\` — new file `project_conductor_deployed.md` (type: project) recording: Conductor deployed at `~/.claude/conductor/`, hooks in settings.json, superpowers disabled, global CLAUDE.md reconciled, repo path of source of truth; pointer line added to MEMORY.md.
+- [ ] **Step 2:** Update memory: `C:\Users\<user>\.claude\projects\c--Users-Dee-Desktop------------\memory\` — new file `project_conductor_deployed.md` (type: project) recording: Conductor deployed at `~/.claude/conductor/`, hooks in settings.json, superpowers disabled, global CLAUDE.md reconciled, repo path of source of truth; pointer line added to MEMORY.md.
 - [ ] **Step 3:** `git tag conductor-v1 && git log --oneline` — final commit + tag.
 
 ---
@@ -596,7 +596,7 @@ say so in one line.
   named "cannot-verify" item in the claim.
 - Any human gate in a non-interactive run -> default-deny + BLOCKED report.
 
-## PLAYBOOKS (base: C:\Users\Dee\.claude\conductor\playbooks\)
+## PLAYBOOKS (base: C:\Users\<user>\.claude\conductor\playbooks\)
 - debugging.md — load on debug classification; and when tempted to edit before reproducing.
 - implementing.md — load on implement classification; and when tempted to code before reading.
 - investigating.md — load on investigate classification; and when tempted to answer from priors.
@@ -631,7 +631,7 @@ You are a dispatched subagent operating under Conductor.
    report, not edits.
 ````
 
-## Appendix C — global `C:\Users\Dee\.claude\CLAUDE.md` (exact content for Task 14 Step 3)
+## Appendix C — global `C:\Users\<user>\.claude\CLAUDE.md` (exact content for Task 14 Step 3)
 
 Identical to the project `CLAUDE.md` (committed version at repo root) with these deltas:
 1. Drop the «Контекст проекта» section (project-specific).

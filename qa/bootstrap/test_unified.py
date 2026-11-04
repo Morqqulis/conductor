@@ -145,6 +145,9 @@ class UnifiedTests(unittest.TestCase):
         self.assertTrue((self.home / '.codex/AGENTS.md').exists())
         self.assertFalse((self.config / 'settings.json').exists())
         self.assertIn(b'Answer in Azerbaijani', (self.home / '.codex/AGENTS.md').read_bytes())
+        # Shared memory maintenance is not a Claude-only feature.
+        self.assertTrue((self.config / 'conductor/memory/migrate-lessons.sh').is_file())
+        self.assertTrue((self.config / 'conductor/memory/recall.py').is_file())
 
     def test_scope_claude_leaves_other_agent_rules_alone(self):
         self.run_install('--scope', 'claude', '--language', 'Russian')

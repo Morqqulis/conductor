@@ -8,29 +8,23 @@ import json
 import os
 import re
 from pathlib import Path
-import stat
 import uuid
 
 from transaction import plain, write
+from transaction import read as bounded_read
 
+# Companion files include downloaded binaries and environments, hence the wider bound.
 LIMIT = 128 * 1024 * 1024
 
 
 def read(path):
-    path = plain(path)
-    try:
-        info = path.stat()
-    except FileNotFoundError:
-        return None, 0o644
-    if not stat.S_ISREG(info.st_mode) or info.st_size > LIMIT:
-        raise ValueError('companion file is not a bounded regular file')
-    with path.open('rb') as stream:
-        data = stream.read(LIMIT + 1)
-        after = os.fstat(stream.fileno())
-    if len(data) > LIMIT or (info.st_ino, info.st_size, info.st_mtime_ns) != (
-            after.st_ino, after.st_size, after.st_mtime_ns):
-        raise ValueError('companion file changed while reading')
-    return data, stat.S_IMODE(info.st_mode) if os.name != 'nt' else 0o644
+    """The installer's bounded, link-refusing reader with the companion size bound.
+
+    Windows reports no meaningful POSIX mode for these files; a fixed mode keeps journal
+    comparisons stable there.
+    """
+    data, mode = bounded_read(path, LIMIT)
+    return data, mode if os.name != 'nt' else 0o644
 
 
 def sha(data):

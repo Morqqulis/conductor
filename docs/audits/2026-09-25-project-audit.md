@@ -42,15 +42,15 @@ Conductor — набор инструкций для агентов, средс�
 
 | Слой | Роль | Основной источник |
 |---|---|---|
-| Ядро | Классификация задач, уровни риска, правила завершения | [runtime/core.md](C:/Users/Dee/Desktop/conductor/runtime/core.md:15) |
-| Плейбуки | Подробный процесс исследования, разработки, отладки, делегирования | [runtime/playbooks](C:/Users/Dee/Desktop/conductor/runtime/playbooks) |
-| Контракт исполнителя | Обязанности и отчёт субагента | [subagent-contract.md](C:/Users/Dee/Desktop/conductor/runtime/subagent-contract.md:1) |
-| Хуки Claude Code | Передача правил при событиях и пассивный журнал команд | [runtime/hooks](C:/Users/Dee/Desktop/conductor/runtime/hooks) |
-| Другие среды | Сокращённые правила из общего текста | [adapters/core-body.md](C:/Users/Dee/Desktop/conductor/adapters/core-body.md:1) |
-| Память | Входящие уроки, отдельные разобранные записи, индекс | [lessons-inject.sh](C:/Users/Dee/Desktop/conductor/runtime/hooks/lessons-inject.sh:24) |
-| Установка | Развёртывание правил и подключение дополнительных инструментов | [install.sh](C:/Users/Dee/Desktop/conductor/install.sh:1) |
-| Проверки Conductor | Формулировки, бюджеты, конфигурация, диагностические инструменты | [qa](C:/Users/Dee/Desktop/conductor/qa) |
-| Graphify | Производная карта связей для поиска, не источник истины | [GRAPH_REPORT.md](C:/Users/Dee/Desktop/conductor/graphify-out/GRAPH_REPORT.md:1) |
+| Ядро | Классификация задач, уровни риска, правила завершения | [runtime/core.md](C:/Users/<user>/Desktop/conductor/runtime/core.md:15) |
+| Плейбуки | Подробный процесс исследования, разработки, отладки, делегирования | [runtime/playbooks](C:/Users/<user>/Desktop/conductor/runtime/playbooks) |
+| Контракт исполнителя | Обязанности и отчёт субагента | [subagent-contract.md](C:/Users/<user>/Desktop/conductor/runtime/subagent-contract.md:1) |
+| Хуки Claude Code | Передача правил при событиях и пассивный журнал команд | [runtime/hooks](C:/Users/<user>/Desktop/conductor/runtime/hooks) |
+| Другие среды | Сокращённые правила из общего текста | [adapters/core-body.md](C:/Users/<user>/Desktop/conductor/adapters/core-body.md:1) |
+| Память | Входящие уроки, отдельные разобранные записи, индекс | [lessons-inject.sh](C:/Users/<user>/Desktop/conductor/runtime/hooks/lessons-inject.sh:24) |
+| Установка | Развёртывание правил и подключение дополнительных инструментов | [install.sh](C:/Users/<user>/Desktop/conductor/install.sh:1) |
+| Проверки Conductor | Формулировки, бюджеты, конфигурация, диагностические инструменты | [qa](C:/Users/<user>/Desktop/conductor/qa) |
+| Graphify | Производная карта связей для поиска, не источник истины | [GRAPH_REPORT.md](C:/Users/<user>/Desktop/conductor/graphify-out/GRAPH_REPORT.md:1) |
 
 Основной путь Claude Code: исходники → установщик → установленный runtime и настройки
 хуков → инструкции в контексте модели. У Cursor, Antigravity и Codex другой путь:
@@ -66,14 +66,14 @@ Conductor — набор инструкций для агентов, средс�
 проверки целостности назначены на каждую задачу. После объединения результатов
 исполнителей снова назван полный прогон тестов либо линтер.
 
-Источники: [implementing.md:59](C:/Users/Dee/Desktop/conductor/runtime/playbooks/implementing.md:59),
-[implementing.md:73](C:/Users/Dee/Desktop/conductor/runtime/playbooks/implementing.md:73),
-[orchestration.md:96](C:/Users/Dee/Desktop/conductor/runtime/playbooks/orchestration.md:96).
+Источники: [implementing.md:59](C:/Users/<user>/Desktop/conductor/runtime/playbooks/implementing.md:59),
+[implementing.md:73](C:/Users/<user>/Desktop/conductor/runtime/playbooks/implementing.md:73),
+[orchestration.md:96](C:/Users/<user>/Desktop/conductor/runtime/playbooks/orchestration.md:96).
 
 Кроме того, доказательство объявляется устаревшим после завершения сообщения и после
 любой последующей правки файла, без проверки связи этой правки с полученным результатом.
 Это прямой источник повторных прогонов при запросе повторного подтверждения или после
-редактирования отчёта. Источник: [core.md:85](C:/Users/Dee/Desktop/conductor/runtime/core.md:85).
+редактирования отчёта. Источник: [core.md:85](C:/Users/<user>/Desktop/conductor/runtime/core.md:85).
 
 Подтверждено наличие противоречия в тексте. То, насколько именно оно замедляет конкретную
 модель, в этом аудите не измерялось. Это причинная гипотеза о поведении агента,
@@ -97,8 +97,8 @@ Conductor — набор инструкций для агентов, средс�
 Для Claude Code повторное выключение исправления ради проверки теста требуется
 на средних и крупных задачах, но пропускается на простых. В общем сокращённом тексте
 та же процедура требуется для любого исправления без этого исключения.
-Источники: [debugging.md:38](C:/Users/Dee/Desktop/conductor/runtime/playbooks/debugging.md:38),
-[core-body.md:45](C:/Users/Dee/Desktop/conductor/adapters/core-body.md:45).
+Источники: [debugging.md:38](C:/Users/<user>/Desktop/conductor/runtime/playbooks/debugging.md:38),
+[core-body.md:45](C:/Users/<user>/Desktop/conductor/adapters/core-body.md:45).
 
 Оба сгенерированных файла действительно содержат общий текст adapters/core-body.md.
 Следовательно, исправление только Claude-плейбука не изменит это правило у других сред.
@@ -113,8 +113,8 @@ Conductor — набор инструкций для агентов, средс�
 текущей задачей. Это статически подтверждённый дефект процедуры, не сообщение о
 потере файлов в данном аудите.
 
-Источник: [debugging.md:12](C:/Users/Dee/Desktop/conductor/runtime/playbooks/debugging.md:12),
-[debugging.md:39](C:/Users/Dee/Desktop/conductor/runtime/playbooks/debugging.md:39).
+Источник: [debugging.md:12](C:/Users/<user>/Desktop/conductor/runtime/playbooks/debugging.md:12),
+[debugging.md:39](C:/Users/<user>/Desktop/conductor/runtime/playbooks/debugging.md:39).
 Дальнейшее исправление должно использовать сохранённое состояние перед собственной
 правкой и учитывать границы владения файлами; отдельное рабочее дерево само по себе
 не переносит существующие незакоммиченные изменения.
@@ -127,9 +127,9 @@ Conductor — набор инструкций для агентов, средс�
 индекс. При превышении лимита сохраняется начало полученного блока. Поэтому у длинного
 набора исчезает конец: самые новые из выбранных уроков и ссылка на разобранную память.
 
-Источник: [lessons-inject.sh:65](C:/Users/Dee/Desktop/conductor/runtime/hooks/lessons-inject.sh:65),
-[lessons-inject.sh:73](C:/Users/Dee/Desktop/conductor/runtime/hooks/lessons-inject.sh:73),
-[lessons-inject.sh:88](C:/Users/Dee/Desktop/conductor/runtime/hooks/lessons-inject.sh:88).
+Источник: [lessons-inject.sh:65](C:/Users/<user>/Desktop/conductor/runtime/hooks/lessons-inject.sh:65),
+[lessons-inject.sh:73](C:/Users/<user>/Desktop/conductor/runtime/hooks/lessons-inject.sh:73),
+[lessons-inject.sh:88](C:/Users/<user>/Desktop/conductor/runtime/hooks/lessons-inject.sh:88).
 
 Проверка на искусственных данных: короткий вход сохраняет ссылку на индекс; восемь
 строк примерно по 675 символов сохраняют старшие строки выбранной группы, теряют
@@ -150,8 +150,8 @@ HOOK_CONTROL index=true; LONG index=false newest=false older=true; chars=2986
 runtime. Это разные среды выполнения. В записях обслуживания установленной памяти уже
 зафиксировано, что эти шаги приходилось выполнять вручную или пропускать.
 
-Источник: [distill.md:30](C:/Users/Dee/Desktop/conductor/runtime/playbooks/distill.md:30),
-[tools/migrate-lessons.sh](C:/Users/Dee/Desktop/conductor/tools/migrate-lessons.sh:1).
+Источник: [distill.md:30](C:/Users/<user>/Desktop/conductor/runtime/playbooks/distill.md:30),
+[tools/migrate-lessons.sh](C:/Users/<user>/Desktop/conductor/tools/migrate-lessons.sh:1).
 Установленная папка осмотрена: tools/, qa/ и install.sh там отсутствуют.
 
 Рекомендуется разделить обычное перемещение пользовательских уроков и изменение
@@ -168,7 +168,7 @@ runtime. Это разные среды выполнения. В записях 
 MIGRATION preserved_valid=2 preserved_invalid=1 retained_prior=1; first_index_entry=undated
 ```
 
-Источник сортировки: [migrate-lessons.sh:64](C:/Users/Dee/Desktop/conductor/tools/migrate-lessons.sh:64).
+Источник сортировки: [migrate-lessons.sh:64](C:/Users/<user>/Desktop/conductor/tools/migrate-lessons.sh:64).
 Первый запуск этой проверки был остановлен ограничением песочницы; после разрешённого
 повтора только на временных данных проверка завершилась с кодом 0. Это не дефект
 работы скрипта в обычном окружении.
@@ -187,7 +187,7 @@ backup-push.sh и .gitignore, не создаёт задание планиро�
 это отдельно сверено с локальной справкой Git. Поэтому обещание возобновления
 резервирования после выполнения перечисленных шагов необоснованно.
 
-Источник: [локальная инструкция восстановления](C:/Users/Dee/.claude/conductor/README.md:17).
+Источник: [локальная инструкция восстановления](C:/Users/<user>/.claude/conductor/README.md:17).
 В исходном репозитории установщик этого резервирования не найден. Исправление
 должно завершаться безопасной проверкой восстановления в отдельную папку и
 проверкой повторной настройки расписания, а не только пробной отправкой.
@@ -201,8 +201,8 @@ backup-push.sh и .gitignore, не создаёт задание планиро�
 контрольные суммы отличаются от текущих. Среди них установщик, CI, README и три
 плейбука. Новый install-companions.sh отсутствует в манифесте.
 
-Источник состояния: [manifest.json](C:/Users/Dee/Desktop/conductor/graphify-out/manifest.json),
-[GRAPH_REPORT.md](C:/Users/Dee/Desktop/conductor/graphify-out/GRAPH_REPORT.md:1).
+Источник состояния: [manifest.json](C:/Users/<user>/Desktop/conductor/graphify-out/manifest.json),
+[GRAPH_REPORT.md](C:/Users/<user>/Desktop/conductor/graphify-out/GRAPH_REPORT.md:1).
 Сравнивались MD5 текущих байтов файлов с сохранёнными ast_hash/semantic_hash:
 73 совпадения, 12 несовпадений, 0 пропавших файлов манифеста.
 
@@ -222,9 +222,9 @@ backup-push.sh и .gitignore, не создаёт задание планиро�
 печатает выбранный путь. После двух ошибок копирования всё равно выбран весь
 каталог для удаления, итог — сообщение об успехе и код 0. Настоящие файлы не удалялись.
 
-Источники: [uninstall.sh:49](C:/Users/Dee/Desktop/conductor/uninstall.sh:49),
-[uninstall.sh:78](C:/Users/Dee/Desktop/conductor/uninstall.sh:78),
-[uninstall.sh:85](C:/Users/Dee/Desktop/conductor/uninstall.sh:85).
+Источники: [uninstall.sh:49](C:/Users/<user>/Desktop/conductor/uninstall.sh:49),
+[uninstall.sh:78](C:/Users/<user>/Desktop/conductor/uninstall.sh:78),
+[uninstall.sh:85](C:/Users/<user>/Desktop/conductor/uninstall.sh:85).
 
 Для текущей машины есть дополнительный разрыв: сохраняются только lessons.md и lessons/,
 но в удаляемом каталоге также находятся резервирующий скрипт, снимки памяти проектов
@@ -241,16 +241,16 @@ backup-push.sh и .gitignore, не создаёт задание планиро�
 
 | Проблема | Последствие | Доказательство и место |
 |---|---|---|
-| Очистка ожидает только вложенную форму Claude hooks | Плоская запись Cursor остаётся после обещанной очистки | Запуск: удалено 0; [settings-json.py:85](C:/Users/Dee/Desktop/conductor/tools/settings-json.py:85) |
-| Слишком широкий признак принадлежности | Чужая команда company-conductor-core-lint удаляется; контроль semiconductor-core-lint сохраняется | Запуск; [settings-json.py:29](C:/Users/Dee/Desktop/conductor/tools/settings-json.py:29) |
-| Путь внутри shell-команды не экранирован буквально | Знак доллара в имени каталога меняет фактически запускаемый путь | Регистрация + безопасная функция вместо запуска; [settings-json.py:115](C:/Users/Dee/Desktop/conductor/tools/settings-json.py:115) |
-| Подстановка пути через sed не экранирует & | Ссылки на модули содержат остаток шаблона | Фрагмент; [install.sh:88](C:/Users/Dee/Desktop/conductor/install.sh:88) |
-| Проектные правила выбираются для удаления по имени | Файл с личным текстом без признака Conductor тоже выбирается; копия не создаётся | Заглушки; [uninstall.sh:146](C:/Users/Dee/Desktop/conductor/uninstall.sh:146) |
-| Проектная очистка удаляет скрипт, но не его регистрацию | Остаётся настройка, указывающая на отсутствующий gate | Заглушки + чтение сохранённого JSON; [uninstall.sh:139](C:/Users/Dee/Desktop/conductor/uninstall.sh:139) |
-| Ошибка чтения списка плагинов принимается за enabled | При коде CLI 73 итог всё равно OK already enabled | Заглушки; [install-companions.sh:100](C:/Users/Dee/Desktop/conductor/install-companions.sh:100) |
-| Не сопоставляются native Windows и Git Bash формы пути | Старый init.templateDir не очищается | Фрагмент; [install-global.sh:169](C:/Users/Dee/Desktop/conductor/install-global.sh:169) |
-| Проверка установки выбирает первый hook с похожим именем | Может выполнить чужой SessionStart вместо Conductor | Фрагмент; [install.sh:199](C:/Users/Dee/Desktop/conductor/install.sh:199) |
-| Очистка старого Git gate возвращает 0 при отказах удаления | Вызывающий процесс получает ложный успех | Заглушки; [sweep-git-gate.sh:127](C:/Users/Dee/Desktop/conductor/tools/sweep-git-gate.sh:127) |
+| Очистка ожидает только вложенную форму Claude hooks | Плоская запись Cursor остаётся после обещанной очистки | Запуск: удалено 0; [settings-json.py:85](C:/Users/<user>/Desktop/conductor/tools/settings-json.py:85) |
+| Слишком широкий признак принадлежности | Чужая команда company-conductor-core-lint удаляется; контроль semiconductor-core-lint сохраняется | Запуск; [settings-json.py:29](C:/Users/<user>/Desktop/conductor/tools/settings-json.py:29) |
+| Путь внутри shell-команды не экранирован буквально | Знак доллара в имени каталога меняет фактически запускаемый путь | Регистрация + безопасная функция вместо запуска; [settings-json.py:115](C:/Users/<user>/Desktop/conductor/tools/settings-json.py:115) |
+| Подстановка пути через sed не экранирует & | Ссылки на модули содержат остаток шаблона | Фрагмент; [install.sh:88](C:/Users/<user>/Desktop/conductor/install.sh:88) |
+| Проектные правила выбираются для удаления по имени | Файл с личным текстом без признака Conductor тоже выбирается; копия не создаётся | Заглушки; [uninstall.sh:146](C:/Users/<user>/Desktop/conductor/uninstall.sh:146) |
+| Проектная очистка удаляет скрипт, но не его регистрацию | Остаётся настройка, указывающая на отсутствующий gate | Заглушки + чтение сохранённого JSON; [uninstall.sh:139](C:/Users/<user>/Desktop/conductor/uninstall.sh:139) |
+| Ошибка чтения списка плагинов принимается за enabled | При коде CLI 73 итог всё равно OK already enabled | Заглушки; [install-companions.sh:100](C:/Users/<user>/Desktop/conductor/install-companions.sh:100) |
+| Не сопоставляются native Windows и Git Bash формы пути | Старый init.templateDir не очищается | Фрагмент; [install-global.sh:169](C:/Users/<user>/Desktop/conductor/install-global.sh:169) |
+| Проверка установки выбирает первый hook с похожим именем | Может выполнить чужой SessionStart вместо Conductor | Фрагмент; [install.sh:199](C:/Users/<user>/Desktop/conductor/install.sh:199) |
+| Очистка старого Git gate возвращает 0 при отказах удаления | Вызывающий процесс получает ложный успех | Заглушки; [sweep-git-gate.sh:127](C:/Users/<user>/Desktop/conductor/tools/sweep-git-gate.sh:127) |
 
 Форма hooks Cursor сверена с [официальной документацией](https://prod.cursor.com/docs/hooks).
 Отдельный статический вопрос переносимости: install.sh использует GNU-форму sed -i,
@@ -267,12 +267,12 @@ rtk/graphify в PATH считается успешным наличием даж
 
 | Находка | Проверенное наблюдение | Источник |
 |---|---|---|
-| Журнал принимает текст команды за выполненный тест | Вывод строки npm test записан как PASS partial, хотя тест не запускался | [test-run-journal.sh:175](C:/Users/Dee/Desktop/conductor/runtime/hooks/test-run-journal.sh:175) |
-| Журнал принимает результат оболочки за результат теста | Тест завершился 7, но после обработки ошибки оболочка вернула 0; запись PASS partial | [test-run-journal.sh:193](C:/Users/Dee/Desktop/conductor/runtime/hooks/test-run-journal.sh:193) |
-| Benchmark завершает неудачный эксперимент кодом 0 | Fake Claude вернул 7, результат JSON пуст; runner печатает done. Ноль повторов также принят | [run.sh:43](C:/Users/Dee/Desktop/conductor/qa/bench/run.sh:43), [run.sh:160](C:/Users/Dee/Desktop/conductor/qa/bench/run.sh:160) |
-| Doctor не проверяет набор файлов плейбуков | Пустая папка признана установленным комплектом инструкций | [doctor.sh:88](C:/Users/Dee/Desktop/conductor/tools/doctor.sh:88) |
-| Линтер зависит от отсутствия пробелов в пути | Та же копия в space repo даёт ложное dead wiring | [lint.sh:64](C:/Users/Dee/Desktop/conductor/qa/lint.sh:64) |
-| Линтер сверяет значения порога, но не наличие объявлений | После удаления одного объявления lint проходит, а hook падает | [lint.sh:150](C:/Users/Dee/Desktop/conductor/qa/lint.sh:150) |
+| Журнал принимает текст команды за выполненный тест | Вывод строки npm test записан как PASS partial, хотя тест не запускался | [test-run-journal.sh:175](C:/Users/<user>/Desktop/conductor/runtime/hooks/test-run-journal.sh:175) |
+| Журнал принимает результат оболочки за результат теста | Тест завершился 7, но после обработки ошибки оболочка вернула 0; запись PASS partial | [test-run-journal.sh:193](C:/Users/<user>/Desktop/conductor/runtime/hooks/test-run-journal.sh:193) |
+| Benchmark завершает неудачный эксперимент кодом 0 | Fake Claude вернул 7, результат JSON пуст; runner печатает done. Ноль повторов также принят | [run.sh:43](C:/Users/<user>/Desktop/conductor/qa/bench/run.sh:43), [run.sh:160](C:/Users/<user>/Desktop/conductor/qa/bench/run.sh:160) |
+| Doctor не проверяет набор файлов плейбуков | Пустая папка признана установленным комплектом инструкций | [doctor.sh:88](C:/Users/<user>/Desktop/conductor/tools/doctor.sh:88) |
+| Линтер зависит от отсутствия пробелов в пути | Та же копия в space repo даёт ложное dead wiring | [lint.sh:64](C:/Users/<user>/Desktop/conductor/qa/lint.sh:64) |
+| Линтер сверяет значения порога, но не наличие объявлений | После удаления одного объявления lint проходит, а hook падает | [lint.sh:150](C:/Users/<user>/Desktop/conductor/qa/lint.sh:150) |
 
 Все эти случаи воспроизведены изолированно. В журнальных опытах shell-команды реально
 выполнялись, но события хуку передавал тестовый сценарий, не живой Claude Code.
@@ -292,31 +292,31 @@ rtk/graphify в PATH считается успешным наличием даж
    причину до правки. Основной аудитор повторно извлёк все видимые сообщения до первой
    правки из этих трёх стенограмм. Скрытые рассуждения отсутствуют: нельзя заключать,
    что модель не знала причину; нельзя и засчитывать отсутствующее наблюдаемое
-   доказательство. См. [ab-report-v2.md:24](C:/Users/Dee/Desktop/conductor/qa/reports/ab-report-v2.md:24)
-   и [baseline-grades.tsv:12](C:/Users/Dee/Desktop/conductor/qa/reports/ab-v2/baseline-grades.tsv:12).
+   доказательство. См. [ab-report-v2.md:24](C:/Users/<user>/Desktop/conductor/qa/reports/ab-report-v2.md:24)
+   и [baseline-grades.tsv:12](C:/Users/<user>/Desktop/conductor/qa/reports/ab-v2/baseline-grades.tsv:12).
 2. Необходимость файла ценностей экспериментом не установлена: файл был в обеих
    сравниваемых конфигурациях. Корректная формулировка — поддерживаемая и проверявшаяся
-   конфигурация; работа без файла не измерялась. См. [README.md:22](C:/Users/Dee/Desktop/conductor/README.md:22)
-   и [ab-report-v2.md:11](C:/Users/Dee/Desktop/conductor/qa/reports/ab-report-v2.md:11).
+   конфигурация; работа без файла не измерялась. См. [README.md:22](C:/Users/<user>/Desktop/conductor/README.md:22)
+   и [ab-report-v2.md:11](C:/Users/<user>/Desktop/conductor/qa/reports/ab-report-v2.md:11).
 3. Историческое измерение Conductor выполнено только с ядром: загрузка плейбуков
    тогда не работала. Оно не измеряет цену и качество нынешнего полного процесса.
-   Это честно указано в [ab-report-v2.md:61](C:/Users/Dee/Desktop/conductor/qa/reports/ab-report-v2.md:61).
+   Это честно указано в [ab-report-v2.md:61](C:/Users/<user>/Desktop/conductor/qa/reports/ab-report-v2.md:61).
 4. Для глобального Cursor установщик готовит текст, требующий ручной активации.
    Основной путь README пропускает этот шаг; повторная установка сама по себе не
    обновит уже вставленный текст. Проверена реализация, не нынешний интерфейс Cursor.
-   См. [install-global.sh:110](C:/Users/Dee/Desktop/conductor/install-global.sh:110).
+   См. [install-global.sh:110](C:/Users/<user>/Desktop/conductor/install-global.sh:110).
 5. В письме наставника объявлены актуальными уже отсутствующие PowerShell-команды.
    Исторические документы нужно отличать от действующей инструкции. См.
-   [MENTOR-NOTES.md:68](C:/Users/Dee/Desktop/conductor/docs/MENTOR-NOTES.md:68).
+   [MENTOR-NOTES.md:68](C:/Users/<user>/Desktop/conductor/docs/MENTOR-NOTES.md:68).
 6. Обещание копировать всё изменяемое шире реализации; runtime и проектные адаптеры
    перезаписываются без сохранения прежнего содержимого. См.
-   [README.md:126](C:/Users/Dee/Desktop/conductor/README.md:126),
-   [install-project.sh:77](C:/Users/Dee/Desktop/conductor/install-project.sh:77).
+   [README.md:126](C:/Users/<user>/Desktop/conductor/README.md:126),
+   [install-project.sh:77](C:/Users/<user>/Desktop/conductor/install-project.sh:77).
 7. PROOF-LOOP и PARALLEL-WORK остаются источниками частично принятого замысла, а не
    списком обязательных невыполненных задач. Требование личного повторного прогона
    конфликтует с разрешением зачесть неизменившийся прогон проверяющего. См.
-   [PROOF-LOOP.md:70](C:/Users/Dee/Desktop/conductor/docs/PROOF-LOOP.md:70),
-   [PROOF-LOOP.md:241](C:/Users/Dee/Desktop/conductor/docs/PROOF-LOOP.md:241).
+   [PROOF-LOOP.md:70](C:/Users/<user>/Desktop/conductor/docs/PROOF-LOOP.md:70),
+   [PROOF-LOOP.md:241](C:/Users/<user>/Desktop/conductor/docs/PROOF-LOOP.md:241).
 
 Три README прочитаны полностью: RU, EN и AZ содержательно согласованы по проверенным
 обещаниям и основным командам. Их общие ошибки переведены одинаково; исправлять нужно
@@ -366,7 +366,7 @@ rtk/graphify в PATH считается успешным наличием даж
 
 ## Покрытие и доказательные артефакты
 
-[Полный пофайловый список покрытия](C:/Users/Dee/Desktop/conductor/docs/audits/2026-09-25-coverage.md).
+[Полный пофайловый список покрытия](C:/Users/<user>/Desktop/conductor/docs/audits/2026-09-25-coverage.md).
 
 | Независимая область | Файлов |
 |---|---:|
@@ -383,11 +383,11 @@ rtk/graphify в PATH считается успешным наличием даж
 Подробные материалы текущего сеанса находятся во временной папке; Windows может
 впоследствии очистить её. Основные находки и их исходные места сохранены выше:
 
-- [Установщики: подробности и доказательства](C:/Users/Dee/AppData/Local/Temp/conductor-installer-audit-6aa3c550f568456a868eeb820feb7aac/REPORT.md).
-- [QA: подробности](C:/Users/Dee/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/REPORT.md) и [выводы команд](C:/Users/Dee/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/evidence).
-- [Документация: подробности](C:/Users/Dee/AppData/Local/Temp/conductor-docs-audit-9f846de1f2274256ae720e1a74f7ff2c.md).
-- [Проба памяти](C:/Users/Dee/AppData/Local/Temp/conductor-audit-20260925-main/memory-probe.ps1).
-- [Результаты обычной и повторной установки](C:/Users/Dee/AppData/Local/Temp/conductor-installer-audit-6aa3c550f568456a868eeb820feb7aac/approved-install-cycle/cycle-results.json).
+- [Установщики: подробности и доказательства](C:/Users/<user>/AppData/Local/Temp/conductor-installer-audit-6aa3c550f568456a868eeb820feb7aac/REPORT.md).
+- [QA: подробности](C:/Users/<user>/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/REPORT.md) и [выводы команд](C:/Users/<user>/AppData/Local/Temp/conductor-qa-audit-74769ba8b6da48d6b81c7d3eee3c1989/evidence).
+- [Документация: подробности](C:/Users/<user>/AppData/Local/Temp/conductor-docs-audit-9f846de1f2274256ae720e1a74f7ff2c.md).
+- [Проба памяти](C:/Users/<user>/AppData/Local/Temp/conductor-audit-20260925-main/memory-probe.ps1).
+- [Результаты обычной и повторной установки](C:/Users/<user>/AppData/Local/Temp/conductor-installer-audit-6aa3c550f568456a868eeb820feb7aac/approved-install-cycle/cycle-results.json).
 
 ## Границы проверки
 

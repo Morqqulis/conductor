@@ -16,9 +16,9 @@
 #   - --dry-run prints every planned action and changes nothing
 #
 # Usage:
-#   tools/sweep-git-gate.sh --dry-run                 # default roots, no changes
-#   tools/sweep-git-gate.sh                           # default roots, remove
 #   tools/sweep-git-gate.sh --roots "/d/top,/d/x" -n  # explicit roots, dry run
+#   tools/sweep-git-gate.sh --roots "/d/top,/d/x"     # explicit roots, remove
+# Exit 0 when every planned action succeeded, 1 when at least one failed, 2 on usage errors.
 set -uo pipefail
 
 SENTINEL='conductor gate'
@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
         --roots)      [ $# -ge 2 ] || die "--roots needs a value"; ROOTS_ARG="$2"; shift 2 ;;
         --roots=*)    ROOTS_ARG="${1#--roots=}"; shift ;;
         --depth)      [ $# -ge 2 ] || die "--depth needs a value"; MAX_DEPTH="$2"; shift 2 ;;
-        -h|--help)    sed -n '2,26p' "$0"; exit 0 ;;
+        -h|--help)    sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *)            die "unknown argument: $1 (see --help)" ;;
     esac
 done
@@ -44,14 +44,13 @@ case "$MAX_DEPTH" in
     ''|*[!0-9]*) die "--depth must be a positive integer, got: $MAX_DEPTH" ;;
 esac
 
-# Default roots: every drive-level code directory this machine is known to use. Missing
-# roots are reported and skipped, never fatal - the set is a convenience, not a contract.
-if [ -n "$ROOTS_ARG" ]; then
-    IFS=',' read -r -a ROOTS <<< "$ROOTS_ARG"
-else
-    ROOTS=("$HOME/Desktop" "/d/top" "/d/projects" "/d/codelabs")
-fi
+# Roots are always explicit: a built-in list can only describe one machine, and a walk that
+# silently covers nothing looks exactly like a clean sweep. Missing roots are reported and
+# skipped, never fatal.
+[ -n "$ROOTS_ARG" ] || die "--roots is required (comma-separated directories to scan)"
+IFS=',' read -r -a ROOTS <<< "$ROOTS_ARG"
 
+failed_actions=0
 removed_hooks=0
 restored_hooks=0
 removed_markers=0
@@ -68,6 +67,7 @@ act() {  # act <description> <command...>
         return 0
     fi
     printf '[FAIL] %s\n' "$desc" >&2
+    failed_actions=$((failed_actions + 1))
     return 1
 }
 
@@ -121,7 +121,9 @@ printf 'repositories scanned : %d\n' "$scanned_repos"
 printf 'gate hooks removed   : %d\n' "$removed_hooks"
 printf 'own hooks restored   : %d\n' "$restored_hooks"
 printf 'markers removed      : %d\n' "$removed_markers"
+printf 'failed actions       : %d\n' "$failed_actions"
 if [ "$DRY_RUN" -eq 1 ]; then
     printf '\nDry run: nothing was changed. Re-run without --dry-run to apply.\n'
 fi
+[ "$failed_actions" -eq 0 ] || exit 1
 exit 0

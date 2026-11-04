@@ -4,6 +4,7 @@ import io
 from pathlib import Path
 import runpy
 import tarfile
+import zipfile
 import unittest
 from unittest.mock import patch
 import urllib.request
@@ -79,6 +80,55 @@ class SecurityTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "decompressed archive exceeds"):
                 extract(bomb, "rtk")
 
+
+    def zip_archive(self, entries):
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, "w") as package:
+            for name, data in entries:
+                package.writestr(name, data)
+        return stream.getvalue()
+
+    def tar_archive(self, entries, link=None):
+        stream = io.BytesIO()
+        with tarfile.open(fileobj=stream, mode="w") as package:
+            for name, data in entries:
+                member = tarfile.TarInfo(name)
+                member.size = len(data)
+                package.addfile(member, io.BytesIO(data))
+            if link:
+                member = tarfile.TarInfo(link)
+                member.type = tarfile.SYMTYPE
+                member.linkname = "/etc/passwd"
+                package.addfile(member)
+        return gzip.compress(stream.getvalue())
+
+    def test_licence_files_beside_the_binary_are_accepted_but_not_extracted(self):
+        # RTK 1.1.0 ships LICENSE and LICENSE-ENGINE beside the binary; the old
+        # "exactly one member" rule refused every update to it.
+        extract = self.api["binary_from_archive"]
+        extras = [("LICENSE", b"Apache"), ("LICENSE-ENGINE", b"BSL"), ("README.md", b"docs")]
+        self.assertEqual(extract(self.zip_archive([*extras, ("rtk.exe", b"MZbinary")]), "rtk.exe"), b"MZbinary")
+        self.assertEqual(extract(self.tar_archive([("rtk", b"ELFbinary"), *extras]), "rtk"), b"ELFbinary")
+
+    def test_anything_else_beside_the_binary_is_refused(self):
+        extract = self.api["binary_from_archive"]
+        cases = {
+            "unknown program": [("rtk.exe", b"MZ"), ("helper.exe", b"MZ")],
+            "nested licence": [("rtk.exe", b"MZ"), ("docs/LICENSE", b"text")],
+            "second binary": [("rtk.exe", b"MZ"), ("rtk.exe", b"MZ2")],
+            "no binary": [("LICENSE", b"text")],
+            "oversized text": [("rtk.exe", b"MZ"), ("LICENSE", b"x" * (1024 * 1024 + 1))],
+        }
+        for label, entries in cases.items():
+            with self.subTest(case=label, kind="zip"):
+                with self.assertRaises(ValueError):
+                    extract(self.zip_archive(entries), "rtk.exe")
+            with self.subTest(case=label, kind="tar"):
+                tar_entries = [(n.replace("rtk.exe", "rtk"), d) for n, d in entries]
+                with self.assertRaises(ValueError):
+                    extract(self.tar_archive(tar_entries), "rtk")
+        with self.assertRaises(ValueError):
+            extract(self.tar_archive([("rtk", b"ELF")], link="LICENSE"), "rtk")
 
 if __name__ == "__main__":
     unittest.main()

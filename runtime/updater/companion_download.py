@@ -102,22 +102,43 @@ def target():
     return f"rtk-{targets[system, arch]}.{'zip' if windows else 'tar.gz'}", "rtk.exe" if windows else "rtk"
 
 
+# Releases may ship small text files beside the binary (RTK 1.1 added LICENSE and
+# LICENSE-ENGINE). Only these names are tolerated, only at the archive root, only as small
+# regular files, and they are never extracted: the binary is the one thing read.
+EXTRA_TEXT = re.compile(r"(?i)(license|licence|copying|notice|readme|changelog|authors)"
+                        r"([-_.][a-z0-9.-]{1,40})?")
+MAX_EXTRA = 1024 * 1024
+MAX_EXTRAS = 8
+
+
+def _accept_extra(name, size, regular, seen):
+    if ("/" in name or "\\" in name or not EXTRA_TEXT.fullmatch(name) or not regular
+            or not 0 <= size <= MAX_EXTRA or name.casefold() in seen or len(seen) >= MAX_EXTRAS):
+        raise ValueError(f"archive has an unexpected entry: {name[:80]}")
+    seen.add(name.casefold())
+
+
 def binary_from_archive(data, name):
-    # Official releases contain exactly one root regular file. Reading that member
-    # directly (no extract/extractall) also excludes traversal, links, devices and ADS.
+    # The official archive holds exactly one root binary plus, optionally, small text files
+    # (see EXTRA_TEXT). Reading members directly (no extract/extractall) also excludes
+    # traversal, links, devices and ADS.
+    binary, seen = None, set()
     if name.endswith(".exe"):
         with zipfile.ZipFile(io.BytesIO(data)) as package:
             members = package.infolist()
-            if len(members) != 1:
+            if not members or len(members) > MAX_EXTRAS + 1:
                 raise ValueError("archive must contain exactly one binary")
-            member = members[0]
-            kind = stat.S_IFMT(member.external_attr >> 16)
-            if (member.filename != name or member.orig_filename != name or
-                    kind not in (0, stat.S_IFREG) or member.flag_bits & 1 or
-                    not 0 < member.file_size <= MAX_BINARY):
-                raise ValueError("archive has unsafe path/type/size")
-            with package.open(member) as stream:
-                binary = stream.read(MAX_BINARY + 1)
+            for member in members:
+                kind = stat.S_IFMT(member.external_attr >> 16)
+                regular = kind in (0, stat.S_IFREG) and not member.is_dir() and not member.flag_bits & 1
+                if member.filename == name or member.orig_filename == name:
+                    if (binary is not None or member.filename != name or member.orig_filename != name
+                            or not regular or not 0 < member.file_size <= MAX_BINARY):
+                        raise ValueError("archive has unsafe path/type/size")
+                    with package.open(member) as stream:
+                        binary = stream.read(MAX_BINARY + 1)
+                else:
+                    _accept_extra(member.filename, member.file_size, regular, seen)
     else:
         # Bound gzip output before tarfile can allocate a malicious PAX header.
         budget = MAX_BINARY + 1024 * 1024
@@ -126,14 +147,20 @@ def binary_from_archive(data, name):
         if len(unpacked) > budget:
             raise ValueError("decompressed archive exceeds size limit")
         with tarfile.open(fileobj=io.BytesIO(unpacked), mode="r:") as package:
-            member = package.next()
-            if (member is None or member.name != name or not member.isfile() or
-                    not 0 < member.size <= MAX_BINARY):
-                raise ValueError("archive has unsafe path/type/size")
-            with package.extractfile(member) as stream:
-                binary = stream.read(MAX_BINARY + 1)
-            if package.next() is not None:
-                raise ValueError("archive must contain exactly one binary")
+            count = 0
+            for member in package:
+                count += 1
+                if count > MAX_EXTRAS + 1:
+                    raise ValueError("archive must contain exactly one binary")
+                if member.name == name:
+                    if binary is not None or not member.isfile() or not 0 < member.size <= MAX_BINARY:
+                        raise ValueError("archive has unsafe path/type/size")
+                    with package.extractfile(member) as stream:
+                        binary = stream.read(MAX_BINARY + 1)
+                else:
+                    _accept_extra(member.name, member.size, member.isfile(), seen)
+    if binary is None:
+        raise ValueError("archive must contain exactly one binary")
     if not 0 < len(binary) <= MAX_BINARY:
         raise ValueError("binary exceeds size limit or is empty")
     return binary

@@ -35,11 +35,6 @@ case "$payload" in
     *) exit 0 ;;
 esac
 
-PYTHON=''
-for c in python3 python; do
-    if command -v "$c" >/dev/null 2>&1; then PYTHON="$c"; break; fi
-done
-[ -n "$PYTHON" ] || exit 0
 
 # The reader takes the payload on stdin, so the program itself must NOT arrive there: passing
 # it with `python -` would consume the very input it is meant to parse.
@@ -258,5 +253,12 @@ except OSError:
     pass
 PY
 
-printf '%s' "$payload" | "$PYTHON" -c "$READER" "$JOURNAL" 2>/dev/null
+# Found on PATH is not the same as runnable: on Windows `python3` is often the Microsoft
+# Store stub, which exits non-zero without running anything. The reader always exits 0 when
+# it ran, so a failing candidate is skipped and the next one tried - no extra probe process
+# on the common path.
+for c in python3 python; do
+    command -v "$c" >/dev/null 2>&1 || continue
+    printf '%s' "$payload" | "$c" -c "$READER" "$JOURNAL" 2>/dev/null && exit 0
+done
 exit 0

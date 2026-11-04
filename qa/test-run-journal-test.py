@@ -118,6 +118,28 @@ class JournalWriterTest(unittest.TestCase):
         self.assertEqual(len(rows), 1, rows)
         self.assertEqual((rows[0][1], rows[0][2], rows[0][4]), ("PASS", "partial", "python -m pytest tests/unit"))
 
+    def test_unrunnable_python3_falls_back_to_python(self):
+        # Windows often has a Store stub named python3 that exits non-zero without running.
+        stubs = Path(self.tmp.name) / "stubs"
+        stubs.mkdir()
+        (stubs / "python3").write_text("#!/usr/bin/env bash\nexit 9\n", encoding="utf-8")
+        (stubs / "python3").chmod(0o755)
+        real = shutil.which("python3") or shutil.which("python")
+        (stubs / "python").write_text(f'#!/usr/bin/env bash\nexec "{real}" "$@"\n', encoding="utf-8")
+        (stubs / "python").chmod(0o755)
+        stub_path = stubs.as_posix()
+        if os.name == "nt":
+            stub_path = subprocess.check_output(["cygpath", "-u", str(stubs)], text=True).strip()
+        payload = {"hook_event_name": "PostToolUse", "tool_name": "Bash", "cwd": str(self.repo),
+                   "tool_input": {"command": "pytest"}, "tool_response": {"exit_code": 0}}
+        hook = subprocess.run([BASH, "-c", 'export PATH="$1:$PATH"; exec bash "$2"', "journal-fallback",
+                               stub_path, str(HOOK)], input=json.dumps(payload), cwd=self.repo,
+                              env=self.env, capture_output=True, text=True, timeout=15)
+        self.assertEqual(hook.returncode, 0, hook.stderr)
+        rows = self.journal.read_text(encoding="utf-8").splitlines() if self.journal.exists() else []
+        self.assertEqual(len(rows), 1, rows)
+        self.assertEqual(rows[0].split("\t")[1:3], ["PASS", "full"])
+
     def test_cd_semicolon_is_not_a_proven_directory(self):
         _, rows = self.invoke("cd missing-directory; pytest")
         self.assertEqual(rows, [])

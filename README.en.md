@@ -392,6 +392,8 @@ remain. Modified managed files or an unrecognized installation without a manifes
 refusal without deletion. Backups live in `~/.local/state/conductor/updates/`.
 After removal `conductor` is unavailable: use the printed restoration command from a
 complete source copy. Old backups are never automatically deleted.
+Free space explicitly: `conductor prune --keep 5 --dry-run` lists what would go; without
+`--dry-run` it deletes all but the five newest backups. Unrecognized files and folders stay.
 
 Optional `bash uninstall.sh --sweep-roots "/d/projects,/d/top"` additionally cleans
 the explicitly named projects; preview it with `--dry-run` first.

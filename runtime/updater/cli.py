@@ -66,6 +66,9 @@ def main(argv=None):
     lessons = uninstall.add_mutually_exclusive_group()
     lessons.add_argument('--keep-lessons', action='store_true')
     lessons.add_argument('--remove-lessons', action='store_true')
+    trim = commands.add_parser('prune', help='delete all but the N newest update backups (explicit only)')
+    trim.add_argument('--keep', type=int, required=True, help='how many of the newest backups to keep (>= 1)')
+    trim.add_argument('--dry-run', action='store_true')
     restore = commands.add_parser('rollback', help='restore a named update backup without overwriting later edits')
     restore.add_argument('--backup', type=Path, required=True)
     enrollment = commands.add_parser('register', help=argparse.SUPPRESS)
@@ -133,6 +136,9 @@ def main(argv=None):
                         print(f'Lessons kept at {paths.runtime}.')
                     print('To restore, use a complete Conductor source copy:')
                     print(f'python runtime/updater/cli.py --config "{paths.config}" --profile "{paths.profile}" rollback --backup "{backup}"')
+            elif args.command == 'prune':
+                from retention import prune
+                prune(paths, args.keep, args.dry_run)
             elif args.command == 'register':
                 register(paths, args.source, args.scope)
                 print(f'Conductor CLI installed: {paths.target("launcher")} (add its directory to PATH if necessary)')

@@ -396,6 +396,9 @@ Dəyişmiş idarə olunan fayl və ya manifesti olmayan naməlum quraşdırma si
 səbəb olur. Nüsxələr `~/.local/state/conductor/updates/` daxilindədir.
 Silinmədən sonra `conductor` mövcud deyil: tam mənbə nüsxəsindən göstərilən bərpa əmrini
 istifadə edin. Köhnə ehtiyat nüsxələr avtomatik silinmir.
+Yeri açıq şəkildə boşaltmaq olar: `conductor prune --keep 5 --dry-run` nəyin silinəcəyini
+göstərir, `--dry-run` olmadan beş ən yeni nüsxədən başqa hamısını silir. Tanınmayan fayl və
+qovluqlara toxunulmur.
 
 Könüllü `bash uninstall.sh --sweep-roots "/d/projects,/d/top"` yalnız açıq göstərilən
 layihələri də təmizləyir; əvvəlcə `--dry-run` ilə baxın.

@@ -78,7 +78,10 @@ def payload(source, paths, scopes, reply):
                   'and `.conductor/decisions.md` in the repository (this project) at the start of work; do not\n'
                   're-propose a declined item unless its revisit condition holds. Record only a decision the owner\n'
                   'states explicitly, as a precise self-contained instruction in English (not the owner\'s words):\n'
-                  '"YYYY-MM-DD | instruction | revisit when"; then say in plain words what you recorded.\n\n')
+                  '"YYYY-MM-DD | instruction | revisit when"; then say in plain words what you recorded.\n'
+                  'Commits are authored by the owner\'s git identity, never an AI identity (if the environment\n'
+                  'forces its own committer, keep it and pass `--author`); add no AI co-author trailer,\n'
+                  '"Generated with" line or session link to commit messages or pull request descriptions.\n\n')
         result['codex'] = ((heading + memory + body).encode('utf-8'), 0o644)
     args = [sys.executable, '-B', str(paths.runtime / 'updater/cli.py'),
             '--config', str(paths.config), '--profile', str(paths.profile)]

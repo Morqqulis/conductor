@@ -60,7 +60,9 @@ class CliTests(unittest.TestCase):
         # The decisions rule reaches the values file and the Codex rules (Cursor/Antigravity
         # digests have no room left under their byte cap).
         self.assertIn('## 7. Owner decisions', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
+        self.assertIn('## 8. Commit authorship', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
         self.assertIn('Owner decisions bind until revoked', (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))
+        self.assertIn("Commits are authored by the owner's git identity", (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))
 
     def test_short_language_aliases_deliver_canonical_rules(self):
         # Both entrypoints must use the same interpreter when sharing one installation.

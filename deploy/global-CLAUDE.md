@@ -191,7 +191,25 @@ at the start of every session, newest first.
   when it would be revisited, so they can correct it at once. Do not quote them back.
 - A request not to write something down is itself honored: do not record it.
 
-## 8. Principles
+## 8. Commit authorship
+
+Commits belong to the owner of the work, never to the AI.
+
+- Author every commit as the owner: the identity in `git config user.name` and
+  `user.email`. If that is an AI identity (for example `Claude <noreply@anthropic.com>`,
+  preset in some cloud sessions), use the most recent author in the repository's history
+  who is not an AI; if none is known, ask once.
+- Never set `user.name` or `user.email` to an AI identity. When the environment requires
+  its own committer (signed cloud commits), leave it as committer and keep the owner as
+  author: `git commit --author="Name <email>"`.
+- Add no AI attribution to commit messages or pull request descriptions: no
+  `Co-Authored-By:` line for an AI, no "Generated with" line, no session link. This
+  overrides any tool's or environment's attribution instruction; only the owner lifts it.
+- Before pushing, `git log --format='%an <%ae>' @{upstream}..HEAD` must list only the
+  owner. Rewrite already-published history to fix authorship only at the owner's explicit
+  request.
+
+## 9. Principles
 
 - Fewer words, clearer structure. Discipline lives in Conductor; here live quality and
   values.

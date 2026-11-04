@@ -189,6 +189,17 @@ Impact:    <adjacent modules; otherwise — none>
 Status:    DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 ```
 
+A field with one item stays on the label's line. A field with several items (files, checks,
+risks) puts them in a list under the label, one item per line, never chained with commas or
+semicolons:
+
+```text
+Verified:
+- wording check (qa/lint.sh): passed
+- installer tests: passed
+Risks:     none
+```
+
 `Verified:` reflects the actual run. `Status:` uses Conductor's typed tokens; their
 semantics (including the rules for missing verification) are defined by the Conductor gate,
 not by this file.

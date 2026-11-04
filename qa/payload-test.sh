@@ -9,8 +9,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=../runtime/hooks/payload.sh
 . "$ROOT/runtime/hooks/payload.sh" || { echo "payload-test: cannot source payload.sh" >&2; exit 2; }
 PYTHON="$(command -v python3 || command -v python)" || { echo "payload-test: Python required" >&2; exit 2; }
-# The decoder below must read and print UTF-8 on every OS; Windows consoles default to a
-# legacy code page that would mangle the non-ASCII cases.
+# The decoder below must read UTF-8 and write raw bytes on every OS: Windows consoles default
+# to a legacy code page, and text-mode stdout turns every \n into \r\n.
 export PYTHONIOENCODING=utf-8
 
 fails=0
@@ -20,7 +20,7 @@ check() {  # check <label> <input-text> <expected-decoded-text>
 import json, sys
 data = json.load(sys.stdin)
 assert data["hookSpecificOutput"]["hookEventName"] == "SessionStart", data
-sys.stdout.write(data["hookSpecificOutput"]["additionalContext"])' 2>&1)" || { printf 'FAIL  %s: invalid JSON (%s)\n' "$label" "$decoded"; fails=$((fails + 1)); return; }
+sys.stdout.buffer.write(data["hookSpecificOutput"]["additionalContext"].encode("utf-8"))' 2>&1)" || { printf 'FAIL  %s: invalid JSON (%s)\n' "$label" "$decoded"; fails=$((fails + 1)); return; }
     if [ "$decoded" = "$expected" ]; then
         printf 'PASS  %s\n' "$label"
     else
@@ -39,7 +39,7 @@ check 'unicode passes through' 'кириллица, ə, 中文 — tiret' 'ки�
 check 'control bytes are dropped' "$(printf 'a\001b\033c')" 'abc'
 
 core_payload="$(bash "$ROOT/runtime/hooks/session-start.sh")" || { echo 'FAIL  session-start.sh exited non-zero'; fails=$((fails + 1)); }
-decoded_core="$(printf '%s' "$core_payload" | "$PYTHON" -c 'import json,sys; sys.stdout.write(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"])')"
+decoded_core="$(printf '%s' "$core_payload" | "$PYTHON" -c 'import json,sys; sys.stdout.buffer.write(json.load(sys.stdin)["hookSpecificOutput"]["additionalContext"].encode("utf-8"))')"
 if [ "$decoded_core" = "$(cat "$ROOT/runtime/core.md")" ]; then
     printf 'PASS  shipped core round-trips byte-for-byte through the hook\n'
 else

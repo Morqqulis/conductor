@@ -70,6 +70,9 @@ esac
             cwd=self.fixture, env=self.env, capture_output=True, text=True, encoding="utf-8",
             errors="replace", timeout=35)
         output = result.stdout + result.stderr
+        violations = self.fixture / "violations"
+        if violations.exists():
+            output += "\nfixture fence violations:\n" + violations.read_text(encoding="utf-8")
         self.assertEqual(result.returncode, expected, output)
         self.assertFalse((self.fixture / "blocked").exists(), output)
         return output

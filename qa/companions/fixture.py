@@ -70,6 +70,12 @@ def main():
         with (fixture / name).open("a", encoding="utf-8") as output:
             output.write(value + "\n")
 
+    def fence(message):
+        # The coordinator reports only the exception type ("rtk: FAILED AssertionError"), so
+        # the reason is written where the test harness prints it on failure.
+        log("violations", message)
+        raise AssertionError(message)
+
     def transport(opener, request, **kwargs):
         url = request.full_url
         log("network", url)
@@ -83,7 +89,7 @@ def main():
                   "https://pypi.org/pypi/graphifyy/json": json.dumps({"info": {"version": "1.9.0"},
                       "releases": {"1.9.0": [{"yanked": False}], "2.0.0rc1": [{"yanked": False}]}}).encode()}
         if url not in bodies:
-            raise AssertionError("unexpected external URL: " + url)
+            fence("unexpected external URL: " + url)
         response = io.BytesIO(bodies[url])
         response.headers = {"Content-Length": str(len(bodies[url]))}
         response.status = 200
@@ -140,7 +146,7 @@ def main():
         elif tool == "uv" and argv[1:] == ["tool", "dir"]:
             return subprocess.CompletedProcess(argv, 0, str(fixture / "external-uv").encode(), b"")
         else:
-            raise AssertionError("unexpected external process: " + repr(argv))
+            fence("unexpected external process: " + repr(argv))
         return subprocess.CompletedProcess(argv, 0, b"", b"")
 
     sys.argv = sys.argv[1:]

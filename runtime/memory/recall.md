@@ -2,7 +2,10 @@
 
 Use once the task is known, and again when its topic changes or new evidence requires
 different lessons. Reuse inspected candidates within an unchanged task; not every message.
-SessionStart supplies navigation only, because the task may not yet be known.
+SessionStart supplies navigation only, because the task may not yet be known. In Claude
+Code a task-like message also arrives with up to three close lesson matches (per-message
+hook, `prompt_recall.py`); treat them like search results below and still search when the
+topic changes. Matching folds common word forms (Russian, English, Azerbaijani).
 
 ## Retrieve, then judge
 

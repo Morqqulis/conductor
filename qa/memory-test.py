@@ -184,6 +184,46 @@ class MemoryTest(unittest.TestCase):
         self.assertIn("Reply in the language your rules set", text)
         self.assertNotIn("user's language", text)
 
+    def prompt_hook(self, prompt, env=None):
+        hook = ROOT / "runtime/hooks/user-prompt.sh"
+        result = subprocess.run([BASH, str(hook)], env=env or self.env, capture_output=True, text=True,
+                                encoding="utf-8", timeout=30,
+                                input=json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": prompt}))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+
+    def test_task_message_brings_matching_lessons_automatically(self):
+        # Lessons used to surface only if the agent remembered to search; now a task-like
+        # message carries the closest ones, matched across word forms.
+        (self.store / "cyr.md").write_text("# Кириллица в пути установки\n- date: 2026-09-01\n"
+                                           "Установка падала, если путь профиля содержал кириллицу.\n",
+                                           encoding="utf-8")
+        (self.store / "other.md").write_text("# Цвет логотипа\nВыбирать синий.\n", encoding="utf-8")
+        text = self.prompt_hook("После установки всё падает, когда в пути профиля кириллица. "
+                                "Посмотри, что не так с установкой на этой машине.")
+        self.assertIn("Lessons that may apply to this message", text)
+        self.assertIn("Кириллица в пути установки", text)
+        self.assertNotIn("Цвет логотипа", text)
+
+    def test_short_reply_and_unrelated_task_bring_no_lessons(self):
+        (self.store / "cyr.md").write_text("# Кириллица в пути установки\nУстановка падала.\n",
+                                           encoding="utf-8")
+        self.assertNotIn("Lessons that may apply", self.prompt_hook("продолжай"))
+        self.assertNotIn("Lessons that may apply", self.prompt_hook(
+            "Напиши, пожалуйста, короткое поздравление коллеге с днём рождения, тёплое и весёлое."))
+
+    def test_broken_python_never_blocks_the_reminder(self):
+        stubs = Path(self.tmp.name) / "stubs"
+        stubs.mkdir()
+        for name in ("python3", "python"):
+            (stubs / name).write_text("#!/usr/bin/env bash\nexit 9\n", encoding="utf-8")
+            (stubs / name).chmod(0o755)
+        env = dict(self.env, PATH=stubs.as_posix() + os.pathsep + self.env["PATH"])
+        text = self.prompt_hook("После установки всё падает, когда в пути профиля кириллица, "
+                                "посмотри установку внимательно.", env=env)
+        self.assertIn("[Conductor active]", text)
+        self.assertNotIn("Lessons that may apply", text)
+
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")
         result = self.run_script(ROOT / "install.sh", "--skip-global-md", "--skip-companions")

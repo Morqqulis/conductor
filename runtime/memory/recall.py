@@ -15,11 +15,17 @@ import re
 import unicodedata
 
 from corpus import Corpus
+from wordforms import fold
 
 
 def tokens(text):
     normalized = unicodedata.normalize("NFKC", text).casefold()
     return {word for word in re.findall(r"[^\W_]+", normalized) if len(word) >= 2}
+
+
+def keys(words):
+    """Word-form keys: "тесты" and "тестов" match "тест" (see wordforms.py)."""
+    return {fold(word) for word in words}
 
 
 class Parser(argparse.ArgumentParser):
@@ -43,11 +49,12 @@ def lesson_date(text):
 def excerpt(entry, query):
     lines = entry.text.splitlines()
     # Show a matching body line rather than only a title when both match.
+    wanted = keys(query)
     index = max(range(len(lines)), key=lambda i: (
-        len(tokens(lines[i]) & query), not lines[i].startswith("#"), -i))
+        len(keys(tokens(lines[i])) & wanted), not lines[i].startswith("#"), -i))
     line = lines[index]
     words = list(re.finditer(r"[^\W_]+", line))
-    match = next((m for m in words if tokens(m[0]) & query), None)
+    match = next((m for m in words if keys(tokens(m[0])) & wanted), None)
     start = max(0, (match.start() if match else 0) - 100)
     sample = line[start:start + 600]
     if start:
@@ -58,19 +65,22 @@ def excerpt(entry, query):
 
 
 def rank(entries, query, limit):
-    sets = [tokens(entry.text) for entry in entries]
-    counts = Counter(term for terms in sets for term in terms & query)
+    wanted = keys(query)
+    sets = [keys(tokens(entry.text)) for entry in entries]
+    counts = Counter(term for terms in sets for term in terms & wanted)
     ranked = []
     for entry, terms in zip(entries, sets):
-        matched = query & terms
-        if not matched:
+        hits = wanted & terms
+        if not hits:
             continue
+        matched = {word for word in query if fold(word) in hits}
         line, sample = excerpt(entry, query)
         item = {"source": entry.source, "line": line, "title": entry.title[:200],
                 "excerpt": sample, "date": lesson_date(entry.text), "matched_terms": sorted(matched)}
-        # Distinct concepts dominate; repeated words cannot inflate the rank.
-        key = (len(matched), sum(1 / counts[term] for term in sorted(matched)),
-               len(tokens(entry.title) & query), item["date"])
+        # Distinct concepts dominate: two forms of one word count once, and repeated words
+        # cannot inflate the rank.
+        key = (len(hits), sum(1 / counts[term] for term in sorted(hits)),
+               len(keys(tokens(entry.title)) & wanted), item["date"])
         ranked.append((key, item))
     # Stable tie order, independent of filesystem directory iteration order.
     ranked.sort(key=lambda pair: (pair[1]["source"], pair[1]["line"]))

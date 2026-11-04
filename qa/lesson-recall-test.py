@@ -156,6 +156,32 @@ class RecallTests(unittest.TestCase):
         self.assertEqual({item["line"] for item in data["candidates"]}, {3, 7})
         self.assertTrue(all(item["source"] == str(path.absolute()) for item in data["candidates"]))
 
+    def test_other_word_forms_still_find_the_lesson(self):
+        # Exact matching treated "тесты" and "тестов" as unrelated words; most lessons of a
+        # Russian-speaking owner are in Russian, so they went unfound.
+        ru = self.lesson("ru.md", "# Тесты падали после установки\nПроверять кириллицу в путях.\n")
+        en = self.lesson("en.md", "# Libraries fail\nTests failed when paths contained spaces.\n")
+        az = self.lesson("az.md", "# Xətalar\nTestlər yolda boşluq olanda düşür.\n")
+        cases = (("тесты падают", ru), ("установка кириллица", ru), ("library test", en),
+                 ("xəta test", az))
+        for query, source in cases:
+            with self.subTest(query=query):
+                data = self.run_cli("--query", query, "--limit", "1")
+                self.assertEqual(data["candidates"][0]["source"], str(source.absolute()))
+                self.assertEqual(len(data["candidates"][0]["matched_terms"]), 2)
+
+    def test_word_forms_do_not_merge_different_words(self):
+        self.lesson("text.md", "# Текст письма\nПисать коротко.\n")
+        self.lesson("money.md", "# Dollar rounding\nRound prices.\n")
+        self.assertEqual(self.run_cli("--query", "тест")["status"], "NO_MATCH")
+        self.assertEqual(self.run_cli("--query", "panda")["status"], "NO_MATCH")
+
+    def test_two_forms_of_one_word_count_as_one_concept(self):
+        both = self.lesson("both.md", "# Тест и тесты\nтест тесты тестов\n")
+        two = self.lesson("two.md", "# Тест кириллицы\nтест кириллица\n")
+        data = self.run_cli("--query", "тест тесты кириллица", "--limit", "2")
+        self.assertEqual(data["candidates"][0]["source"], str(two.absolute()))
+
     def test_headings_inside_fenced_code_do_not_split_a_lesson(self):
         path = self.lesson("fenced.md", "# Shell quoting\n- date: 2026-09-26\n"
                            "Use the probe below.\n```bash\n# not a heading: comment\n"
@@ -191,14 +217,14 @@ class RecallTests(unittest.TestCase):
     def test_plain_python_invocation_creates_no_bytecode_cache(self):
         installed = Path(self.tmp.name) / "runtime"
         installed.mkdir()
-        for name in ("recall.py", "corpus.py"):
+        for name in ("recall.py", "corpus.py", "wordforms.py"):
             shutil.copyfile(CLI.parent / name, installed / name)
         env = dict(self.env)
         env.pop("PYTHONDONTWRITEBYTECODE", None)
         result = subprocess.run([sys.executable, str(installed / "recall.py"), "--query", "Python"],
                                 env=env, capture_output=True, encoding="utf-8", timeout=15)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual({p.name for p in installed.iterdir()}, {"recall.py", "corpus.py"})
+        self.assertEqual({p.name for p in installed.iterdir()}, {"recall.py", "corpus.py", "wordforms.py"})
 
     @unittest.skipIf(os.name == "nt", "creating symlinks requires Windows privileges")
     def test_explicit_linked_inbox_and_store_are_not_resolved_first(self):

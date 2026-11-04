@@ -6,8 +6,17 @@
 # It also escalates DISTILL DUE: the session-start mention fires once and reliably loses
 # to the user's actual task, so an overdue inbox is repeated here until someone distills.
 #
+# It also attaches up to three lessons that share words with a task-like message
+# (memory/prompt_recall.py), so recorded lessons are found without the agent having to
+# remember to search. Short replies never start Python; the search has a 3 s limit.
+#
 # Fails OPEN: a reminder is never worth blocking a prompt over.
 set -uo pipefail
+
+# The hook payload (JSON with the user's message) arrives on stdin; a builtin read keeps
+# the common path free of extra processes.
+payload=''
+IFS= read -r -d '' payload || true
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=payload.sh
@@ -37,6 +46,22 @@ if [ -f "$LEDGER" ]; then
     if [ "$n" -gt "$DISTILL_THRESHOLD" ]; then
         line="$line DISTILL DUE: $n lessons in the inbox - run playbooks/distill.md before new feature work."
     fi
+fi
+# Automatic lessons: only for messages long enough to describe a task. The cheap length
+# check keeps "continue" / "yes" replies from starting Python at all.
+recall="$HOOK_DIR/../memory/prompt_recall.py"
+message="${payload#*\"prompt\":}"
+if [ "$message" != "$payload" ] && [ "${#message}" -ge 80 ] && [ -f "$recall" ]; then
+    limit=''
+    command -v timeout >/dev/null 2>&1 && limit='timeout 3'
+    for c in python3 python; do
+        command -v "$c" >/dev/null 2>&1 || continue
+        if found="$(printf '%s' "$payload" | CONDUCTOR_HOME="$CONDUCTOR_HOME" $limit "$c" -B "$recall" 2>/dev/null)"; then
+            [ -n "$found" ] && line="$line
+$found"
+            break
+        fi
+    done
 fi
 emit_payload UserPromptSubmit "$line" || exit 0
 exit 0

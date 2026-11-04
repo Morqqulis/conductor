@@ -6,6 +6,8 @@ Load trigger: investigate classification; or tempted to answer from priors.
 Every claim in the answer carries file:line (or command output) evidence.
 At T2+, name the question's essence and its method per playbooks/methods.md before
 enumerating (a find-all question and a stale-knowledge question demand different sweeps).
+A study, audit or "how would you improve it" of a whole project or system is T2+ and uses
+methods.md RUN-BEFORE-JUDGING AUDIT: reading alone does not complete it.
 
 ## Sequence
 0. GRAPH CHECK: if `graphify-out/` exists in the project root (Glob it), query the knowledge

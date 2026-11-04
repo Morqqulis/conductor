@@ -31,10 +31,10 @@ sub-task of a different type is a new unit: own Step 0, own counters.
 
 ## CLASSIFY (priority: debug > review > implement > investigate > trivial)
 - debug: error text, stack trace, "broken/fails/crashes/stopped working", regression report
-- review: review/check/audit of existing code or a diff -> use the native /code-review skill;
+- review: review/check of a diff or named code -> use the native /code-review skill;
   absent -> skeptic module inline mode
 - implement: any requested change to code or behavior (new or existing surface)
-- investigate: how/why/where question, no mutation requested
+- investigate: how/why/where question or whole-project audit, no mutation requested
 Borderline: "stops crashing"=debug; "why slow"=investigate, "make faster"=implement.
 
 ## TIER (mechanical signals only — never "feels risky")

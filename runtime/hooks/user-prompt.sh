@@ -16,7 +16,7 @@ set -uo pipefail
 # The hook payload (JSON with the user's message) arrives on stdin; a builtin read keeps
 # the common path free of extra processes.
 payload=''
-IFS= read -r -d '' payload || true
+IFS= read -r -d '' -t 2 payload || true
 
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=payload.sh

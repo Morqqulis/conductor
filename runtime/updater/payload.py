@@ -73,7 +73,12 @@ def payload(source, paths, scopes, reply):
         memory = ('Memory (shared; Codex pulls its own): when the task is known or changes topic,\n'
                   f'read `{paths.runtime.as_posix()}/memory/recall.md` and retrieve lessons for the task from inbox AND curated files.\n'
                   'Read candidate context before applying; recency alone is not relevance. Reuse\n'
-                  'unchanged recall within a task. If Python is unavailable, search those files directly.\n\n')
+                  'unchanged recall within a task. If Python is unavailable, search those files directly.\n'
+                  f'Owner decisions bind until revoked: read `{paths.runtime.as_posix()}/decisions.md` (all projects)\n'
+                  'and `.conductor/decisions.md` in the repository (this project) at the start of work; do not\n'
+                  're-propose a declined item unless its revisit condition holds. Record only a decision the owner\n'
+                  'states explicitly, as a precise self-contained instruction in English (not the owner\'s words):\n'
+                  '"YYYY-MM-DD | instruction | revisit when"; then say in plain words what you recorded.\n\n')
         result['codex'] = ((heading + memory + body).encode('utf-8'), 0o644)
     args = [sys.executable, '-B', str(paths.runtime / 'updater/cli.py'),
             '--config', str(paths.config), '--profile', str(paths.profile)]

@@ -168,7 +168,30 @@ Status:    DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 semantics (including the rules for missing verification) are defined by the Conductor gate,
 not by this file.
 
-## 7. Principles
+## 7. Owner decisions
+
+The owner's decisions and preferences live in two files, one line each, `YYYY-MM-DD |
+decision | revisit when`: `~/.claude/conductor/decisions.md` for every project and
+`.conductor/decisions.md` in a repository for that project only. In Claude Code both arrive
+at the start of every session, newest first.
+
+- They bind until the owner revokes them; a later line on the same topic overrides an
+  earlier one. Do not propose a declined item again unless its revisit condition holds,
+  and when you decline to raise it, say which condition would bring it back.
+- Record a decision only when the owner states it explicitly in the conversation. Never
+  record a preference you inferred, a guess about what the owner probably wants, or your
+  own recommendation.
+- Do not copy the owner's words. Write the line as a precise, self-contained instruction
+  for an AI agent, in English: what to do or avoid, what it applies to, and nothing that
+  needs this conversation to be understood (no "it", "that idea", "as discussed").
+  Owner, in any language: "let's not do the plugin for now".
+  Line: `2026-11-04 | Do not propose distributing Conductor as a Claude Code plugin |
+  several people need access, or Claude Code changes how hooks are wired`.
+- After appending, tell the owner in plain words, in their language, what you recorded and
+  when it would be revisited, so they can correct it at once. Do not quote them back.
+- A request not to write something down is itself honored: do not record it.
+
+## 8. Principles
 
 - Fewer words, clearer structure. Discipline lives in Conductor; here live quality and
   values.

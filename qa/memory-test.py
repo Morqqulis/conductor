@@ -31,9 +31,12 @@ class MemoryTest(unittest.TestCase):
                         GIT_CONFIG_GLOBAL=str(self.profile / "gitconfig"), GIT_CONFIG_NOSYSTEM="1",
                         CLAUDE_CONFIG_DIR=self.config.as_posix(),
                         CONDUCTOR_HOME=self.home.as_posix(), CONDUCTOR_LESSONS=self.ledger.as_posix())
+        # Hermetic: a project directory inherited from the calling session would add that
+        # project's own decisions file to every hook payload under test.
+        self.env.pop("CLAUDE_PROJECT_DIR", None)
 
     def run_script(self, script, *args):
-        return subprocess.run([BASH, str(script), *map(str, args)], env=self.env,
+        return subprocess.run([BASH, str(script), *map(str, args)], env=self.env, cwd=self.tmp.name,
                               capture_output=True, text=True, encoding="utf-8", timeout=30)
 
     def payload(self):
@@ -43,8 +46,63 @@ class MemoryTest(unittest.TestCase):
         if not result.stdout:
             return ""
         text = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
-        self.assertLessEqual(len(text), 3000)
+        self.assertLessEqual(len(text), 5000)
         return text
+
+    def session_block(self, cwd=None, project_env=None, stdin_data=None):
+        env = {k: v for k, v in self.env.items() if k != "CLAUDE_PROJECT_DIR"}
+        if project_env is not None:
+            env["CLAUDE_PROJECT_DIR"] = str(project_env)
+        data = stdin_data if stdin_data is not None else json.dumps({"hook_event_name": "SessionStart",
+                                                                     "cwd": str(cwd or self.tmp.name)})
+        result = subprocess.run([BASH, str(HOOK)], env=env, input=data, capture_output=True,
+                                text=True, encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        text = json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertLessEqual(len(text), 5000)
+        return text
+
+    def test_owner_decisions_arrive_first_and_newest_first(self):
+        project = Path(self.tmp.name) / "project with spaces"
+        (project / ".conductor").mkdir(parents=True)
+        (project / ".conductor/decisions.md").write_text(
+            "# comment\n2026-11-04 | Plugin postponed | several users need access\n", encoding="utf-8")
+        (self.home / "decisions.md").write_text(
+            "2026-10-01 | OLD_GLOBAL | never\n2026-11-04 | NEW_GLOBAL | never\n", encoding="utf-8")
+        self.ledger.write_text("2026-11-01 | trigger | LESSON_RULE\n", encoding="utf-8")
+        text = self.session_block(cwd=project)
+        self.assertTrue(text.startswith("OWNER DECISIONS"), text[:80])
+        self.assertIn("Plugin postponed | several users need access", text)
+        self.assertLess(text.index("NEW_GLOBAL"), text.index("OLD_GLOBAL"))
+        self.assertNotIn("# comment", text)
+        self.assertIn("CONDUCTOR LESSONS", text)  # lessons navigation still delivered
+        self.assertIn("Record a decision only when the owner states it explicitly", text)
+        self.assertIn("Do not copy the owner's words: write a precise, self-contained instruction", text)
+
+    def test_no_decisions_yet_still_says_where_to_record(self):
+        text = self.session_block()
+        self.assertIn("OWNER DECISIONS", text)
+        self.assertIn("None recorded yet.", text)
+        self.assertIn(str(self.home / "decisions.md").replace(os.sep, "/") if os.name == "nt" else str(self.home / "decisions.md"), text)
+
+    def test_many_decisions_keep_the_newest_and_count_the_rest(self):
+        lines = [f"2026-10-{i % 28 + 1:02d} | decision {i:03d} with enough words to take real space | none"
+                 for i in range(80)]
+        (self.home / "decisions.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        text = self.session_block()
+        self.assertIn("decision 079", text)          # newest kept
+        self.assertNotIn("decision 000", text)       # oldest yields
+        self.assertRegex(text, r"\(\+\d+ older decision\(s\) in the files above")
+
+    def test_project_comes_from_claude_project_dir_then_payload_cwd(self):
+        first, second = Path(self.tmp.name) / "first", Path(self.tmp.name) / "second"
+        for folder, marker in ((first, "FIRST_PROJECT"), (second, "SECOND_PROJECT")):
+            (folder / ".conductor").mkdir(parents=True)
+            (folder / ".conductor/decisions.md").write_text(f"2026-11-04 | {marker} | never\n", encoding="utf-8")
+        text = self.session_block(cwd=second, project_env=first)
+        self.assertIn("FIRST_PROJECT", text)
+        self.assertNotIn("SECOND_PROJECT", text)
+        self.assertIn("SECOND_PROJECT", self.session_block(cwd=second))
 
     def test_task_routing_replaces_unrelated_recency_preview(self):
         self.ledger.write_text("\n".join(f"2026-09-25 | old-{i} | " + "x" * 600 for i in range(7))
@@ -68,10 +126,14 @@ class MemoryTest(unittest.TestCase):
         self.assertIn(self.index.as_posix(), text)
 
     def test_due_empty_and_unicode(self):
-        self.assertEqual(self.payload(), "")
-        self.ledger.write_text("# inbox\n", encoding="utf-8")
-        self.index.write_text("# index\n", encoding="utf-8")
-        self.assertEqual(self.payload(), "")
+        # With no lessons the block carries only the owner-decisions part, never an empty
+        # lessons section.
+        for prepare in (lambda: None, lambda: (self.ledger.write_text("# inbox\n", encoding="utf-8"),
+                                               self.index.write_text("# index\n", encoding="utf-8"))):
+            prepare()
+            text = self.payload()
+            self.assertTrue(text.startswith("OWNER DECISIONS"), text[:60])
+            self.assertNotIn("CONDUCTOR LESSONS", text)
         self.ledger.write_text("\n".join(f"2026-09-25 | урок-{i} | yaddaş ə сохранён" for i in range(13)), encoding="utf-8")
         text = self.payload()
         self.assertIn("DISTILL DUE", text)

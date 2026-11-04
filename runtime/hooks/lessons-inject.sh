@@ -22,7 +22,30 @@ LEDGER="${CONDUCTOR_LESSONS:-$CONDUCTOR_HOME/lessons.md}"
 STORE="$(dirname "$LEDGER")/lessons"
 INDEX="$STORE/INDEX.md"
 DISTILL_THRESHOLD=12
-MAX_CHARS=3000
+MAX_CHARS=5000
+DECISIONS_CHARS=2500
+
+# Owner decisions ride in this same hook on purpose: a new registered hook command would
+# change the hook registration shape that installed updaters verify, and break updates.
+DECISIONS="$CONDUCTOR_HOME/decisions.md"
+# SessionStart sends JSON on stdin; only the working directory is read from it.
+payload=''
+IFS= read -r -d '' -t 2 payload || true
+project="${CLAUDE_PROJECT_DIR:-}"
+if [ -z "$project" ]; then
+    # Tolerate any JSON spacing: "cwd":"..." and "cwd": "..." are the same field.
+    project="${payload#*\"cwd\":}"
+    if [ "$project" = "$payload" ]; then
+        project="$PWD"
+    else
+        project="${project#"${project%%[![:space:]]*}"}"
+        project="${project#\"}"
+        project="${project%%\"*}"
+        project="${project//\\\\/\\}"
+    fi
+fi
+command -v cygpath >/dev/null 2>&1 && project="$(cygpath -u "$project" 2>/dev/null || printf '%s' "$project")"
+PROJECT_DECISIONS="$project/.conductor/decisions.md"
 
 trap 'printf "conductor lessons hook error (fail-open)\n" >&2; exit 0' ERR
 
@@ -42,11 +65,54 @@ if [ -f "$INDEX" ]; then
     case "$index_count" in ''|*[!0-9]*) index_count=0 ;; esac
 fi
 
-# Nothing captured and nothing filed: stay silent rather than spend context on an empty block.
+# --- owner decisions: few, all of them binding, so delivered whole (newest first) ------
+# decision_lines <file> <label>: sets $listing to the file's entries, newest first, within
+# the budget shared by both files. Not called through $(...): the counters must survive.
+decisions_used=0
+decisions_omitted=0
+listing=''
+decision_lines() {
+    local file="$1" label="$2" entries line out=''
+    listing=''
+    [ -f "$file" ] || return 0
+    entries="$(grep -vE '^[[:space:]]*(#|$)' "$file" 2>/dev/null | tr -d '\r' | awk '{ l[NR] = $0 } END { for (i = NR; i >= 1; i--) print l[i] }' || true)"
+    [ -n "$entries" ] || return 0
+    while IFS= read -r line; do
+        if [ $((decisions_used + ${#line} + 3)) -gt "$DECISIONS_CHARS" ]; then
+            decisions_omitted=$((decisions_omitted + 1))
+            continue
+        fi
+        out="$out
+- $line"
+        decisions_used=$((decisions_used + ${#line} + 3))
+    done <<< "$entries"
+    [ -z "$out" ] || listing="$label ($file):$out"
+    return 0
+}
+decision_lines "$PROJECT_DECISIONS" 'This project'
+project_listing="$listing"
+decision_lines "$DECISIONS" 'All projects'
+global_listing="$listing"
+decisions="OWNER DECISIONS - binding until the owner revokes them. A later line on the same topic overrides an earlier one. Do not re-propose a declined item unless its revisit condition holds; when you decline to raise one again, name that condition. Record a decision only when the owner states it explicitly in this conversation, never an inferred preference. Do not copy the owner's words: write a precise, self-contained instruction for an AI agent, in English - what to do or avoid, its scope, no references that need this conversation. Append one line \"YYYY-MM-DD | instruction | revisit when\" to $DECISIONS (all projects) or $PROJECT_DECISIONS (this project only), then tell the owner in plain words, in their language, what you recorded."
+if [ -n "$project_listing$global_listing" ]; then
+    decisions="$decisions
+${project_listing:+$project_listing
+}$global_listing"
+    [ "$decisions_omitted" -gt 0 ] && decisions="$decisions
+(+$decisions_omitted older decision(s) in the files above - read them before proposing anything they might cover.)"
+else
+    decisions="$decisions
+None recorded yet."
+fi
+
+# Nothing captured and nothing filed: deliver the decisions alone, not an empty lessons block.
 if [ -z "$inbox" ] && [ "$index_count" -eq 0 ]; then
     # A stale or absent INDEX must not hide filed lessons.
     filed="$(find "$STORE" -type f -name '*.md' ! -name 'INDEX.md' ! -name '.*' -print -quit 2>/dev/null || true)"
-    [ -n "$filed" ] || exit 0
+    if [ -z "$filed" ]; then
+        emit_payload SessionStart "$decisions"
+        exit 0
+    fi
 fi
 
 # Keep navigation bounded even with exceptionally long configured paths.
@@ -67,7 +133,12 @@ if [ "$inbox_count" -gt "$DISTILL_THRESHOLD" ]; then
 $block"
 fi
 
-[ "$(printf '%s' "$block" | wc -m)" -le "$MAX_CHARS" ] || exit 0
+block="$decisions
+
+$block"
+# The decisions part is bounded by DECISIONS_CHARS; if paths make the whole too long, the
+# lessons navigation yields rather than the binding decisions.
+[ "$(printf '%s' "$block" | wc -m)" -le "$MAX_CHARS" ] || block="$decisions"
 
 emit_payload SessionStart "$block"
 exit 0

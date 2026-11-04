@@ -37,7 +37,9 @@ OWNED_SCRIPT = re.compile(
 # SessionStart fires on these lifecycle events. "compact" matters most: after a context
 # compaction the core would otherwise be gone from the model's context while the session
 # continues, which is the exact moment the discipline is needed and hardest to notice.
-SESSION_MATCHER = "startup|resume|clear|compact"
+# "fork" is a branched session that inherits no hook output from its parent: without it the
+# fork ran with no core at all while the per-prompt reminder kept announcing Conductor.
+SESSION_MATCHER = "startup|resume|clear|compact|fork"
 
 
 def load(path: str) -> dict:

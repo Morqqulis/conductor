@@ -151,6 +151,9 @@ def install(source, commit, shell, options):
 
 
 def main(argv=None):
+    # Windows: never let shutil.which or CreateProcess pick git/rtk/uv from the current
+    # directory (a repository could plant one); harmless on other systems.
+    os.environ.setdefault('NoDefaultCurrentDirectoryInExePath', '1')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ref', default='main')
     parser.add_argument('--language')

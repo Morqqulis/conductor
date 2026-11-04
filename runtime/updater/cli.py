@@ -40,6 +40,9 @@ def superpowers(source, paths):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    # Windows: never let shutil.which or CreateProcess pick git/rtk/uv from the current
+    # directory (a repository could plant one); harmless on other systems.
+    os.environ.setdefault('NoDefaultCurrentDirectoryInExePath', '1')
     parser.add_argument('--config', type=Path, default=Path(os.environ.get('CLAUDE_CONFIG_DIR', Path.home() / '.claude')))
     parser.add_argument('--profile', type=Path, default=Path.home())
     commands = parser.add_subparsers(dest='command', required=True)

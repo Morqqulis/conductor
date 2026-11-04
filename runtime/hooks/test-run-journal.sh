@@ -18,7 +18,7 @@
 # observed. Tests run by a human in a separate terminal leave no line here.
 set -uo pipefail
 
-JOURNAL="${CONDUCTOR_TEST_JOURNAL:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor/test-runs.log}"
+JOURNAL="${CONDUCTOR_TEST_JOURNAL:-${CLAUDE_CONFIG_DIR:-${HOME:-}/.claude}/conductor/test-runs.log}"
 
 # Slurped with a builtin, not `cat`: this runs on every Bash tool call, and on Windows each
 # extra process costs more than everything the hook actually does.
@@ -118,6 +118,15 @@ if any(w.split("=", 1)[0].lower() in nonruns or w.split("=", 1)[0] in relocates
        for w in words[1:]):
     bail()
 
+# Every recognisable test command starts with one of these words. Checking it here keeps
+# git out of the picture for the many Bash calls whose OUTPUT merely mentions "test".
+RUNNER_WORDS = {"npm", "pnpm", "yarn", "bun", "npx", "node", "vitest", "jest", "mocha", "deno",
+                "cargo", "go", "pytest", "python", "python3", "uv", "bundle", "mvn", "gradle",
+                "vendor/bin/phpunit", "mix", "swift", "flutter", "dart", "zig", "ctest",
+                "dotnet", "make"}
+if words[0] not in RUNNER_WORDS:
+    bail()
+
 def git(*args, cwd=cwd, stdin=None):
     try:
         p = subprocess.run(("git",) + args, cwd=cwd, input=stdin,
@@ -198,14 +207,26 @@ expected_words = shlex.split(expected)
 prefix = expected_words[:-1] if expected == "go test ./..." else expected_words
 matched = expected if words[:len(prefix)] == prefix else None
 scope = "full" if words == expected_words else "partial"
+# The standard command run from a subdirectory covers that subtree at most; a run after
+# `cd sub &&` must never be journaled as the full suite.
+if os.path.realpath(cwd) != os.path.realpath(root):
+    scope = "partial"
 
 # JS projects routinely run the suite through a direct runner instead of the package
 # script. Those runs used to be invisible, which skews the journal's data downward. They
 # are recorded - but always as partial: coverage equivalence with the standard command
 # cannot be proven from here, so the claim stays narrow.
-if not matched and expected in ("npm test", "pnpm test", "yarn test", "bun test"):
-    for alt in ("npx vitest", "npx jest", "npx mocha", "node --test",
-                "vitest", "jest", "mocha"):
+alternates = {
+    "npm test": ("npx vitest", "npx jest", "npx mocha", "node --test", "vitest", "jest", "mocha"),
+    "pnpm test": ("npx vitest", "npx jest", "npx mocha", "node --test", "vitest", "jest", "mocha"),
+    "yarn test": ("npx vitest", "npx jest", "npx mocha", "node --test", "vitest", "jest", "mocha"),
+    "bun test": ("npx vitest", "npx jest", "npx mocha", "node --test", "vitest", "jest", "mocha"),
+    # Module and launcher forms are how agents most often run pytest; equivalence with the
+    # bare command is not proven from here, so they stay partial like the JS runners.
+    "pytest": ("python -m pytest", "python3 -m pytest", "uv run pytest", "poetry run pytest"),
+}
+if not matched:
+    for alt in alternates.get(expected, ()):
         alt_words = shlex.split(alt)
         if words[:len(alt_words)] == alt_words:
             matched, scope = alt, "partial"

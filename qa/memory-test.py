@@ -139,6 +139,18 @@ class MemoryTest(unittest.TestCase):
             self.assertEqual(filed, ["2026-09-25-lesson.md"])
         self.assertIn("RULE_RU", (self.store / filed[0]).read_text(encoding="utf-8"))
 
+    def test_fail_open_hooks_survive_an_unset_home(self):
+        # `set -u` turned an unset HOME into a fatal expansion before any fail-open trap.
+        env = {k: v for k, v in self.env.items() if k not in ("HOME", "CONDUCTOR_HOME", "CONDUCTOR_LESSONS", "CLAUDE_CONFIG_DIR")}
+        for hook in ("lessons-inject.sh", "user-prompt.sh"):
+            with self.subTest(hook=hook):
+                result = subprocess.run([BASH, str(ROOT / "runtime/hooks" / hook)], env=env, input="{}",
+                                        capture_output=True, text=True, encoding="utf-8", timeout=30)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertNotIn("unbound variable", result.stderr)
+                if result.stdout:
+                    json.loads(result.stdout)
+
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")
         result = self.run_script(ROOT / "install.sh", "--skip-global-md", "--skip-companions")

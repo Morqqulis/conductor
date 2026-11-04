@@ -103,6 +103,21 @@ class JournalWriterTest(unittest.TestCase):
         self.assertEqual(rows[-1][1:3], ["PASS", "full"])
         self.assertEqual(Path(rows[-1][3]).resolve(), self.repo.resolve())
 
+    def test_subdirectory_run_is_partial_and_module_form_is_recognised(self):
+        # `cd sub && pytest` covers at most that subtree; it used to be journaled as "full".
+        (self.repo / "sub").mkdir()
+        _, rows = self.invoke("cd sub && pytest")
+        self.assertEqual(len(rows), 1, rows)
+        self.assertEqual((rows[0][1], rows[0][2]), ("PASS", "partial"))
+        self.assertEqual(rows[0][4], "pytest")
+        # Agents mostly run pytest through the interpreter; that is a run, claimed narrowly.
+        python = self.bin / "python"
+        python.write_text('#!/usr/bin/env bash\nprintf "RUNNER_EXECUTED\\n"\nexit 0\n', encoding="utf-8")
+        python.chmod(0o755)
+        _, rows = self.invoke("python -m pytest tests/unit")
+        self.assertEqual(len(rows), 1, rows)
+        self.assertEqual((rows[0][1], rows[0][2], rows[0][4]), ("PASS", "partial", "python -m pytest tests/unit"))
+
     def test_cd_semicolon_is_not_a_proven_directory(self):
         _, rows = self.invoke("cd missing-directory; pytest")
         self.assertEqual(rows, [])

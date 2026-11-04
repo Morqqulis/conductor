@@ -80,8 +80,12 @@ def fetch(destination: Path, ref: str = "main", *, remote: str = OFFICIAL_URL) -
         git = shutil.which("git")
         if git is None:
             raise _failure(stage, "Git executable is unavailable")
+        # GIT_* is dropped wholesale (config injection, credential helpers), except the CA
+        # overrides: without them a corporate proxy with its own certificate cannot update.
+        kept = ("GIT_SSL_CAINFO", "GIT_SSL_CAPATH")
         env = {key: value for key, value in os.environ.items()
-               if not key.upper().startswith("GIT_") and key not in ("BASH_ENV", "ENV")}
+               if (not key.upper().startswith("GIT_") or key.upper() in kept)
+               and key not in ("BASH_ENV", "ENV")}
         env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull,
                    GIT_CONFIG_NOSYSTEM="1", GIT_ATTR_NOSYSTEM="1", GIT_TERMINAL_PROMPT="0")
         base = [git, "-c", "core.hooksPath=" + os.devnull, "-c", "core.fsmonitor=false",

@@ -90,6 +90,9 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 сохранённый выбор, иначе русский. Язык можно передать явно: `-Language ru`
 в PowerShell или `bash -s -- --language ru` вместо `bash` в конвейере.
 Коды: `ru` — русский, `en` — английский, `az` — азербайджанский.
+Установщик заменяет глобальный `~/.claude/CLAUDE.md` файлом ценностей (прежний сохраняется
+в снимке); `--skip-global-md` (PowerShell: `-SkipGlobalMd`) оставляет ваш личный файл.
+`--skip-companions` (`-SkipCompanions`) не ставит Superpowers, RTK и Graphify.
 
 В уже скачанной папке достаточно **только** `bash install.sh`.
 `--scope claude` выбирает Claude Code, `--scope global` — остальные глобальные адаптеры;

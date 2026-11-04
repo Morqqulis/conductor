@@ -12,8 +12,12 @@
 # not occur in the markdown sources this ships, and emitting them raw would produce a
 # payload the harness silently rejects. Tab and newline are mapped, not dropped.
 json_escape() {
+    # The tab is spelled as a literal character: GNU sed understands `\t` in a pattern,
+    # BSD/macOS sed reads it as the letter t and would corrupt every "t" in the core.
+    local tab
+    tab="$(printf '\t')"
     LC_ALL=C tr -d '\000-\010\013-\037\177' |
-        sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/\t/\\t/g' |
+        sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e "s/${tab}/\\\\t/g" |
         sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g'
 }
 

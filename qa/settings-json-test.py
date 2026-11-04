@@ -92,9 +92,10 @@ class SettingsJsonTest(unittest.TestCase):
         self.assertIsInstance(session, list, "SessionStart event missing after install")
         self.assertEqual(len(session), 1, "expected exactly one SessionStart entry")
         self.assertEqual(
-            session[0].get("matcher"), "startup|resume|clear|compact",
-            "SessionStart matcher must cover startup|resume|clear|compact "
-            "(compact especially: post-compaction is when the core must be re-injected)",
+            session[0].get("matcher"), "startup|resume|clear|compact|fork",
+            "SessionStart matcher must cover startup|resume|clear|compact|fork "
+            "(compact especially: post-compaction is when the core must be re-injected; "
+            "fork: a branched session inherits no hook output)",
         )
         commands = [h.get("command") for h in session[0].get("hooks", [])]
         self.assertEqual(

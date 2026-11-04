@@ -16,7 +16,8 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=payload.sh
 . "$HOOK_DIR/payload.sh" 2>/dev/null || exit 0
 
-CONDUCTOR_HOME="${CONDUCTOR_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/conductor}"
+# ${HOME:-}: these hooks fail OPEN, and under `set -u` an unset HOME is a fatal expansion.
+CONDUCTOR_HOME="${CONDUCTOR_HOME:-${CLAUDE_CONFIG_DIR:-${HOME:-}/.claude}/conductor}"
 LEDGER="${CONDUCTOR_LESSONS:-$CONDUCTOR_HOME/lessons.md}"
 STORE="$(dirname "$LEDGER")/lessons"
 INDEX="$STORE/INDEX.md"

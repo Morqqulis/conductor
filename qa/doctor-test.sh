@@ -123,7 +123,7 @@ while IFS= read -r source_file; do
     mv "$CONDUCTOR_DIR/$rel" "$SANDBOX/held-file"
     expect_runtime_failure "missing $rel rejected" "runtime file missing or empty: $rel"
     mv "$SANDBOX/held-file" "$CONDUCTOR_DIR/$rel"
-done < <(find "$ROOT/runtime" -type f)
+done < <(find "$ROOT/runtime" -type f ! -name '*.pyc' ! -path '*/__pycache__/*')
 
 mv "$CONDUCTOR_DIR/playbooks/methods.md" "$SANDBOX/held-file"
 : > "$CONDUCTOR_DIR/playbooks/methods.md"

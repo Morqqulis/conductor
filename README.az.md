@@ -89,6 +89,9 @@ Rus, ingilis və ya Azərbaycan dilini seçin. Terminal yoxdursa, saxlanmış di
 o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language az` əlavə edin
 və ya konveyerin son `bash` əmrini `bash -s -- --language az` ilə əvəz edin.
 Kodlar: `ru` — rus dili, `en` — ingilis dili, `az` — Azərbaycan dili.
+Quraşdırıcı qlobal `~/.claude/CLAUDE.md` faylını dəyərlər faylı ilə əvəz edir (əvvəlki fayl
+snapshot-da saxlanılır); `--skip-global-md` (PowerShell: `-SkipGlobalMd`) şəxsi faylınızı
+saxlayır. `--skip-companions` (`-SkipCompanions`) Superpowers, RTK və Graphify quraşdırmır.
 
 Artıq yüklənmiş mənbə qovluğunda **yalnız** `bash install.sh` kifayətdir.
 `--scope claude` Claude Code-u, `--scope global` digər qlobal adapterləri seçir;

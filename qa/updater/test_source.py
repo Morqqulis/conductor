@@ -144,6 +144,22 @@ class SourceTests(unittest.TestCase):
                 external.assert_not_called()
                 self.assertEqual(list(self.destination.iterdir()), [])
 
+    def test_ca_overrides_reach_git_while_config_injection_is_dropped(self):
+        module = self.module()
+        seen = {}
+
+        def capture(*args, **kwargs):
+            seen.update(kwargs.get("env") or {})
+            raise AssertionError("stop after environment capture")
+
+        environment = dict(os.environ, GIT_SSL_CAINFO="/corp/ca.pem", GIT_SSL_CAPATH="/corp/certs",
+                           GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="core.hooksPath", GIT_CONFIG_VALUE_0="/evil")
+        with patch.dict(os.environ, environment, clear=True), patch("subprocess.Popen", side_effect=capture):
+            with self.assertRaises(AssertionError):
+                module.fetch(self.destination, remote=str(self.remote))
+        self.assertEqual((seen.get("GIT_SSL_CAINFO"), seen.get("GIT_SSL_CAPATH")), ("/corp/ca.pem", "/corp/certs"))
+        self.assertFalse({"GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0", "GIT_CONFIG_VALUE_0"} & set(seen))
+
     def test_tag_and_full_sha_pin_old_commit_despite_same_named_branch(self):
         self.git("-C", self.repo, "-c", "user.name=Source Test", "-c",
                  "user.email=source@example.invalid", "tag", "-a", "v1.2.3", "-m", "release")

@@ -53,6 +53,7 @@ jobs:
           python -B -m unittest discover -s qa/project_artifacts -v
           bash qa/uninstall-test.sh
           bash qa/doctor-test.sh
+          bash qa/payload-test.sh
           bash qa/journal-report-test.sh
           python -B qa/test-run-journal-test.py
           python -B qa/memory-test.py

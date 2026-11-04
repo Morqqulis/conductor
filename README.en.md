@@ -90,6 +90,9 @@ Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved la
 or defaults to Russian. Set it explicitly with `-Language en` in PowerShell or replace
 the pipeline's final `bash` with `bash -s -- --language en`.
 Codes: `ru` for Russian, `en` for English, `az` for Azerbaijani.
+The installer replaces the global `~/.claude/CLAUDE.md` with the values file (the previous
+one is kept in a snapshot); `--skip-global-md` (PowerShell: `-SkipGlobalMd`) keeps your
+personal file. `--skip-companions` (`-SkipCompanions`) installs no Superpowers, RTK or Graphify.
 
 From a downloaded source directory, run **only** `bash install.sh`.
 `--scope claude` selects Claude Code, `--scope global` the other global adapters;

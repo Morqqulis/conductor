@@ -11,6 +11,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -35,15 +36,29 @@ class OfficialRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def download(url, limit):
+DOWNLOAD_SECONDS = 180
+
+
+def download(url, limit, seconds=DOWNLOAD_SECONDS):
     official(url)
     request = urllib.request.Request(url, headers={'User-Agent': 'Conductor-installer',
                                                   'Accept': 'application/vnd.github+json'})
+    # The socket timeout bounds each read, not the whole transfer: a server trickling bytes
+    # could keep the installer waiting indefinitely. A wall-clock deadline bounds it.
+    deadline = time.monotonic() + seconds
     with urllib.request.build_opener(OfficialRedirect()).open(request, timeout=60) as response:
-        result = response.read(limit + 1)
-    if len(result) > limit:
-        raise ValueError('download exceeds size limit')
-    return result
+        reader = getattr(response, 'read1', None) or response.read
+        data = bytearray()
+        while True:
+            if time.monotonic() > deadline:
+                raise ValueError('download exceeded time limit')
+            chunk = reader(min(65536, limit + 1 - len(data)))
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > limit:
+                raise ValueError('download exceeds size limit')
+    return bytes(data)
 
 
 def extract(data, destination, commit):

@@ -89,6 +89,8 @@ bootstrap does not silently install them or change the system execution policy.
 Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved language,
 or defaults to Russian. Set it explicitly with `-Language en` in PowerShell or replace
 the pipeline's final `bash` with `bash -s -- --language en`.
+`--ref vX.Y.Z` or a full commit (PowerShell: `-Ref`) pins the version: both the second-stage
+bootstrap and the installed files come from it. An invalid value is refused before any download.
 Codes: `ru` for Russian, `en` for English, `az` for Azerbaijani.
 The installer replaces the global `~/.claude/CLAUDE.md` with the values file (the previous
 one is kept in a snapshot); `--skip-global-md` (PowerShell: `-SkipGlobalMd`) keeps your

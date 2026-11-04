@@ -25,7 +25,8 @@ class LauncherTests(unittest.TestCase):
     def shell(self, args=(), failure='0', code=0):
         self.assertTrue((ROOT / 'bootstrap.sh').is_file(), 'Bash bootstrap missing')
         stub = self.folder / 'curl'
-        stub.write_text('#!/bin/bash\nif [ "$FIXTURE_DOWNLOAD_FAIL" = 1 ]; then exit 22; fi\n'
+        stub.write_text('#!/bin/bash\n[ -z "$CURL_LOG" ] || printf "%s\\n" "$@" >> "$CURL_LOG"\n'
+                        'if [ "$FIXTURE_DOWNLOAD_FAIL" = 1 ]; then exit 22; fi\n'
                         'while [ $# -gt 0 ]; do if [ "$1" = -o ]; then cp "$FIXTURE" "$2"; exit; fi; shift; done\nexit 99\n', encoding='utf-8')
         stub.chmod(0o755)
         env = dict(self.env, FIXTURE_DOWNLOAD_FAIL=failure)
@@ -45,6 +46,38 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout), args)
         self.env['FIXTURE_EXIT'] = '7'
         self.shell(args, code=7)
+
+    def recorded_urls(self):
+        log = self.folder / 'curl-args.log'
+        return log.read_text(encoding='utf-8').split() if log.exists() else []
+
+    def test_bash_downloads_second_stage_from_the_pinned_ref(self):
+        stub_log = (self.folder / 'curl-args.log').as_posix()
+        if os.name == 'nt':
+            stub_log = '/' + stub_log[0].lower() + stub_log[2:]
+        self.env['CURL_LOG'] = stub_log
+        sha = 'a' * 40
+        cases = ((['--skip-companions'], 'main'), (['--ref', 'v9.9.9'], 'v9.9.9'),
+                 (['--ref=' + sha, '--scope', 'all'], sha))
+        for args, ref in cases:
+            with self.subTest(ref=ref):
+                (self.folder / 'curl-args.log').unlink(missing_ok=True)
+                result = self.shell(args)
+                self.assertEqual(json.loads(result.stdout), args)  # --ref still reaches stage two
+                self.assertIn(f'https://raw.githubusercontent.com/Morqqulis/conductor/{ref}/tools/bootstrap.py',
+                              self.recorded_urls())
+
+    def test_bash_invalid_ref_downloads_nothing(self):
+        stub_log = (self.folder / 'curl-args.log').as_posix()
+        if os.name == 'nt':
+            stub_log = '/' + stub_log[0].lower() + stub_log[2:]
+        self.env['CURL_LOG'] = stub_log
+        for ref in ('../../evil', 'main;rm', 'v1.2', 'MAIN', ''):
+            with self.subTest(ref=ref):
+                result = self.shell(['--ref', ref], code=2)
+                self.assertIn('--ref must be', result.stderr)
+                self.assertEqual(self.recorded_urls(), [])
+                self.assertNotIn('[', result.stdout)
 
     def test_bash_download_failure_never_executes_python_payload(self):
         result = self.shell(failure='1', code=1)
@@ -89,6 +122,30 @@ class LauncherTests(unittest.TestCase):
                 self.assertTrue(result.stdout.strip(), result.stderr)
                 self.assertEqual(json.loads(result.stdout), ['--ref', 'main', '--scope', 'all',
                                                              '--language', 'English', '--skip-companions'])
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_downloads_second_stage_from_the_pinned_ref_and_rejects_bad_refs(self):
+        powershell = shutil.which('pwsh') or shutil.which('powershell')
+        log = self.folder / 'uri.log'
+        script = self.folder / 'pinned.ps1'
+        script.write_text("$ErrorActionPreference = 'Stop'\n"
+                          'function Invoke-WebRequest { param($Uri,$OutFile,[switch]$UseBasicParsing,$TimeoutSec) '
+                          'Add-Content -LiteralPath $env:URI_LOG -Value $Uri; '
+                          'Copy-Item -LiteralPath $env:FIXTURE -Destination $OutFile }\n'
+                          '& $args[0] -Ref $args[1] -Language English -SkipCompanions\n', encoding='utf-8')
+        env = dict(self.env, URI_LOG=str(log))
+        result = subprocess.run([powershell, '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                                 str(script), str(ROOT / 'install.ps1'), 'v9.9.9'], env=env,
+                                capture_output=True, encoding='utf-8', errors='replace', timeout=25)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('https://raw.githubusercontent.com/Morqqulis/conductor/v9.9.9/tools/bootstrap.py',
+                      log.read_text(encoding='utf-8'))
+        log.unlink()
+        result = subprocess.run([powershell, '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                                 str(script), str(ROOT / 'install.ps1'), '../evil'], env=env,
+                                capture_output=True, encoding='utf-8', errors='replace', timeout=25)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(log.exists())
 
     @unittest.skipUnless(os.name == 'nt', 'Windows Store/older Python fallback')
     def test_windows_powershell_skips_failing_python_candidate(self):

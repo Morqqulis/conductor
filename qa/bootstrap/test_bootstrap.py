@@ -124,5 +124,49 @@ class BootstrapTests(unittest.TestCase):
             self.assertEqual(self.api.install(self.target, SHA, 'bash', []), 3)
 
 
+    def fake_opener(self, chunks, delay=0.0):
+        import time as clock
+
+        class Response:
+            def __init__(self):
+                self.parts = list(chunks)
+
+            def read1(self, size):
+                clock.sleep(delay)
+                return self.parts.pop(0) if self.parts else b''
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        class Opener:
+            def open(self, request, timeout):
+                return Response()
+
+        return Opener()
+
+    def test_download_reads_whole_body_in_chunks(self):
+        with patch.object(self.api.urllib.request, 'build_opener', return_value=self.fake_opener([b'ab', b'cd'])):
+            self.assertEqual(self.api.download('https://api.github.com/x', 10), b'abcd')
+
+    def test_download_size_limit_counts_every_chunk(self):
+        with patch.object(self.api.urllib.request, 'build_opener', return_value=self.fake_opener([b'abc', b'def'])):
+            with self.assertRaisesRegex(ValueError, 'size limit'):
+                self.api.download('https://api.github.com/x', 5)
+
+    def test_download_trickle_hits_the_wall_clock_deadline(self):
+        # A server sending a few bytes at a time never trips the per-read socket timeout;
+        # only a deadline over the whole transfer stops it.
+        trickle = [b'x'] * 1000
+        with patch.object(self.api.urllib.request, 'build_opener', return_value=self.fake_opener(trickle, 0.01)):
+            with self.assertRaisesRegex(ValueError, 'time limit'):
+                self.api.download('https://api.github.com/x', 10 ** 6, seconds=0.2)
+
+    def test_download_still_refuses_unofficial_hosts(self):
+        with self.assertRaisesRegex(ValueError, 'official GitHub'):
+            self.api.download('https://example.com/x', 10)
+
 if __name__ == '__main__':
     unittest.main()

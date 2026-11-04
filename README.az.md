@@ -88,6 +88,8 @@ yükləyici onları səssiz quraşdırmır və sistemin təhlükəsizlik siyasə
 Rus, ingilis və ya Azərbaycan dilini seçin. Terminal yoxdursa, saxlanmış dil,
 o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language az` əlavə edin
 və ya konveyerin son `bash` əmrini `bash -s -- --language az` ilə əvəz edin.
+`--ref vX.Y.Z` və ya tam commit (PowerShell: `-Ref`) versiyanı sabitləyir: yükləyicinin ikinci
+mərhələsi də, quraşdırılan fayllar da ondan götürülür. Yanlış dəyər yükləmədən əvvəl rədd edilir.
 Kodlar: `ru` — rus dili, `en` — ingilis dili, `az` — Azərbaycan dili.
 Quraşdırıcı qlobal `~/.claude/CLAUDE.md` faylını dəyərlər faylı ilə əvəz edir (əvvəlki fayl
 snapshot-da saxlanılır); `--skip-global-md` (PowerShell: `-SkipGlobalMd`) şəxsi faylınızı

@@ -9,6 +9,11 @@ param(
     [switch]$SkipGlobalMd
 )
 $ErrorActionPreference = 'Stop'
+# The second stage comes from the SAME revision as -Ref, so a pinned install never runs a
+# bootstrap from a newer main. Same grammar as tools/bootstrap.py (case-sensitive).
+if ($Ref -cnotmatch '^(main|[0-9a-fA-F]{40}|v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$') {
+    throw 'Conductor bootstrap: -Ref must be main, a version tag (vX.Y.Z) or a full commit; nothing installed.'
+}
 $pythonExecutable = $null
 foreach ($candidate in @($env:CONDUCTOR_PYTHON, 'python3', 'python')) {
     if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
@@ -31,7 +36,7 @@ New-Item -ItemType Directory -Path $temporaryDirectory | Out-Null
 try {
     # SecurityProtocol change applies to this process only; never disable certificate checks.
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -UseBasicParsing -TimeoutSec 90 -Uri 'https://raw.githubusercontent.com/Morqqulis/conductor/main/tools/bootstrap.py' -OutFile $bootstrapFile
+    Invoke-WebRequest -UseBasicParsing -TimeoutSec 90 -Uri "https://raw.githubusercontent.com/Morqqulis/conductor/$Ref/tools/bootstrap.py" -OutFile $bootstrapFile
     $downloadSize = (Get-Item -LiteralPath $bootstrapFile).Length
     if ($downloadSize -eq 0 -or $downloadSize -gt 1048576) { throw 'Bootstrap download is empty or exceeds size limit.' }
     $bootstrapArguments = @('-B', $bootstrapFile, '--ref', $Ref, '--scope', $Scope)

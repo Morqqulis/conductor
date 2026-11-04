@@ -91,12 +91,45 @@ class FlowTests(unittest.TestCase):
             self.assertEqual(sync.call_count, 1)
             self.assertEqual(sync.call_args.args[1], 'update')
 
+    def test_applied_update_runs_companions_with_the_newly_installed_code(self):
+        # The running process imported the companion modules before the update replaced
+        # them; syncing in-process ran the previous release's code (RTK fix seen only on the
+        # second run). After an applied update a fresh process must do it.
+        self.install(['global'])
+        candidate = self.source / 'runtime/memory/recall.md'
+        candidate.write_bytes(candidate.read_bytes() + b'\nNew release note.\n')
+        cli = importlib.import_module('cli')
+        args = ['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update']
+        with patch.object(cli, 'fetch', return_value={'source': self.source, 'commit': 'b' * 40}), \
+             patch.object(cli, 'sync', create=True, return_value=[]) as sync, \
+             patch.object(cli, 'fresh_companions', return_value=0) as fresh:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(args), 0)
+        self.assertEqual(sync.call_count, 0)
+        self.assertEqual(fresh.call_count, 1)
+        # The fresh step starts the INSTALLED CLI's hidden companion command.
+        with patch.object(cli.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as child:
+            self.assertEqual(cli.fresh_companions(self.paths), 0)
+        command = child.call_args.args[0]
+        self.assertEqual(Path(command[2]), self.paths.runtime / 'updater/cli.py')
+        self.assertEqual(command[-3:], ['sync-companions', '--mode', 'update'])
+        with patch.object(cli.subprocess, 'run', return_value=subprocess.CompletedProcess([], 7)):
+            self.assertEqual(cli.fresh_companions(self.paths), 3)
+        with patch.object(cli, 'sync', create=True, return_value=[]) as sync:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(['--config', str(self.paths.config), '--profile',
+                                           str(self.paths.profile), 'sync-companions', '--mode', 'update']), 0)
+        self.assertEqual(sync.call_args.args[1], 'update')
+
     def test_companion_failure_preserves_verified_conductor(self):
         self.install(['global'])
         cli = importlib.import_module('cli')
         result = [dict(tool='graphify', status='FAILED', before='1', after='1', latest='2', detail='fixture failure')]
+        # An applied update hands the companion step to a fresh process; its failure code
+        # (3) must reach the caller while the verified Conductor update stays in place.
         with patch.object(cli, 'fetch', return_value={'source': self.source, 'commit': 'a' * 40}), \
-             patch.object(cli, 'sync', create=True, return_value=result):
+             patch.object(cli, 'sync', create=True, return_value=result), \
+             patch.object(cli, 'fresh_companions', side_effect=lambda paths: cli.report_companions(paths, 'update', False)):
             code = cli.main(['--config', str(self.paths.config), '--profile', str(self.paths.profile), 'update'])
         self.assertEqual(code, 3)
         self.assertEqual(self.api.load_state(self.paths)['revision'], 'a' * 40)

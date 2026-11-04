@@ -65,6 +65,20 @@ class ProcessTests(unittest.TestCase):
         self.assertEqual(result.execution, "interrupted")
         self.assertIn("timeout", result.errors)
 
+    def test_timeout_kills_descendants_holding_the_pipes(self):
+        # A grandchild inheriting stdout outlived the direct child's kill and held the pipe
+        # open, so every timed-out run also reported open_descendant_pipe after the 2 s drain.
+        script = ("import subprocess,sys,time; "
+                  "subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'], cwd=sys.prefix); "
+                  "time.sleep(30)")
+        start = time.monotonic()
+        result, _ = self.run_child(script, timeout=0.3)
+        self.assertLess(time.monotonic() - start, 5)
+        self.assertEqual(result.execution, "interrupted")
+        self.assertIn("timeout", result.errors)
+        self.assertNotIn("open_descendant_pipe", result.errors)
+        self.assertNotIn("termination_unconfirmed", result.errors)
+
     def test_descendant_pipe_is_bounded(self):
         script = ("import subprocess,sys; "
                   "subprocess.Popen([sys.executable,'-c','import time; time.sleep(3)'], "

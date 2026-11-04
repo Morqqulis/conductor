@@ -169,7 +169,9 @@ def main(argv=None):
             if getattr(args, option.replace('-', '_')):
                 options.append('--' + option)
         with tempfile.TemporaryDirectory(prefix='conductor-download-') as temporary:
-            source = Path(temporary) / 'source'
+            # Resolved: the installer refuses linked paths, and TMPDIR itself is a symlink on
+            # macOS (/var -> /private/var).
+            source = Path(temporary).resolve() / 'source'
             commit = acquire(source, args.ref)
             print(f'Official source: {commit}; installing without a repository clone.', flush=True)
             result = install(source, commit, shell, options)

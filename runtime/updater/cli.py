@@ -96,7 +96,9 @@ def main(argv=None):
                     source, revision = args.source, args.revision
                     if source is None:
                         temporary = stack.enter_context(tempfile.TemporaryDirectory(prefix='conductor-install-'))
-                        fetched = fetch(Path(temporary), args.ref)
+                        # Our own fresh directory: resolve it so a symlinked TMPDIR (macOS
+                        # /var -> /private/var) does not trip the linked-path guard.
+                        fetched = fetch(Path(temporary).resolve(), args.ref)
                         source, revision = fetched['source'], fetched['commit']
                     scopes = ['claude', 'global'] if args.scope == 'all' else [args.scope]
                     reply = args.language if args.language is not None else language(paths)
@@ -135,7 +137,7 @@ def main(argv=None):
             else:
                 load_state(paths)  # Fail before network activity for an unregistered installation.
                 with tempfile.TemporaryDirectory(prefix='conductor-update-') as temporary:
-                    source = fetch(Path(temporary), args.ref)
+                    source = fetch(Path(temporary).resolve(), args.ref)
                     changes = prepare(paths, source['source'], source['commit'])
                     print(f'Official source: {source["commit"]}; files to change: {len(changes)}')
                     if args.check:

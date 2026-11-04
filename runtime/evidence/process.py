@@ -2,6 +2,7 @@
 import hashlib
 import os
 from pathlib import Path
+import signal
 import subprocess
 import time
 
@@ -25,7 +26,19 @@ def capture_process(argv: tuple[str, ...], cwd: Path, env: dict[str, str], direc
             errors.append(code)
 
     def cancel():
+        # Kill the whole process group, not only the direct child: a test runner's workers
+        # or daemons inherit the output pipes, so a surviving descendant held them open past
+        # the timeout and every such run ended in "open_descendant_pipe".
         if child is not None and child.poll() is None:
+            try:
+                if os.name == "nt":
+                    subprocess.run(("taskkill", "/F", "/T", "/PID", str(child.pid)),
+                                   stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL, timeout=5)
+                else:
+                    os.killpg(child.pid, signal.SIGKILL)
+            except (OSError, subprocess.SubprocessError):
+                pass
             try:
                 child.kill()
                 child.wait(timeout=2)
@@ -37,9 +50,11 @@ def capture_process(argv: tuple[str, ...], cwd: Path, env: dict[str, str], direc
             files[name] = os.open(directory / (name + ".bin"),
                                   os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
                                   0o600)
+        group = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == "nt" \
+            else {"start_new_session": True}
         child = subprocess.Popen(argv, cwd=cwd, env=env, shell=False,
                                  stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, bufsize=0)
+                                 stderr=subprocess.PIPE, bufsize=0, **group)
         open_pipes = {"stdout": child.stdout, "stderr": child.stderr}
         drain_deadline = None
         while open_pipes or child.poll() is None:

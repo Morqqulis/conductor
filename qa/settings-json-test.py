@@ -444,6 +444,23 @@ class SettingsJsonTest(unittest.TestCase):
             "the pre-existing foreign SessionStart hook was lost or duplicated by reinstalling",
         )
 
+    def test_hook_command_survives_shell_metacharacters_in_conductor_dir(self):
+        # The registered command is a bash line with the path in double quotes, where `$`,
+        # a backtick, `\\` and `"` still expand. A config directory carrying one of them used
+        # to register a command bash would resolve to a different path. A backslash is not
+        # exercised: the recogniser reads it as a Windows separator by design.
+        tricky = '/home/user/.cl$aude/`x`/conductor'
+        self.assertEqual(run_tool("install-hooks", "--file", self.path, "--conductor-dir", tricky).returncode, 0)
+        entry = read_json(self.path)["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+        self.assertTrue(entry.startswith("bash "), entry)
+        echoed = subprocess.run(["bash", "-c", "printf '%s\\n' " + entry[len("bash "):]],
+                                capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(echoed.stdout.rstrip("\n"), f"{tricky}/hooks/session-start.sh")
+        audit = run_tool("audit-hooks", "--file", self.path, "--conductor-dir", tricky, "--shell", "bash")
+        self.assertEqual(audit.returncode, 0, audit.stdout + audit.stderr)
+        self.assertEqual(run_tool("strip-hooks", "--file", self.path).returncode, 0)
+        self.assertNotIn("hooks", read_json(self.path))
+
     def test_audit_accepts_exact_install_with_foreign_entries_without_rewriting(self):
         self.assertEqual(self.install().returncode, 0, "install-hooks failed")
         data = read_json(self.path)

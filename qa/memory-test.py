@@ -117,6 +117,28 @@ class MemoryTest(unittest.TestCase):
         self.assertIn("SECOND_RULE", text)
         self.assertEqual(len(list(self.store.glob(".filed-*.inbox"))), 1)
 
+    def test_cyrillic_trigger_files_under_a_readable_slug(self):
+        # The shipped rules mandate Russian replies, so most captured triggers are Cyrillic;
+        # an ASCII-only slug filed every one of them as DATE-lesson-N.md with an index entry
+        # that named nothing. With a UTF-8 locale the trigger becomes the file name; without
+        # one the ASCII fallback still produces a file and keeps the trigger inside it.
+        self.ledger.write_text("2026-09-25 | Ошибка При Запуске миграции | RULE_RU\n", encoding="utf-8")
+        probe = ("for c in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do "
+                 "[ \"$(printf 'й' | LC_ALL=$c sed -e 's/[^[:alnum:]]/-/g' 2>/dev/null)\" = 'й' ] && exit 0; done; exit 1")
+        utf8 = subprocess.run([BASH, "-c", probe], env=self.env, capture_output=True).returncode == 0
+        result = self.run_script(MIGRATE)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        filed = [f.name for f in self.store.glob("2026-09-25-*.md")]
+        self.assertEqual(len(filed), 1, filed)
+        index = self.index.read_text(encoding="utf-8")
+        if utf8:
+            # Lower-casing Cyrillic depends on the available sed/awk; the readable name does not.
+            self.assertEqual(filed[0].lower(), "2026-09-25-ошибка-при-запуске-миграции.md")
+            self.assertIn("[ошибка-при-запуске-миграции](2026-09-25-ошибка-при-запуске-миграции.md)", index.lower())
+        else:
+            self.assertEqual(filed, ["2026-09-25-lesson.md"])
+        self.assertIn("RULE_RU", (self.store / filed[0]).read_text(encoding="utf-8"))
+
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")
         result = self.run_script(ROOT / "install.sh", "--skip-global-md", "--skip-companions")

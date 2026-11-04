@@ -140,4 +140,22 @@ echo "PASS  restored complete installation"
 mv "$CONDUCTOR_DIR/memory/migrate-lessons.sh" "$SANDBOX/held-file"
 expect_runtime_failure "missing installed memory utility rejected" "runtime file missing or empty: memory/migrate-lessons.sh"
 mv "$SANDBOX/held-file" "$CONDUCTOR_DIR/memory/migrate-lessons.sh"
+# The installer never ships Python bytecode; a stray __pycache__ in the checkout must not be
+# demanded from the installed tree. Run a copied doctor so the real checkout stays untouched.
+mkdir -p "$SANDBOX/src/tools" "$SANDBOX/src/runtime"
+cp -R "$ROOT/runtime/." "$SANDBOX/src/runtime/"
+cp "$ROOT/tools/doctor.sh" "$ROOT/tools/settings-json.py" "$SANDBOX/src/tools/"
+mkdir -p "$SANDBOX/src/runtime/evidence/__pycache__"
+printf 'stray' > "$SANDBOX/src/runtime/evidence/__pycache__/store.cpython-312.pyc"
+printf 'stray' > "$SANDBOX/src/runtime/evidence/stray.pyc"
+set +e
+DOCTOR_OUTPUT="$(CLAUDE_CONFIG_DIR="$CLAUDE_HOME" bash "$SANDBOX/src/tools/doctor.sh" 2>&1)"
+DOCTOR_STATUS=$?
+set -e
+if [ "$DOCTOR_STATUS" -ne 0 ] || ! grep -qF 'PASS  shipped runtime files deployed' <<< "$DOCTOR_OUTPUT"; then
+    printf '%s\n' "$DOCTOR_OUTPUT"
+    echo "doctor test: stray bytecode in the source checkout failed the runtime audit" >&2
+    exit 1
+fi
+echo "PASS  stray bytecode in the source checkout is ignored"
 echo "doctor integration tests: PASS"

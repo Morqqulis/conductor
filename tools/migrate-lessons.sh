@@ -46,10 +46,39 @@ done
 
 [ -f "$LEDGER" ] || { echo "migrate-lessons: no ledger at $LEDGER" >&2; exit 1; }
 
+# A UTF-8 locale keeps non-Latin letters (the shipped rules mandate Russian replies, so most
+# triggers are Cyrillic): under a C locale `[:alnum:]` is ASCII-only and a Russian trigger
+# slugged to an empty string, so every such lesson was filed as `DATE-lesson-N.md` and the
+# index showed `[lesson-N]` instead of the trigger. The locale is probed once, never assumed.
+SLUG_LOCALE=''
+for candidate in C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8; do
+    if [ "$(printf 'й' | LC_ALL="$candidate" sed -e 's/[^[:alnum:]]/-/g' 2>/dev/null)" = 'й' ]; then
+        SLUG_LOCALE="$candidate"; break
+    fi
+done
+# Lower-casing non-Latin letters is best effort: GNU sed's \L does it, mawk/BSD awk keep
+# such letters as they are. Neither tool ever corrupts bytes, so the slug stays readable.
+SLUG_LOWER='awk'
+if [ -n "$SLUG_LOCALE" ] && [ "$(printf 'Й' | LC_ALL="$SLUG_LOCALE" sed -e 's/.*/\L&/' 2>/dev/null)" = 'й' ]; then
+    SLUG_LOWER='sed'
+fi
+slug_lower() {
+    if [ "$SLUG_LOWER" = 'sed' ]; then
+        LC_ALL="$SLUG_LOCALE" sed -e 's/.*/\L&/'
+    else
+        LC_ALL="${SLUG_LOCALE:-C}" awk '{ print tolower($0) }'
+    fi
+}
 slugify() {
-    printf '%s' "$1" | tr '[:upper:]' '[:lower:]' \
-        | sed -e 's/[^a-z0-9]\+/-/g' -e 's/^-//' -e 's/-$//' \
-        | cut -c1-52
+    if [ -n "$SLUG_LOCALE" ]; then
+        printf '%s' "$1" | slug_lower \
+            | LC_ALL="$SLUG_LOCALE" sed -e 's/[^[:alnum:]]\{1,\}/-/g' -e 's/^-//' -e 's/-$//' \
+            | LC_ALL="$SLUG_LOCALE" cut -c1-52
+    else
+        printf '%s' "$1" | tr '[:upper:]' '[:lower:]' \
+            | sed -e 's/[^a-z0-9]\{1,\}/-/g' -e 's/^-//' -e 's/-$//' \
+            | cut -c1-52
+    fi
 }
 
 # Rebuild INDEX.md from what is actually IN the store. The previous design wrote the index

@@ -91,7 +91,9 @@ else
     # snippets and playbooks reached only through other modules. Never infer completeness
     # from the installed directories or maintain a separate list of required files.
     RUNTIME_SOURCE="$SCRIPT_DIR/../runtime"
-    if runtime_files="$(find "$RUNTIME_SOURCE" -type f)" && [ -n "$runtime_files" ]; then
+    # The installer skips Python bytecode (payload.py), so a stray __pycache__ in the checkout
+    # must not be demanded from the installed tree.
+    if runtime_files="$(find "$RUNTIME_SOURCE" -type f ! -name '*.pyc' ! -path '*/__pycache__/*')" && [ -n "$runtime_files" ]; then
         runtime_complete=1
         while IFS= read -r source_file; do
             rel="${source_file#"$RUNTIME_SOURCE/"}"

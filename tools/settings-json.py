@@ -71,6 +71,15 @@ def save(path: str, data: dict) -> None:
         raise
 
 
+def unquote(word: str) -> str:
+    """Strip one layer of shell quotes; undo only the escapes command() itself writes."""
+    if word[:1] == '"' and word[-1:] == '"' and len(word) >= 2:
+        return re.sub(r'\\([\\"$`])', r"\1", word[1:-1])
+    if word[:1] == "'" and word[-1:] == "'" and len(word) >= 2:
+        return word[1:-1]
+    return word
+
+
 def owns_command(value) -> bool:
     """Recognize shipped Bash/PowerShell invocations without executing shell text."""
     if not isinstance(value, str):
@@ -81,8 +90,7 @@ def owns_command(value) -> bool:
         words = shlex.split(value, posix=False)
     except ValueError:
         return False
-    words = [word[1:-1] if word[:1] in ("'", '"') and word[-1:] == word[:1] else word
-             for word in words]
+    words = [unquote(word) for word in words]
     if not words:
         return False
     executable = words[0].replace("\\", "/").rsplit("/", 1)[-1].lower()
@@ -161,7 +169,13 @@ def strip(data: dict) -> int:
 
 
 def command(shell: str, script: str) -> str:
-    return f'{shell} "{script}"'
+    # The hook command is a shell line, so the path is double-quoted; inside double quotes
+    # `\\`, `"`, `$` and a backtick are still interpreted and must be escaped, or a config
+    # directory such as ~/.claude$x would register a command that bash expands differently.
+    escaped = script
+    for char in ("\\", '"', "$", "`"):
+        escaped = escaped.replace(char, "\\" + char)
+    return f'{shell} "{escaped}"'
 
 
 def install(data: dict, conductor_dir: str, shell: str) -> None:

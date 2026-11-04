@@ -25,6 +25,16 @@ REPS=1
 START=1
 
 cli_error() { printf 'bench: %s\n' "$1" >&2; exit 2; }
+# `column` ships with util-linux (bsdmainutils on Debian) and is absent on minimal images;
+# a missing formatter must not turn --list into "command not found".
+list_table() {
+    if command -v column >/dev/null 2>&1; then
+        column -t -s "$(printf '\t')"
+    else
+        awk -F '\t' '{ printf "%-24s %s\n", $1, $2 }'
+    fi
+}
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --arm|--scenario|--reps|--start)
@@ -35,7 +45,7 @@ while [ $# -gt 0 ]; do
         --scenario) SCENARIO="${2:-}"; shift 2 ;;
         --reps)     REPS="${2:-}"; shift 2 ;;
         --start)    START="${2:-}"; shift 2 ;;
-        --list)     grep -vE '^[[:space:]]*(#|$)' "$SCENARIOS" | cut -f1,2 | column -t -s "$(printf '\t')"; exit 0 ;;
+        --list)     grep -vE '^[[:space:]]*(#|$)' "$SCENARIOS" | cut -f1,2 | list_table; exit 0 ;;
         -h|--help)  sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac

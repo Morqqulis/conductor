@@ -72,6 +72,22 @@ class CliTests(unittest.TestCase):
         code, body = self.cli("check", "--id", identifier)
         self.assertEqual((code, body["status"]), (1, "CHANGED"))
 
+    def test_refused_run_leaves_no_run_directory(self):
+        # The run directory used to be created before the inputs were captured, so a cwd
+        # behind a link raised after the directory existed and `list` showed an INVALID run
+        # forever. The identity check must happen first, leaving nothing behind.
+        real = self.repo / "real"
+        real.mkdir()
+        try:
+            (self.repo / "linked").symlink_to(real, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("symbolic links unavailable")
+        self.write_spec(cwd="linked", inputs=["check.py"])
+        code, body = self.cli("run", "--spec", str(self.spec))
+        self.assertNotEqual(code, 0, body)
+        self.assertEqual(list(self.home.glob("projects/*/runs/*")), [])
+        self.assertEqual(self.cli("list")[1]["runs"], [])
+
     def test_foreign_project_and_corrupt_stream(self):
         identifier = self.run_record()
         other = self.base / "other"

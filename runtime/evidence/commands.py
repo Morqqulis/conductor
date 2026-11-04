@@ -49,9 +49,11 @@ def run_command(args, project, home, env):
     if not cwd.is_dir() or not cwd.is_relative_to(project.root):
         raise EvidenceError("invalid_cwd", "Working directory must be inside the project")
     executable = resolve_executable(spec.argv[0], cwd, env)
-    handle = begin_run(home, project)
     key = load_key(home, create=True)
+    # Snapshot the inputs before creating the run directory: an invalid or linked input
+    # raises here, and a directory created first would stay behind as an INVALID run forever.
     before = capture_inputs(project, spec, env, key)
+    handle = begin_run(home, project)
     print("Evidence: command arguments and raw output are saved locally and may contain secrets.", file=sys.stderr)
     result = capture_process((str(executable), *spec.argv[1:]), cwd, env, handle.directory,
                              spec.timeout_seconds)

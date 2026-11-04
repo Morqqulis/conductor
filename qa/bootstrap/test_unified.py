@@ -188,6 +188,22 @@ class UnifiedTests(unittest.TestCase):
         self.assertEqual(state['scopes'], ['claude', 'global'])
 
     def test_downloaded_archive_runs_real_installer_then_removes_temporary_source(self):
+        self.exercise_bootstrap(self.home)
+
+    def test_bootstrap_accepts_a_linked_temporary_directory(self):
+        # macOS resolves TMPDIR through /var -> /private/var; the installer refuses linked
+        # paths, so the bootstrap must resolve its own temporary directory before use.
+        real = self.home / 'tmp-real'
+        real.mkdir()
+        link = self.home / 'tmp-link'
+        try:
+            link.symlink_to(real, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest('symbolic links unavailable')
+        self.exercise_bootstrap(link)
+        self.assertEqual(list(real.glob('conductor-download-*')), [])
+
+    def exercise_bootstrap(self, tempdir):
         sha = 'b' * 40
         fixture = self.home / 'source.zip'
         files = list(ROOT.glob('install*.sh'))
@@ -207,7 +223,7 @@ class UnifiedTests(unittest.TestCase):
             'tempfile.tempdir=sys.argv[3]\n'
             'raise SystemExit(api.main(["--language","Russian","--skip-companions"]))\n', encoding='utf-8')
         result = subprocess.run([sys.executable, '-B', str(driver), str(ROOT / 'tools/bootstrap.py'),
-                                 str(fixture), str(self.home)], env=self.env, cwd=self.home,
+                                 str(fixture), str(tempdir)], env=self.env, cwd=self.home,
                                 stdin=subprocess.DEVNULL, capture_output=True, encoding='utf-8',
                                 errors='replace', timeout=90)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

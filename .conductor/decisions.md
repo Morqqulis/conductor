@@ -8,3 +8,4 @@
 2026-11-04 | In every reply, explain in plain words, where it first appears, each term a non-programmer may not know | never
 2026-11-04 | Do not propose distributing Conductor as a Claude Code plugin; if it is ever built, it is for the owner and hand-picked people only, through a private repository | several people need access, settings.json breakage recurs, or Claude Code changes how hooks are wired
 2026-11-04 | Do not trim Conductor's rules or build new bench trap tasks; results would vary with the session's effort level | the owner asks to revisit
+2026-11-04 | Keep the pre-edit file snapshots, the fix-falsification check (break the fix, the test must fail) and the essence->method line; in the owner's experience they prevented serious mistakes. Any speed-up of Conductor must not lower code quality | the owner asks to revisit

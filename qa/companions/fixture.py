@@ -104,6 +104,9 @@ def main():
                 if data.startswith(b"#!/"):
                     data = (tool + " 1.0.0").encode()
                 return subprocess.CompletedProcess(argv, code, data, b"")
+            if argv[1:] == ["telemetry", "disable"]:
+                code = 7 if os.environ.get("TELEMETRY_FAIL") else 0
+                return subprocess.CompletedProcess(argv, code, b"Telemetry disabled.", b"")
             if os.environ.get("WIRING_FAIL"):
                 return subprocess.CompletedProcess(argv, 9, b"", b"fixture wiring denied")
             if not os.environ.get("WIRING_EMPTY"):

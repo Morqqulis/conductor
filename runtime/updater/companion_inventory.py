@@ -29,8 +29,12 @@ def clean_env():
 
 
 def command(argv, *, env=None, cwd=None, timeout=30):
+    # Never hand a tool the user's terminal: RTK 1.1 `init` asks "Enable anonymous
+    # telemetry? [y/N]" when it sees one, which waited until the timeout on Windows.
+    # A closed stdin answers every such prompt with its default (telemetry stays off).
     result = subprocess.run([str(p) for p in argv], capture_output=True, timeout=timeout,
-                            env=clean_env() if env is None else env, cwd=cwd)
+                            env=clean_env() if env is None else env, cwd=cwd,
+                            stdin=subprocess.DEVNULL)
     if result.returncode:
         raise ValueError(f'{Path(argv[0]).name} command failed (exit {result.returncode})')
     return result.stdout.decode('utf-8', errors='replace').strip()

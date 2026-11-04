@@ -18,7 +18,8 @@ def generated_wiring(executable, name):
         env = clean_env()
         env.update(HOME=str(home), USERPROFILE=str(home), CLAUDE_CONFIG_DIR=str(config),
                    XDG_CONFIG_HOME=str(home / '.config'), XDG_DATA_HOME=str(home / '.local/share'),
-                   APPDATA=str(home / 'AppData/Roaming'), LOCALAPPDATA=str(home / 'AppData/Local'))
+                   APPDATA=str(home / 'AppData/Roaming'), LOCALAPPDATA=str(home / 'AppData/Local'),
+                   RTK_TELEMETRY_DISABLED='1')
         for key in ('CODEX_HOME', 'CURSOR_CONFIG_DIR', 'GRAPHIFY_HOME'):
             env.pop(key, None)
         args = ['init', '-g', '--auto-patch'] if name == 'rtk' else ['install', '--platform', 'claude']

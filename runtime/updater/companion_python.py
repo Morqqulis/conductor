@@ -41,13 +41,14 @@ def acquire(dest, uv=None, *, version=None):
     else:
         # mkdir is exclusive, so a concurrent/partial environment is never overwritten.
         environment.mkdir()
-        subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True,
+        subprocess.run([sys.executable, "-m", "venv", str(environment)], check=True, stdin=subprocess.DEVNULL,
                        env=env, stdout=sys.stderr, stderr=sys.stderr, timeout=180)
         interpreter = environment / scripts / ("python.exe" if windows else "python")
         argv = [str(interpreter), "-m", "pip", "--isolated", "install",
                 "--index-url", "https://pypi.org/simple", "--disable-pip-version-check",
                 "--no-input", "--retries", "2", "--timeout", "20", package]
-    subprocess.run(argv, check=True, env=env, stdout=sys.stderr, stderr=sys.stderr, timeout=900)
+    subprocess.run(argv, check=True, env=env, stdin=subprocess.DEVNULL, stdout=sys.stderr, stderr=sys.stderr,
+                   timeout=900)
     if not executable.is_file():
         raise ValueError(f"installer returned success but Graphify CLI is missing at {executable}")
     return executable

@@ -128,6 +128,7 @@ class RegistryBackend:
             return  # A private test key is not a system environment change.
         try:
             result = subprocess.run([sys.executable, '-B', str(Path(__file__).resolve()), '--notify'],
+                                    stdin=subprocess.DEVNULL,
                                     capture_output=True, timeout=3,
                                     creationflags=subprocess.CREATE_NO_WINDOW)
         except subprocess.TimeoutExpired as error:

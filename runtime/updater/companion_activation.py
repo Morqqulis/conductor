@@ -115,6 +115,7 @@ class BashBackend:
         script = 'printf "\\0CONDUCTOR-ACTIVATION\\0%s\\0" "$HOME"; for n in "$@"; do printf "%s\\0%s\\0" "$(type -t -- "$n")" "$(command -v -- "$n")"; done'
         for flags in (['-i'], ['--login', '-i']):
             result = subprocess.run([self.shell, *flags, '-c', script, 'activation', *expected],
+                                    stdin=subprocess.DEVNULL,
                                     env=env, cwd=self.profile, capture_output=True, timeout=10)
             parts = result.stdout.rsplit(b'\0CONDUCTOR-ACTIVATION\0', 1)
             values = parts[-1].split(b'\0') if len(parts) == 2 else []

@@ -6,7 +6,7 @@ import shutil
 import sys
 import uuid
 
-from companion_inventory import discover, latest, version_of
+from companion_inventory import clean_env, command, discover, latest, version_of
 from companion_journal import recover, restore, finish_operation
 from companion_update import probe, upgrade
 from companion_wiring import wire
@@ -18,6 +18,21 @@ from transaction import Paths, plain
 def resolved_command(name):
     selected = shutil.which(name)
     return Path(selected).absolute() if selected else None
+
+
+def refuse_telemetry(executable):
+    """Record the owner's standing "no" to RTK's anonymous usage statistics.
+
+    Conductor never consents for the user. Without a recorded answer RTK asks again in the
+    next interactive `rtk init`; `rtk telemetry disable` stores consent=no in the user's own
+    RTK config, so later runs neither ask nor send. Returns a note for the status line, or ''.
+    """
+    try:
+        command([executable, 'telemetry', 'disable'], env=dict(clean_env(), RTK_TELEMETRY_DISABLED='1'))
+        return ''
+    except Exception as error:
+        reason = str(error) if isinstance(error, ValueError) else type(error).__name__
+        return f'; telemetry refusal NOT recorded ({reason}); telemetry stays off unless consent is given'
 
 
 def sync(paths: Paths, mode: str, *, skip=False) -> list[dict]:
@@ -81,6 +96,8 @@ def sync(paths: Paths, mode: str, *, skip=False) -> list[dict]:
             finish_operation(root, operation)
             result.update(status='CURRENT' if current else ('UPDATED' if found else 'INSTALLED'),
                           detail=f'verified executable and wiring: {executable}')
+            if name == 'rtk':
+                result['detail'] += refuse_telemetry(executable)
         except Exception as error:
             result['status'] = 'FAILED'
             result['detail'] = str(error) if isinstance(error, ValueError) else type(error).__name__

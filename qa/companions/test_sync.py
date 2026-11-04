@@ -39,6 +39,7 @@ class SyncTests(unittest.TestCase):
         self.wire.return_value = None
         patch.object(self.api, 'recover_activation').start()
         patch.object(self.api, 'probe').start()
+        self.telemetry = patch.object(self.api, 'refuse_telemetry', return_value='').start()
         patch.object(self.api, 'resolved_command', side_effect=lambda n: self.found(n)['executable']).start()
 
     def test_install_adds_and_updates(self):
@@ -47,6 +48,21 @@ class SyncTests(unittest.TestCase):
         self.assertEqual([r['status'] for r in result], ['UPDATED', 'INSTALLED'])
         self.assertEqual([r['after'] for r in result], ['2.0.0', '2.0.0'])
         self.assertEqual(self.upgrade.call_count, 2)
+
+    def test_verified_rtk_records_telemetry_refusal_only_for_rtk(self):
+        self.boundaries({'rtk': self.found('rtk'), 'graphify': self.found('graphify')})
+        self.telemetry.return_value = '; note'
+        result = self.api.sync(self.paths, 'update')
+        self.telemetry.assert_called_once_with(self.found('rtk')['executable'])
+        self.assertEqual([r['status'] for r in result], ['UPDATED', 'UPDATED'])
+        self.assertTrue(result[0]['detail'].endswith('; note'))
+
+    def test_check_and_failed_sync_never_touch_telemetry(self):
+        self.boundaries({'rtk': self.found('rtk')})
+        self.api.sync(self.paths, 'check')
+        self.upgrade.side_effect = OSError('offline')
+        self.api.sync(self.paths, 'update')
+        self.telemetry.assert_not_called()
 
     def test_update_skips_absent(self):
         self.boundaries({})

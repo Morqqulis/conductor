@@ -63,6 +63,13 @@ validate_reply_language() {
 # A piped or otherwise non-interactive run gets the default rather than an error.
 prompt_reply_language() {
     local default="$1" answer=''
+    # Only a terminal gets the menu. A pipe that stays open (an agent's shell, a CI runner,
+    # a parent script) used to block `read` forever instead of keeping the saved choice.
+    # bootstrap.sh hands the installer /dev/tty when one exists, so curl|bash still asks.
+    if [ ! -t 0 ]; then
+        printf '%s' "$default"
+        return 0
+    fi
     {
         echo 'Reply language / Язык ответов / Cavab dili:'
         echo '  1 - Русский'

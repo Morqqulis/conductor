@@ -40,6 +40,12 @@ OWNED_SCRIPT = re.compile(
 # "fork" is a branched session that inherits no hook output from its parent: without it the
 # fork ran with no core at all while the per-prompt reminder kept announcing Conductor.
 SESSION_MATCHER = "startup|resume|clear|compact|fork"
+# Matchers shipped by earlier releases. An update is executed by the INSTALLED (older)
+# updater, which never re-renders hooks, but verifies them with the NEWLY written copy of
+# this module - so the default audit must accept the previous shape or every such update
+# rolls back. The exact audit (used to decide whether to re-render) still flags it, and the
+# next update or reinstall writes the current matcher.
+LEGACY_SESSION_MATCHERS = ("startup|resume|clear|compact",)
 
 
 def load(path: str) -> dict:
@@ -217,8 +223,12 @@ def install(data: dict, conductor_dir: str, shell: str) -> None:
         add(event, {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]})
 
 
-def audit(data: dict, conductor_dir: str, shell: str) -> list[str]:
-    """Return structural errors in the current Conductor hook registrations."""
+def audit(data: dict, conductor_dir: str, shell: str, exact: bool = False) -> list[str]:
+    """Return structural errors in the Conductor hook registrations.
+
+    exact=False also accepts the registration shapes of earlier releases (see
+    LEGACY_SESSION_MATCHERS); exact=True demands the shape install() writes today.
+    """
     def cmd(name: str) -> dict:
         return {
             "type": "command",
@@ -269,7 +279,10 @@ def audit(data: dict, conductor_dir: str, shell: str) -> list[str]:
                 f"hooks.{event} Conductor registration has wrong structure; "
                 f"expected fields {sorted(expected_keys)}"
             )
-        if actual.get("matcher") != wanted.get("matcher"):
+        accepted = {wanted.get("matcher")}
+        if event == "SessionStart" and not exact:
+            accepted.update(LEGACY_SESSION_MATCHERS)
+        if actual.get("matcher") not in accepted:
             errors.append(
                 f"hooks.{event} matcher must be {wanted.get('matcher')!r}; "
                 f"found {actual.get('matcher')!r}"
@@ -333,6 +346,8 @@ def main() -> int:
     p_audit.add_argument("--conductor-dir", required=True,
                          help="POSIX path to the deployed conductor tree")
     p_audit.add_argument("--shell", default="bash")
+    p_audit.add_argument("--exact", action="store_true",
+                         help="reject registration shapes of earlier releases too")
 
     # Antigravity stores its gate as a top-level key rather than a hook array, so removing it
     # needs a different shape of surgery than strip-hooks performs.
@@ -344,7 +359,7 @@ def main() -> int:
     data = load(args.file)
 
     if args.cmd == "audit-hooks":
-        errors = audit(data, args.conductor_dir.rstrip("/"), args.shell)
+        errors = audit(data, args.conductor_dir.rstrip("/"), args.shell, exact=args.exact)
         if errors:
             for error in errors:
                 print(f"settings-json: audit failed: {error}", file=sys.stderr)

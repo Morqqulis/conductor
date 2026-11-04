@@ -69,6 +69,10 @@ else
         }; then
             pass "hook registrations structurally exact ($HOOK_BASE/hooks/session-start.sh)"
             hook_audit_ok=1
+            if ! "$PYTHON" "$TOOL_ARG" audit-hooks --file "$SETTINGS_ARG" \
+                    --conductor-dir "$HOOK_BASE" --shell bash --exact >/dev/null 2>&1; then
+                warn "hook registrations use an earlier release's shape (e.g. SessionStart without 'fork') - run 'conductor update' or install.sh once more to register the current one"
+            fi
         else
             fail "hook registration audit: $audit_out - run install.sh"
         fi

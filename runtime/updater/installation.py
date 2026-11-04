@@ -108,6 +108,25 @@ def prepare(paths, source, revision):
     if 'claude' in state['scopes']:
         settings_audit(paths)
     changes = UpdatePlan(observed)
+    if 'claude' in state['scopes']:
+        # The installed module has just confirmed the registration is ours and intact. A new
+        # release may change its shape (a new SessionStart source, a new event); verify()
+        # audits with the NEW module after apply, so re-render with it here. Already-correct
+        # settings stay byte-for-byte untouched.
+        from deployment import settings_module, settings_object
+        helper = settings_module(source)
+        raw, mode = observed['settings']
+        value = settings_object(raw)
+        try:
+            stale = helper.audit(value, paths.runtime.as_posix(), 'bash', exact=True)
+        except TypeError:  # an older source module (explicit --ref) has no exact audit
+            stale = helper.audit(value, paths.runtime.as_posix(), 'bash')
+        if stale:
+            try:
+                helper.install(value, paths.runtime.as_posix(), 'bash')
+            except SystemExit as exc:
+                raise ValueError(str(exc)) from exc
+            changes['settings'] = (encode(value), mode)
     for key, value in desired.items():
         current = observed.get(key, read(paths.target(key)))
         if key not in state['files'] and current[0] is not None and not (key.startswith('launch/') and current == value):

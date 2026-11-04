@@ -151,6 +151,17 @@ class MemoryTest(unittest.TestCase):
                 if result.stdout:
                     json.loads(result.stdout)
 
+    def test_installer_without_language_does_not_wait_on_an_open_pipe(self):
+        # The language menu read stdin even when it was a pipe nobody writes to, so an
+        # installer started by an agent or a script hung until killed.
+        hold = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], stdout=subprocess.PIPE)
+        self.addCleanup(hold.kill)
+        result = subprocess.run([BASH, str(ROOT / "install.sh"), "--skip-global-md", "--skip-companions"],
+                                env=self.env, stdin=hold.stdout, capture_output=True, text=True,
+                                encoding="utf-8", timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.home / "reply-language").read_text(encoding="utf-8").strip(), "Russian")
+
     def test_installed_memory_maintenance_needs_no_source_checkout(self):
         self.ledger.write_text("2026-09-25 | restored | SAVED_RULE\n", encoding="utf-8")
         result = self.run_script(ROOT / "install.sh", "--skip-global-md", "--skip-companions")

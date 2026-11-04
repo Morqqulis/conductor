@@ -462,6 +462,19 @@ class SettingsJsonTest(unittest.TestCase):
         self.assertEqual(run_tool("strip-hooks", "--file", self.path).returncode, 0)
         self.assertNotIn("hooks", read_json(self.path))
 
+    def test_previous_release_matcher_passes_default_audit_but_not_exact(self):
+        # An update runs the OLD installed updater, which verifies with the NEW module: the
+        # previous matcher must still pass, or every update from that release rolls back.
+        self.assertEqual(self.install().returncode, 0)
+        data = read_json(self.path)
+        data["hooks"]["SessionStart"][0]["matcher"] = "startup|resume|clear|compact"
+        write_json(self.path, data)
+        audit = ("audit-hooks", "--file", self.path, "--conductor-dir", CONDUCTOR_DIR)
+        self.assertEqual(run_tool(*audit).returncode, 0)
+        exact = run_tool(*audit, "--exact")
+        self.assertEqual(exact.returncode, 1)
+        self.assertIn("matcher must be 'startup|resume|clear|compact|fork'", exact.stderr)
+
     def test_audit_accepts_exact_install_with_foreign_entries_without_rewriting(self):
         self.assertEqual(self.install().returncode, 0, "install-hooks failed")
         data = read_json(self.path)

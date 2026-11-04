@@ -62,6 +62,27 @@ class InstallationTests(unittest.TestCase):
         self.api.rollback(self.paths, backup)
         self.assertNotIn(b'IRON LAWS (updated)', self.paths.target('runtime/core.md').read_bytes())
 
+    def test_update_rerenders_hook_registration_whose_shape_changed(self):
+        # A release that changes the registration shape (here: a new SessionStart source)
+        # used to fail every update: prepare() kept the old settings and verify() audited
+        # them with the new module, so the update always rolled back.
+        self.install(['claude', 'values', 'global'])
+        settings = json.loads(self.paths.target('settings').read_bytes())
+        settings['hooks']['OtherEvent'] = [{'hooks': [{'type': 'command', 'command': 'personal-tool'}]}]
+        self.paths.target('settings').write_text(json.dumps(settings), encoding='utf-8')
+        helper = self.source / 'tools/settings-json.py'
+        text = helper.read_text(encoding='utf-8')
+        old = 'SESSION_MATCHER = "startup|resume|clear|compact|fork"'
+        self.assertIn(old, text)
+        helper.write_text(text.replace(old, 'SESSION_MATCHER = "startup|resume|clear|compact|fork|future"'),
+                          encoding='utf-8')
+        changes = self.api.prepare(self.paths, self.source, 'a' * 40)
+        self.assertIn('settings', changes)
+        self.api.apply_update(self.paths, changes)
+        updated = json.loads(self.paths.target('settings').read_bytes())
+        self.assertEqual(updated['hooks']['SessionStart'][0]['matcher'], 'startup|resume|clear|compact|fork|future')
+        self.assertEqual(updated['hooks']['OtherEvent'], settings['hooks']['OtherEvent'])
+
     def test_manual_rules_edit_refuses_without_any_write(self):
         self.install(['global'])
         target = self.paths.target('codex')

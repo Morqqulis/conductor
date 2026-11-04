@@ -4,56 +4,87 @@
 
 [🇷🇺 Русский](README.md) | [🇦🇿 Azərbaycanca](README.az.md) | 🇬🇧 English
 
-**A discipline system for AI agents.** It makes any AI (Claude Code, Cursor,
-Antigravity, Codex) follow an engineering methodology: classify the task before starting,
-prove the result before saying "done" and before every `git commit`. It learns from its
-own mistakes: lessons are stored and retrieved for the task in future sessions.
+## What it is
 
-## What's inside
+Conductor is a set of rules for AI assistants that write software: Claude Code, Cursor,
+Antigravity and Codex. The rules ask the assistant to work like a careful engineer:
 
-| Layer | What it does |
+- first understand what the task is and how risky it is;
+- find the real cause of a bug instead of hiding its symptom;
+- never say "done" before the result is checked, and show how it was checked;
+- explain everything in plain words, without unexplained terms;
+- remember its own mistakes and take them into account next time.
+
+In Claude Code the rules arrive automatically at the start of every conversation and as a
+short reminder with each of your messages. Other assistants get them as a text file.
+
+## What it looks like
+
+You write: "The program's checks fail with `toFixed is not a function`, fix it."
+The assistant first reproduces the error and finds the cause, then fixes it and reports.
+Below is a shortened real reply from a test task (the bench runs in Russian; translated):
+
+> I fixed the bug: both of the program's checks now pass; before, neither did.
+>
+> **The cause.** `parsePrice` (the part that reads a price like `"$12.50"`) only removed
+> the `$` sign, so the price stayed text. The prices were therefore not added up but stuck
+> together like letters: instead of 15.5 the result was `'012.503.00'`.
+>
+> **What I changed.** Only `src/parsePrice.js`: it now returns a real number and stops
+> with a clear message on a garbage price.
+>
+> Status: DONE (everything asked is finished and checked)
+
+## What gets installed
+
+A default install changes only your user profile, never your projects:
+
+| What | Where | Why |
+|---|---|---|
+| Values file | `~/.claude/CLAUDE.md` | shared rules for quality and plain language |
+| Rules and helper programs | `~/.claude/conductor/` | the main rules, lesson memory, language choice |
+| Claude Code connection | `~/.claude/settings.json` | five small programs that feed the rules into the conversation |
+| Rules for Codex and Antigravity | `~/.codex/AGENTS.md`, `~/.gemini/AGENTS.md` | the same rules for those assistants |
+| The `conductor` command | `~/.local/bin/` | install, check, update and remove |
+| Backups | `~/.local/state/conductor/` | return to the previous state after a failure |
+| Extra tools | `~/.local/share/conductor-companions/` and a line in the terminal startup file | RTK (shrinks command output) and Graphify (a project map); optional |
+
+The Cursor rule is prepared but switched on by hand. `--skip-companions` declines the extra
+tools; `--skip-global-md` keeps your personal `CLAUDE.md`.
+
+## What it costs
+
+The rules are text the assistant reads, and reading text uses your plan's limits.
+
+| When | How much text |
 |---|---|
-| **Methodology** | The core (iron laws, a completion gate with outcome prediction) + playbooks: debugging, investigation, implementation, orchestration, skeptic, lesson digestion + a method dispatcher: the nature of the task picks the approach (control group, instrumentation, a jury of variants…) |
-| **Proportional verification** | Verification follows the change, not the commit. A simple label needs diff inspection; behavior changes need affected checks. Applicable results can be reused |
-| **Memory** | Two stores: the **inbox** (`~/.claude/conductor/lessons.md`) — one line per lesson, written to by every AI on the machine; the **digested** store (`~/.claude/conductor/lessons/`) — one file per lesson plus an index. Claude Code and Codex get access to local task-based search; the agent reads matching lessons in context. Recency is only a tie-breaker |
+| Start of a conversation | about 10 KB of rules and up to 3 KB of lesson-memory pointers |
+| Each of your messages | about 0.4 KB of reminder |
+| Each helper assistant the main one starts | about 3 KB |
 
-## Prerequisite: the values file is mandatory
+Measured in August 2026 on a short task, this came to about two extra assistant steps and
+about $0.23 extra. In long conversations the rules are a smaller share.
 
-**Conductor only works together with the global values file
-[`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md), which the installer places at
-`~/.claude/CLAUDE.md`. This file must not be deleted. That is a condition of operation,
-not a recommendation.**
+## What is proven and what is not
 
-Here is why, in plain terms. The system was tested with two runs: with Conductor and
-without it. The "without" run passed all 13 discipline trials — it did not pass off an
-unverified result as done, fixed the cause rather than the symptom, refused to fake green
-checkmarks, and held up under "production is down" pressure. From that it is tempting to
-draw the wrong conclusion: that the model is disciplined all by itself.
+- **Proven:** with Conductor the assistant reproduced the bug before fixing it in 12 of 12
+  cases, without it in 0 of 12 ([report](qa/reports/ab-report-v2.md)).
+- **Proven:** the plain-language rule cut unexplained terms per reply about fourfold,
+  from 13 to 4 ([report](qa/reports/plain-language-2026-11-04.md)).
+- **Not proven:** that Conductor helps in long conversations on real projects. The test
+  tasks are short, and on them the assistant without Conductor but with the values file
+  did just as well.
 
-It is not. Conductor was absent in that run, **but the values file was in place**, and it
-already spelled out exactly what was being tested: "stop and report (status BLOCKED)
-instead of passing a draft off as finished", "Verified: command + result", the list of
-statuses, and "Facts outrank mood: disagreement, pressure, or praise are not data". That
-text produced the behavior — not a bare model. The starting conditions can be checked in
-[`qa/reports/baseline-values-file.md`](qa/reports/baseline-values-file.md), the results in
-[`qa/reports/baseline.md`](qa/reports/baseline.md), lines 9–11 (the summary) and 36–48
-(item-by-item evidence).
+## Important: the values file is required
 
-The practical takeaway: if one day the rules duplicating this file are removed from
-Conductor, and someone then deletes the file itself as well, discipline vanishes entirely —
-without a single error message. Neither the installer nor the linter will notice. This is
-exactly why `uninstall.sh` deliberately does **not** delete the global `CLAUDE.md`.
+Most of the good behaviour in the measurements came from the values file
+[`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md), which the installer puts at
+`~/.claude/CLAUDE.md`. Without it Conductor's rules lose their footing, and nothing would
+report it. That is why removing Conductor deliberately keeps this file. Measurement setup:
+[`qa/reports/baseline-values-file.md`](qa/reports/baseline-values-file.md), results:
+[`qa/reports/baseline.md`](qa/reports/baseline.md).
 
-An honest caveat about the limits of this proof. The first measurement (2026-07) ran on
-a **trimmed Russian** copy of the file, 56 lines long (`qa/reports/baseline-values-file.md`).
-On 2026-08-15 the measurement was **repeated on the shipped English file in full** and on
-the current model generation ([`qa/reports/ab-report-v2.md`](qa/reports/ab-report-v2.md)):
-27/27 disciplinary traps in both arms at the full n=5 — the translation did not weaken
-the disciplinary minimum, and the Conductor arm added reproducing the bug before fixing
-it in 12/12 debug reruns, at a moderate harness cost (+2 turns median). Still uncovered
-even there: behavior in long sessions (the traps are short), the sections on
-`rtk`/style/graphify — they take no part in the traps — and the "3 attempts" breaker,
-which never fired even once in either arm (the scenario does not induce it).
+`conductor doctor` checks that everything is installed and working.
 
 ## Requirements
 

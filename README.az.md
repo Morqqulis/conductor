@@ -4,55 +4,87 @@
 
 [🇷🇺 Русский](README.md) | 🇦🇿 Azərbaycanca | [🇬🇧 English](README.en.md)
 
-**AI-agentlər üçün intizam sistemi.** İstənilən AI-ni (Claude Code, Cursor, Antigravity,
-Codex) mühəndis metodologiyası ilə işləməyə məcbur edir: işə başlamazdan əvvəl tapşırığı
-təsnif etmək, «hazırdır» deməzdən əvvəl və hər `git commit`-dən əvvəl nəticəni sübut
-etmək. Öz səhvlərindən öyrənir: dərslər saxlanır və gələcək sessiyalarda tapşırığa
-uyğun seçilir.
+## Bu nədir
 
-## Nədən ibarətdir
+Conductor proqram yazan süni intellekt köməkçiləri üçün qaydalar toplusudur: Claude Code,
+Cursor, Antigravity və Codex. Qaydalar köməkçidən diqqətli mühəndis kimi işləməyi istəyir:
 
-| Qat | Nə edir |
+- əvvəlcə tapşırığın nə olduğunu və nə qədər riskli olduğunu anlamaq;
+- səhvin əlamətini gizlətmək yox, əsl səbəbini tapmaq;
+- nəticə yoxlanmamış «hazırdır» deməmək və nə ilə yoxlandığını göstərmək;
+- hər şeyi sadə sözlərlə, izahsız terminlər olmadan izah etmək;
+- öz səhvlərini yadda saxlamaq və növbəti tapşırıqlarda nəzərə almaq.
+
+Claude Code-da qaydalar hər söhbətin əvvəlində və hər mesajınıza qısa xatırlatma kimi
+avtomatik verilir. Digər köməkçilər onları mətn faylı kimi alır.
+
+## İşdə necə görünür
+
+Siz yazırsınız: «Proqramın yoxlamaları `toFixed is not a function` xətası ilə düşür, düzəlt».
+Köməkçi əvvəlcə xətanı təkrarlayır və səbəbini tapır, sonra düzəldir və hesabat verir.
+Aşağıda test tapşırığından alınmış real cavabın qısaldılmış tərcüməsi var:
+
+> Xətanı düzəltdim: proqramın hər iki yoxlaması indi keçir, əvvəl heç biri keçmirdi.
+>
+> **Səbəb.** `parsePrice` (`"$12.50"` kimi qiyməti oxuyan hissə) yalnız `$` işarəsini
+> silirdi və qiymət mətn olaraq qalırdı. Ona görə qiymətlər toplanmır, hərflər kimi
+> yan-yana yazılırdı: 15.5 əvəzinə `'012.503.00'` alınırdı.
+>
+> **Nəyi dəyişdim.** Yalnız `src/parsePrice.js` faylını: indi o, əsl rəqəm qaytarır,
+> yanlış qiymətdə isə aydın mesajla dayanır.
+>
+> Status: DONE (hər şey edilib və yoxlanılıb)
+
+## Kompüterə nə quraşdırılır
+
+Standart quraşdırma layihələri deyil, yalnız istifadəçi profilinizi dəyişir:
+
+| Nə | Harada | Nə üçün |
+|---|---|---|
+| Dəyərlər faylı | `~/.claude/CLAUDE.md` | keyfiyyət və sadə dil üçün ümumi qaydalar |
+| Qaydalar və köməkçi proqramlar | `~/.claude/conductor/` | əsas qaydalar, dərs yaddaşı, dil seçimi |
+| Claude Code ilə əlaqə | `~/.claude/settings.json` | qaydaları söhbətə ötürən beş kiçik proqram |
+| Codex və Antigravity üçün qaydalar | `~/.codex/AGENTS.md`, `~/.gemini/AGENTS.md` | həmin köməkçilər üçün eyni qaydalar |
+| `conductor` əmri | `~/.local/bin/` | quraşdırma, yoxlama, yeniləmə və silmə |
+| Ehtiyat nüsxələr | `~/.local/state/conductor/` | nasazlıqdan sonra əvvəlki vəziyyətə qayıtmaq |
+| Əlavə alətlər | `~/.local/share/conductor-companions/` və terminalın başlanğıc faylında bir sətir | RTK (əmrlərin çıxışını qısaldır) və Graphify (layihə xəritəsi); istəyə bağlı |
+
+Cursor üçün qayda hazırlanır, amma əl ilə aktivləşdirilir. `--skip-companions` əlavə
+alətlərdən imtina edir, `--skip-global-md` şəxsi `CLAUDE.md` faylınızı saxlayır.
+
+## Bu neçəyə başa gəlir
+
+Qaydalar köməkçinin oxuduğu mətndir, oxunan mətn isə planınızın limitlərindən istifadə edir.
+
+| Nə vaxt | Nə qədər mətn |
 |---|---|
-| **Metodologiya** | Nüvə (dəmir qanunlar, nəticə qapısı + nəticəni əvvəlcədən proqnozlaşdırma) + playbook-lar: debug, araşdırma, icra, orkestrasiya, skeptik, dərslərin həzmi + metod dispetçeri: tapşırığın mahiyyəti yanaşmanı seçir (nəzarət qrupu, instrumentasiya, variantlar münsifləri…) |
-| **Dəyişikliyə uyğun yoxlama** | Yoxlamanın həcmi commit-dən deyil, dəyişiklikdən asılıdır. Sadə düymə yazısı üçün dəyişikliyə baxmaq kifayətdir; davranış dəyişəndə təsirlənən ssenarilər yoxlanır. Uyğun nəticələr təkrar istifadə olunur |
-| **Yaddaş** | İki anbar: **gələnlər** (`~/.claude/conductor/lessons.md`) — dərs başına bir sətir, maşındakı bütün AI-lər ora yazır; **təsnif edilmiş** (`~/.claude/conductor/lessons/`) — dərs başına bir fayl və indeks. Claude Code və Codex tapşırığa uyğun yerli axtarışa çıxış alır; agent uyğun qeydləri kontekstdə oxuyur. Yenilik yalnız əlavə meyardır |
+| Söhbətin əvvəli | təxminən 10 KB qayda və 3 KB-a qədər dərs yaddaşı göstəricisi |
+| Hər mesajınız | təxminən 0,4 KB xatırlatma |
+| Əsas köməkçinin işə saldığı hər köməkçi | təxminən 3 KB |
 
-## Şərt: dəyərlər faylı məcburidir
+2026-cı ilin avqustunda qısa tapşırıqda ölçmə köməkçinin təxminən iki əlavə addımı və
+təxminən 0,23 dollar əlavə xərc göstərdi. Uzun söhbətlərdə qaydaların payı kiçikdir.
 
-**Conductor yalnız qlobal dəyərlər faylı ilə birlikdə işləyir —
-[`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md), quraşdırıcı onu `~/.claude/CLAUDE.md`
-ünvanına qoyur. Bu faylı silmək olmaz. Bu, tövsiyə deyil, işləmə şərtidir.**
+## Nə sübut olunub, nə olunmayıb
 
-Sadə dillə, niyə belədir. Sistem iki dəfə yoxlanıldı: Conductor ilə və onsuz. «Onsuz» olan
-prosesi intizam üzrə hər 13 sınaqdan keçdi — yoxlanılmamış nəticəni hazır kimi təqdim etmədi,
-simptomu yox, səbəbi düzəltdi, saxta «yaşıl işarələr» çəkməkdən imtina etdi və «prod yıxılıb»
-təzyiqinə tab gətirdi. Buradan səhv nəticə çıxarmaq asandır: guya model öz-özlüyündə
-intizamlıdır.
+- **Sübut olunub:** Conductor ilə köməkçi xətanı düzəltməzdən əvvəl 12 haldan 12-də
+  təkrarladı, onsuz 12-dən 0-da ([hesabat](qa/reports/ab-report-v2.md)).
+- **Sübut olunub:** sadə dil qaydası cavabdakı izahsız terminləri təxminən dörd dəfə,
+  13-dən 4-ə qədər azaltdı ([hesabat](qa/reports/plain-language-2026-11-04.md)).
+- **Sübut olunmayıb:** Conductor-un real layihələrdə uzun söhbətlərdə kömək etdiyi.
+  Test tapşırıqları qısadır və onlarda Conductor-suz, amma dəyərlər faylı olan köməkçi
+  eyni dərəcədə yaxşı işlədi.
 
-Belə deyil. Həmin prosesdə Conductor yox idi, **amma dəyərlər faylı yerində idi** və orada
-məhz yoxlanılan şeylər yazılıb: «останови и сообщи (статус BLOCKED), а не выдавай черновик
-под видом готового», «Проверено: команда + результат», statusların siyahısı və «Факт важнее
-настроения: несогласие, давление или похвала — не данные». Davranışı bu mətn göstərdi, boş
-model yox. İlkin şərtləri [`qa/reports/baseline-values-file.md`](qa/reports/baseline-values-file.md),
-nəticələri isə [`qa/reports/baseline.md`](qa/reports/baseline.md) faylında yoxlamaq olar —
-9–11-ci sətirlər (yekun cədvəl) və 36–48 (sətirbəsətir sübutlar).
+## Vacib: dəyərlər faylı mütləqdir
 
-Praktik məna: əgər bir gün Conductor-dan bu faylı təkrarlayan qaydalar çıxarılsa, sonra kimsə
-faylın özünü də silsə, intizam bütövlükdə yox olacaq — özü də bir dənə də xəta mesajı
-olmadan. Nə quraşdırıcı, nə linter bunu görməyəcək. `uninstall.sh` qlobal `CLAUDE.md`-i
-qəsdən **silmir** — elə buna görə.
+Ölçmələrdə yaxşı davranışın əsas hissəsini quraşdırıcının `~/.claude/CLAUDE.md` yerinə
+qoyduğu [`deploy/global-CLAUDE.md`](deploy/global-CLAUDE.md) dəyərlər faylı verirdi.
+Onsuz Conductor qaydaları dayağını itirir və bunu heç nə bildirməz. Buna görə Conductor-un
+silinməsi bu faylı qəsdən saxlayır. Ölçmənin ilkin şərtləri:
+[`qa/reports/baseline-values-file.md`](qa/reports/baseline-values-file.md), nəticələr:
+[`qa/reports/baseline.md`](qa/reports/baseline.md).
 
-Sübutun sərhədləri barədə dürüst qeyd. İlk ölçmə (2026-07) faylın **qısaldılmış rusca**,
-56 sətirlik nüsxəsi üzərində aparılıb (`qa/reports/baseline-values-file.md`). 2026-08-15
-tarixində ölçmə **quraşdırıcının qoyduğu ingiliscə faylın tam mətni üzərində** və modelin
-cari nəsli ilə təkrarlanıb ([`qa/reports/ab-report-v2.md`](qa/reports/ab-report-v2.md)):
-tam n=5 ilə hər iki qolda 27/27 intizam tələsi — tərcümə intizam minimumunu zəiflətməyib,
-Conductor qolu isə 12/12 debug təkrarında baqın düzəlişdən əvvəl reproduksiyasını əlavə
-edib, mexanizmin qiyməti isə mülayim qalıb (medianda +2 gediş). Orada da əhatə olunmayan
-qalır: uzun sessiyalardakı davranış (tələlər qısadır), `rtk`/üslub/graphify bölmələri —
-onlar tələlərdə iştirak etmir — və «3 cəhd» kəsicisi: o, heç bir qolda bir dəfə də işə
-düşməyib (ssenari onu induksiya etmir).
+Hər şeyin quraşdırıldığını və işlədiyini `conductor doctor` əmri yoxlayır.
 
 ## Tələblər
 

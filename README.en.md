@@ -113,6 +113,7 @@ Add that directory to PATH if needed.
 ```bash
 conductor install --language en
 conductor status
+conductor doctor
 conductor update --check
 conductor update
 conductor uninstall --dry-run
@@ -123,6 +124,9 @@ All these commands act on the user profile, never the current project's rules.
 Python 3.10+, Git and Bash are required. Source comes from the official repository into a
 temporary directory; `--ref vX.Y.Z` or a full commit selects a version. The saved language
 is kept. Cursor's prepared rule still requires manual activation.
+`conductor doctor` changes nothing: it checks every installed file against the installation
+record, runs the installed commands and the session-start hook, and prints PASS/WARN/FAIL;
+exit `0` means a healthy installation. No repository clone is needed.
 
 Install, update, uninstall and rollback share a process lock and recovery mechanism.
 Files are checked before and after writing; the revision is recorded after executable

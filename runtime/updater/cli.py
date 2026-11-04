@@ -47,6 +47,7 @@ def main(argv=None):
     parser.add_argument('--profile', type=Path, default=Path.home())
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status', help='show local installed components, language and source revision')
+    commands.add_parser('doctor', help='read-only health check of the installed files, commands and hooks')
     update = commands.add_parser('update', help='update existing components from the official GitHub repository')
     update.add_argument('--check', action='store_true', help='download and inspect only; do not change installed files')
     update.add_argument('--ref', default='main', help='main, a version tag, or a full commit identifier')
@@ -75,6 +76,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         paths = Paths(args.config, args.profile)
+        if args.command == 'doctor':
+            from health import report
+            return report(paths)
         if args.command == 'status':
             unfinished = pending(paths)
             if unfinished:

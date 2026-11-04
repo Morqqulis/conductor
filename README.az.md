@@ -112,6 +112,7 @@ Lazımdırsa, bu qovluğu PATH-a əlavə edin.
 ```bash
 conductor install --language az
 conductor status
+conductor doctor
 conductor update --check
 conductor update
 conductor uninstall --dry-run
@@ -122,6 +123,9 @@ Bütün əmrlər cari layihənin qaydalarına deyil, istifadəçi profilinə tə
 Python 3.10+, Git və Bash lazımdır. Mənbə rəsmi repozitoridən müvəqqəti qovluğa yüklənir;
 `--ref vX.Y.Z` və ya tam commit versiyanı seçir. Saxlanmış dil dəyişmir.
 Cursor-un hazırlanmış qaydası yenə əl ilə aktivləşdirilməlidir.
+`conductor doctor` heç nəyi dəyişmir: hər quraşdırılmış faylı quraşdırma qeydi ilə yoxlayır,
+quraşdırılmış əmrləri və sessiya başlanğıcı hook-unu işə salır, PASS/WARN/FAIL çap edir;
+`0` kodu sağlam quraşdırma deməkdir. Repozitoriyanın klonu lazım deyil.
 
 Quraşdırma, yeniləmə, silinmə və geri qaytarma vahid kilid və bərpa mexanizmindən istifadə
 edir. Fayllar yazmadan əvvəl və sonra yoxlanır; versiya icra yoxlamalarından sonra yazılır.

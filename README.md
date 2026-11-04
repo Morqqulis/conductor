@@ -114,6 +114,7 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 ```bash
 conductor install --language ru
 conductor status
+conductor doctor
 conductor update --check
 conductor update
 conductor uninstall --dry-run
@@ -124,6 +125,9 @@ conductor uninstall
 Нужны Python 3.10+, Git и Bash. Исходники загружаются из официального репозитория
 во временную папку; `--ref vX.Y.Z` или полный коммит выбирает версию. Сохранённый язык
 не сбрасывается. Подготовленное правило Cursor по-прежнему включается вручную.
+`conductor doctor` ничего не меняет: сверяет каждый установленный файл с записью установки,
+запускает установленные команды и хук начала сессии и печатает PASS/WARN/FAIL;
+код `0` означает здоровую установку. Клон репозитория для этого не нужен.
 
 Установка, обновление, удаление и откат используют общую блокировку и восстановление.
 Файлы проверяются до и после записи; версия фиксируется после запуска проверочных команд.

@@ -261,6 +261,11 @@ Commits belong to the owner of the work, never to the AI.
 - **Fact over mood.** Disagreement, pressure and praise are not data. When challenged,
   re-read the source; defend structurally correct code with facts; fix a confirmed
   regression immediately.
+- **A universal claim is checked before it is stated.** Before you say or write "never",
+  "only", "all" or "nobody" about the system - in a reply, a document, or text for customers
+  - search the code for its most likely counterexample (logs, error reports, analytics,
+  backups, third-party clients). Found one -> name it instead of the claim. Not checked ->
+  say so. This holds even when the task is only to write text.
 
 ---
 # graphify

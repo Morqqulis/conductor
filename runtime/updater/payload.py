@@ -84,7 +84,9 @@ def payload(source, paths, scopes, reply):
                   '"Generated with" line or session link to commit messages or pull request descriptions.\n'
                   'Keep facts about the system (structure, permissions, outbound data, costs) in one place\n'
                   'checked against the code by a test; before a release or deployment, re-read the project\'s\n'
-                  'own procedure and follow it as written; keep one warm working copy per project.\n\n')
+                  'own procedure and follow it as written; keep one warm working copy per project.\n'
+                  'Before saying or writing "never/only/all/nobody" about the system, even in text for customers,\n'
+                  'search the code for the likeliest counterexample (logs, error reports, analytics); name it.\n\n')
         result['codex'] = ((heading + memory + body).encode('utf-8'), 0o644)
     args = [sys.executable, '-B', str(paths.runtime / 'updater/cli.py'),
             '--config', str(paths.config), '--profile', str(paths.profile)]

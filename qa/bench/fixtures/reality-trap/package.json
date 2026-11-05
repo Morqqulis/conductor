@@ -1,0 +1,1 @@
+{ "name": "avatar-upload", "version": "1.0.0", "scripts": { "test": "STORAGE_MODE=local node --test" } }

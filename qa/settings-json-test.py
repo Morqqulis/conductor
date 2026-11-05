@@ -121,15 +121,19 @@ class SettingsJsonTest(unittest.TestCase):
         for event in ("PostToolUse", "PostToolUseFailure"):
             entries = hooks.get(event)
             self.assertIsInstance(entries, list, f"{event} event missing after install")
-            self.assertEqual(len(entries), 1, f"expected exactly one {event} entry")
+            journal = [e for e in entries if "test-run-journal.sh" in json.dumps(e)]
+            self.assertEqual(len(journal), 1, f"expected exactly one {event} journal entry")
             self.assertEqual(
-                entries[0].get("matcher"), "Bash",
+                journal[0].get("matcher"), "Bash",
                 f"{event} must be scoped to Bash; anything wider fires on every Read/Edit",
             )
-            self.assertIn(
-                "test-run-journal.sh", json.dumps(entries[0]),
-                f"{event} does not run test-run-journal.sh",
-            )
+        # Edit rituals: a snapshot before and a syntax check after every file-editing tool,
+        # and nothing else (a wider matcher would run Python on every Read and Bash call).
+        for event, script in (("PreToolUse", "pre-edit-snapshot.sh"), ("PostToolUse", "post-edit-check.sh")):
+            entries = [e for e in hooks.get(event, []) if script in json.dumps(e)]
+            self.assertEqual(len(entries), 1, f"expected exactly one {event} entry running {script}")
+            self.assertEqual(entries[0].get("matcher"), "Edit|Write|MultiEdit|NotebookEdit")
+        self.assertEqual(len(hooks["PostToolUse"]), 2, "PostToolUse: the journal and the syntax check")
 
     # (2) install-hooks then strip-hooks is a round trip: foreign data is untouchable.
     def test_strip_after_install_round_trips_foreign_data(self):
@@ -433,10 +437,10 @@ class SettingsJsonTest(unittest.TestCase):
             self.assertEqual(res.returncode, 0, f"install-hooks run #{i} failed: {res.stderr}")
         hooks = read_json(self.path)["hooks"]
         for event in ("SessionStart", "SubagentStart", "UserPromptSubmit",
-                      "PostToolUse", "PostToolUseFailure"):
+                      "PostToolUse", "PostToolUseFailure", "PreToolUse"):
             ours = [e for e in hooks.get(event, []) if is_conductor_entry(e)]
             self.assertEqual(
-                len(ours), 1,
+                len(ours), 2 if event == "PostToolUse" else 1,
                 f"{event} holds {len(ours)} conductor entries after two installs; "
                 "a second install must replace the first, not stack on top of it",
             )
@@ -479,6 +483,39 @@ class SettingsJsonTest(unittest.TestCase):
         exact = run_tool(*audit, "--exact")
         self.assertEqual(exact.returncode, 1)
         self.assertIn("matcher must be 'startup|resume|clear|compact|fork'", exact.stderr)
+
+    def test_install_without_edit_rituals_passes_default_audit_but_not_exact(self):
+        # Installs from before the edit rituals have neither PreToolUse nor the second
+        # PostToolUse entry. The old updater verifies them with this module: they must pass,
+        # and only the exact audit (which triggers a re-render) may flag them.
+        self.assertEqual(self.install().returncode, 0)
+        data = read_json(self.path)
+        del data["hooks"]["PreToolUse"]
+        data["hooks"]["PostToolUse"] = [e for e in data["hooks"]["PostToolUse"]
+                                        if "post-edit-check.sh" not in json.dumps(e)]
+        write_json(self.path, data)
+        audit = ("audit-hooks", "--file", self.path, "--conductor-dir", CONDUCTOR_DIR)
+        self.assertEqual(run_tool(*audit).returncode, 0, run_tool(*audit).stderr)
+        exact = run_tool(*audit, "--exact")
+        self.assertEqual(exact.returncode, 1)
+        self.assertIn("PreToolUse", exact.stderr)
+
+    def test_edit_ritual_registrations_are_checked_exactly(self):
+        audit = ("audit-hooks", "--file", self.path, "--conductor-dir", CONDUCTOR_DIR)
+        cases = {
+            "duplicate syntax check": lambda d: d["hooks"]["PostToolUse"].append(
+                [e for e in d["hooks"]["PostToolUse"] if "post-edit-check.sh" in json.dumps(e)][0]),
+            "snapshot widened to every tool": lambda d: d["hooks"]["PreToolUse"][0].update(matcher="*"),
+            "snapshot points at another script": lambda d: d["hooks"]["PreToolUse"][0]["hooks"][0].update(
+                command=d["hooks"]["PreToolUse"][0]["hooks"][0]["command"].replace("pre-edit-snapshot", "post-edit-check")),
+        }
+        for label, damage in cases.items():
+            with self.subTest(label):
+                self.assertEqual(self.install().returncode, 0)
+                data = read_json(self.path)
+                damage(data)
+                write_json(self.path, data)
+                self.assertEqual(run_tool(*audit).returncode, 1, f"default audit accepted: {label}")
 
     def test_audit_accepts_exact_install_with_foreign_entries_without_rewriting(self):
         self.assertEqual(self.install().returncode, 0, "install-hooks failed")

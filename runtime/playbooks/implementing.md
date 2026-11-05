@@ -7,6 +7,8 @@ No edit before the touched region has been read in this session.
 
 ## SAFE UNDO (all tiers)
 Before the FIRST write, NAME exact per-file pre-task snapshots: bytes and existence,
+(taken automatically: $CONDUCTOR_HOME/snapshots/<session id>/index.tsv lists ORIG <sha256> <path>,
+ABSENT or TOOBIG per file; ORIG bytes are in <sha256 of the path>.orig there)
 including dirty and untracked files. Record expected post-edit bytes/existence and your
 own hunks separately from test hunks. HEAD is not a baseline unless affected paths were
 verified clean, tracked and byte-identical at task start. No named snapshot -> no edit.

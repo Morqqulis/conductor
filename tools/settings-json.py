@@ -29,6 +29,7 @@ import tempfile
 OWNED_SCRIPT = re.compile(
     r"(?:^|/)conductor/(?:"
     r"hooks/(?:session-start|lessons-inject|subagent-start|user-prompt)\.(?:sh|ps1)|"
+    r"hooks/(?:pre-edit-snapshot|post-edit-check)\.sh|"
     r"hooks/test-run-journal\.sh|hooks/pre-commit-gate\.ps1|"
     r"adapters/(?:cursor|antigravity)/gate\.ps1)$|"
     r"(?:^|/)(?:\.cursor|\.agents)/conductor/gate\.ps1$"
@@ -46,6 +47,11 @@ SESSION_MATCHER = "startup|resume|clear|compact|fork"
 # rolls back. The exact audit (used to decide whether to re-render) still flags it, and the
 # next update or reinstall writes the current matcher.
 LEGACY_SESSION_MATCHERS = ("startup|resume|clear|compact",)
+# Edit rituals (runtime/hooks/edit_guard.py): a pre-edit snapshot and a post-edit syntax
+# check on every file-editing tool. Installs from before them lack these two entries; the
+# default audit accepts that (an update run by the old updater must not roll back), the
+# exact audit flags it so the next install or update registers them.
+EDIT_MATCHER = "Edit|Write|MultiEdit|NotebookEdit"
 
 
 def load(path: str) -> dict:
@@ -221,6 +227,8 @@ def install(data: dict, conductor_dir: str, shell: str) -> None:
     # The Bash matcher keeps it off every Read/Edit call - the cheapest optimisation available.
     for event in ("PostToolUse", "PostToolUseFailure"):
         add(event, {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]})
+    add("PreToolUse", {"matcher": EDIT_MATCHER, "hooks": [cmd("pre-edit-snapshot.sh")]})
+    add("PostToolUse", {"matcher": EDIT_MATCHER, "hooks": [cmd("post-edit-check.sh")]})
 
 
 def audit(data: dict, conductor_dir: str, shell: str, exact: bool = False) -> list[str]:
@@ -236,39 +244,50 @@ def audit(data: dict, conductor_dir: str, shell: str, exact: bool = False) -> li
             "timeout": 10,
         }
 
-    expected = {
-        "SessionStart": {
-            "matcher": SESSION_MATCHER,
-            "hooks": [cmd("session-start.sh"), cmd("lessons-inject.sh")],
-        },
-        "SubagentStart": {"hooks": [cmd("subagent-start.sh")]},
-        "UserPromptSubmit": {"hooks": [cmd("user-prompt.sh")]},
-        "PostToolUse": {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]},
-        "PostToolUseFailure": {
-            "matcher": "Bash",
-            "hooks": [cmd("test-run-journal.sh")],
-        },
-    }
+    # (event, wanted entry, added after the earliest supported release)
+    expected = [
+        ("SessionStart", {"matcher": SESSION_MATCHER,
+                          "hooks": [cmd("session-start.sh"), cmd("lessons-inject.sh")]}, False),
+        ("SubagentStart", {"hooks": [cmd("subagent-start.sh")]}, False),
+        ("UserPromptSubmit", {"hooks": [cmd("user-prompt.sh")]}, False),
+        ("PostToolUse", {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]}, False),
+        ("PostToolUseFailure", {"matcher": "Bash", "hooks": [cmd("test-run-journal.sh")]}, False),
+        ("PreToolUse", {"matcher": EDIT_MATCHER, "hooks": [cmd("pre-edit-snapshot.sh")]}, True),
+        ("PostToolUse", {"matcher": EDIT_MATCHER, "hooks": [cmd("post-edit-check.sh")]}, True),
+    ]
 
     hooks = data.get("hooks")
     if not isinstance(hooks, dict):
         return ["hooks must be a JSON object"]
 
     errors = []
-    for event, wanted in expected.items():
+    claimed = {}
+    for event, wanted, newer in expected:
         entries = hooks.get(event)
+        if entries is None and newer and not exact:
+            continue
         if not isinstance(entries, list):
             errors.append(f"hooks.{event} must be a JSON array")
             continue
+        accepted = {wanted.get("matcher")}
+        if event == "SessionStart" and not exact:
+            accepted.update(LEGACY_SESSION_MATCHERS)
         owned = [entry for entry in entries if is_ours(entry)]
-        if len(owned) != 1:
+        # Several Conductor entries may share an event; each is told apart by its matcher.
+        candidates = [entry for entry in owned if isinstance(entry, dict) and entry.get("matcher") in accepted]
+        if sum(1 for wanted_event, _, _ in expected if wanted_event == event) == 1:
+            candidates = owned  # a single registration on this event: report it even if its matcher is wrong
+        if not candidates and newer and not exact:
+            continue
+        if len(candidates) != 1:
             errors.append(
-                f"hooks.{event} must contain exactly one Conductor registration; "
-                f"found {len(owned)}"
+                f"hooks.{event} must contain exactly one Conductor registration "
+                f"for matcher {wanted.get('matcher')!r}; found {len(candidates)}"
             )
             continue
 
-        actual = owned[0]
+        actual = candidates[0]
+        claimed.setdefault(event, []).append(id(actual))
         if not isinstance(actual, dict):
             errors.append(f"hooks.{event} Conductor registration must be a JSON object")
             continue
@@ -279,9 +298,6 @@ def audit(data: dict, conductor_dir: str, shell: str, exact: bool = False) -> li
                 f"hooks.{event} Conductor registration has wrong structure; "
                 f"expected fields {sorted(expected_keys)}"
             )
-        accepted = {wanted.get("matcher")}
-        if event == "SessionStart" and not exact:
-            accepted.update(LEGACY_SESSION_MATCHERS)
         if actual.get("matcher") not in accepted:
             errors.append(
                 f"hooks.{event} matcher must be {wanted.get('matcher')!r}; "
@@ -320,10 +336,16 @@ def audit(data: dict, conductor_dir: str, shell: str, exact: bool = False) -> li
                     f"{prefix}.timeout must be 10; found {actual_hook.get('timeout')!r}"
                 )
 
+    known = {event for event, _, _ in expected}
     for event, entries in hooks.items():
-        if event in expected:
+        if event not in known:
+            if is_ours(entries):
+                errors.append(f"hooks.{event} contains an unexpected Conductor registration")
             continue
-        if is_ours(entries):
+        if not isinstance(entries, list):
+            continue
+        extra = [entry for entry in entries if is_ours(entry) and id(entry) not in claimed.get(event, [])]
+        if extra and not any(e.startswith(f"hooks.{event}") for e in errors):
             errors.append(f"hooks.{event} contains an unexpected Conductor registration")
     return errors
 

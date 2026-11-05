@@ -165,6 +165,11 @@ def acquire(destination, ref):
         # Only a refused or failed transfer falls back; a malformed answer stays an error.
         if isinstance(error, ValueError) and 'time limit' not in str(error):
             raise
+        # An HTTPError carries the server's response; close it, or Python 3.14 reports an
+        # implicitly cleaned-up resource.
+        close = getattr(error, 'close', None)
+        if callable(close):
+            close()
         print(f'Conductor bootstrap: GitHub download refused ({error}); fetching with git instead.',
               file=sys.stderr)
         commit, data = git_archive(ref)

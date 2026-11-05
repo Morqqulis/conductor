@@ -156,7 +156,7 @@ Bulud sessiyası quraşdırma olmayan təzə konteynerdə işləyir. Bu sətri b
 Setup script):
 
 ```bash
-set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language az --skip-companions
+(set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language az --skip-companions) || echo "Conductor: quraşdırma alınmadı; sessiya onsuz davam edir"
 ```
 
 Bundan sonra həmin mühitin hər yeni bulud sessiyası Conductor ilə başlayır, heç bir əmr

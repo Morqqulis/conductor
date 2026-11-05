@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real hooks, migration and isolated installation; never use live memory."""
 import json
+import time
 import os
 from pathlib import Path
 import shutil
@@ -278,6 +279,36 @@ class MemoryTest(unittest.TestCase):
         self.assertNotIn("Lessons that may apply", self.prompt_hook("продолжай"))
         self.assertNotIn("Lessons that may apply", self.prompt_hook(
             "Напиши, пожалуйста, короткое поздравление коллеге с днём рождения, тёплое и весёлое."))
+
+    def test_automatic_notifications_bring_no_lessons(self):
+        # Background-task notifications share "code, command, exit, failed, file" with many
+        # lessons; they are the harness talking, not the owner, so no lessons are attached.
+        (self.store / "exit.md").write_text("# Failed command exit code in a file\nCheck the exit code.\n",
+                                            encoding="utf-8")
+        note = ("<task-notification> <task-id>b1</task-id> <status>failed</status> <summary>Background "
+                "command exited with code 1; output file written; command failed</summary> </task-notification>")
+        self.assertNotIn("Lessons that may apply", self.prompt_hook(note))
+        self.assertNotIn("Lessons that may apply", self.prompt_hook("[SYSTEM NOTIFICATION - NOT USER INPUT] " + note))
+        self.assertIn("Lessons that may apply", self.prompt_hook(
+            "The deploy command failed with exit code 1 and the output file is empty, check why."))
+
+    def test_distill_reminder_repeats_at_most_hourly_per_session(self):
+        self.ledger.write_text("\n".join(f"2026-09-25 | trigger {i} | rule {i}" for i in range(13)), encoding="utf-8")
+        hook = ROOT / "runtime/hooks/user-prompt.sh"
+
+        def text(session):
+            result = subprocess.run([BASH, str(hook)], env=self.env, capture_output=True, text=True,
+                                    encoding="utf-8", timeout=30,
+                                    input=json.dumps({"session_id": session, "prompt": "ok"}))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("DISTILL DUE", text("s-one"))
+        self.assertNotIn("DISTILL DUE", text("s-one"), "repeated on the very next message")
+        self.assertIn("DISTILL DUE", text("s-two"), "another session must still be told")
+        stamp = self.home / ".distill-reminded-s-one"
+        hour_ago = time.time() - 3700
+        os.utime(stamp, (hour_ago, hour_ago))
+        self.assertIn("DISTILL DUE", text("s-one"), "an hour later the reminder returns")
 
     def test_broken_python_never_blocks_the_reminder(self):
         stubs = Path(self.tmp.name) / "stubs"

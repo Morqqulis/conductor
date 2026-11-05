@@ -44,7 +44,18 @@ if [ -f "$LEDGER" ]; then
     n="$(grep -cvE '^[[:space:]]*(#|$)' "$LEDGER" 2>/dev/null || true)"
     case "$n" in ''|*[!0-9]*) n=0 ;; esac
     if [ "$n" -gt "$DISTILL_THRESHOLD" ]; then
-        line="$line DISTILL DUE: $n lessons in the inbox - run playbooks/distill.md before new feature work."
+        # At most once an hour per session: repeated on every message it arrived mid-task and
+        # was tuned out. The session start still announces it.
+        sid=''
+        if [[ "$payload" =~ \"session_id\"[[:space:]]*:[[:space:]]*\"([A-Za-z0-9_-]{1,128})\" ]]; then
+            sid="${BASH_REMATCH[1]}"
+        fi
+        stamp="$CONDUCTOR_HOME/.distill-reminded-${sid:-unknown}"
+        if [ -z "$(find "$stamp" -mmin -60 2>/dev/null)" ]; then
+            line="$line DISTILL DUE: $n lessons in the inbox - run playbooks/distill.md before new feature work."
+            : > "$stamp" 2>/dev/null || true
+            find "$CONDUCTOR_HOME" -maxdepth 1 -name '.distill-reminded-*' -mmin +1440 -delete 2>/dev/null || true
+        fi
     fi
 fi
 # Automatic lessons: only for messages long enough to describe a task. The cheap length

@@ -156,7 +156,7 @@ the cloud environment's **setup script** (the environment menu in the session ti
 Edit → Setup script), with your language:
 
 ```bash
-set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language en --skip-companions
+(set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language en --skip-companions) || echo "Conductor: install failed; the session continues without it"
 ```
 
 Every new cloud session of that environment then starts with Conductor, no commands needed.

@@ -43,6 +43,17 @@ bu şu nə necə niyə harada həm də ilə üçün amma çünki indi sonra art�
 """.split()}
 
 
+# Messages the harness writes, not the owner: background-task notifications, agent
+# hand-backs, webhook payloads. Their fixed vocabulary ("code, command, exit, failed, file")
+# matched lessons on every notification and buried the useful suggestions.
+AUTOMATIC_MARKERS = ("<task-notification>", "[SYSTEM NOTIFICATION", "<agent-message",
+                     "<webhook-payload>", "<wake reason=", "<system-reminder>")
+
+
+def automatic(prompt):
+    return any(marker in prompt[:2000] for marker in AUTOMATIC_MARKERS)
+
+
 def query_words(prompt):
     seen, words = set(), []
     for word in tokens(prompt[:4000]):
@@ -66,7 +77,7 @@ def main():
     try:
         payload = json.loads(sys.stdin.read() or "{}")
         prompt = payload.get("prompt") if isinstance(payload, dict) else None
-        if not isinstance(prompt, str):
+        if not isinstance(prompt, str) or automatic(prompt):
             return 0
         words = query_words(prompt)
         if len(words) < MIN_CONTENT_KEYS:

@@ -158,10 +158,12 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 Edit → Setup script):
 
 ```bash
-set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language ru --skip-companions
+(set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language ru --skip-companions) || echo "Conductor: установка не удалась, сессия продолжится без него"
 ```
 
 Дальше каждая новая облачная сессия этого окружения стартует уже с Conductor, без команд.
+Скобки и `|| echo` в конце обязательны: облако не запускает сессию, если скрипт настройки
+упал, а так неудачная установка лишь оставит сессию без Conductor.
 Установка занимает несколько секунд; `--skip-companions` не ставит RTK и Graphify, чтобы
 старт был быстрым. Проверено: новая сессия с такой установкой отвечает по правилам Conductor
 (язык, итог, статус) и получает проверку синтаксиса после правок.

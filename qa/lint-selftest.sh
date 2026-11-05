@@ -164,6 +164,10 @@ sed -i 's/every path a person takes to the same goal/the main path/' "$WORK/runt
 expect_fail "reach rule removed" \
     "reach rule (every place, every path, every sibling instance) missing in runtime/playbooks/implementing.md" \
     runtime/playbooks/implementing.md
+sed -i 's/other instances of the same defect/nothing else/' "$WORK/runtime/playbooks/debugging.md"
+expect_fail "reach rule for fixes removed" \
+    "reach rule for fixes (other instances of the same defect) missing in runtime/playbooks/debugging.md" \
+    runtime/playbooks/debugging.md
 sed -i 's/not verified in the real environment/probably fine/' "$WORK/runtime/playbooks/verification.md"
 expect_fail "reality rule removed" \
     "reality rule (realistic environment or vendor docs) missing in runtime/playbooks/verification.md" \

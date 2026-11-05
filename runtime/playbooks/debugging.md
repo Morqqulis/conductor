@@ -30,7 +30,8 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    attempt and MUST be pre-registered; an unregistered behavior-changing edit counts as a
    failed attempt.
 5. VERIFY: run the repro command fresh.
-   - Pass -> step 6.
+   - Pass -> REACH: search the code for other instances of the same defect (the same expression,
+     a copied formula, a sibling path to the same goal); fix each or name it unfixed. Then step 6.
    - Fail -> attempt N is FAILED, permanently. Renaming it "a refinement of attempt N" is the
      named violation. Increment N and return to step 2.
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user

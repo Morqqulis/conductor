@@ -51,7 +51,7 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 # transitively, so a file referenced by any of the three is live; one referenced by none
 # is dead weight that no session will ever read.
 declare -A BUDGETS=(
-    [debugging.md]=6000 [implementing.md]=6500 [investigating.md]=6000
+    [debugging.md]=6400 [implementing.md]=6500 [investigating.md]=6000
     [orchestration.md]=7000 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
     [verification.md]=5600
 )
@@ -123,6 +123,8 @@ tr '\n' ' ' < "$RUNTIME/playbooks/verification.md" | grep -qF 'needs the FULL ou
 # --- reach / reality / claim: errors came from places nobody looked at ---------------
 tr '\n' ' ' < "$RUNTIME/playbooks/implementing.md" | grep -qF 'every path a person takes to the same goal' || \
     check 1 "reach rule (every place, every path, every sibling instance) missing in runtime/playbooks/implementing.md"
+tr '\n' ' ' < "$RUNTIME/playbooks/debugging.md" | grep -qF 'other instances of the same defect' || \
+    check 1 "reach rule for fixes (other instances of the same defect) missing in runtime/playbooks/debugging.md"
 tr '\n' ' ' < "$RUNTIME/playbooks/verification.md" | grep -qF 'not verified in the real environment' || \
     check 1 "reality rule (realistic environment or vendor docs) missing in runtime/playbooks/verification.md"
 tr '\n' ' ' < "$RUNTIME/playbooks/skeptic.md" | grep -qF 'most likely counterexample' || \

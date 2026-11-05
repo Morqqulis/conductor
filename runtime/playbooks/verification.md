@@ -31,6 +31,8 @@ requires rerunning the affected check; a remembered green or an agent's summary 
 A later message, unrelated README edit, new commit identity or push alone invalidates nothing.
 If an input matters to one check but not another, invalidate only the dependent check.
 Build-cache reuse is not test-result evidence; test-result caching must cover the test's inputs.
+An absence claim (no warnings/errors/leftovers) needs the FULL output of every check scanned
+by pattern, with the hit count shown; a summary, tail or wrapper line cannot show absence.
 
 Optional saved evidence: if present, use Python with `conductor/evidence/cli.py` under
 CLAUDE_CONFIG_DIR (otherwise ~/.claude). `run --project ROOT --spec FILE` always executes;

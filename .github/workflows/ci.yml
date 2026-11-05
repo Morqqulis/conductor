@@ -41,39 +41,42 @@ jobs:
       - name: Lint negative self-test (every guard must actually fire)
         run: bash qa/lint-selftest.sh
 
+      - name: Warning guard self-test (a check that prints a warning must fail)
+        run: bash qa/no-warnings-test.sh
+
       - name: settings-json compile + tests (highest blast-radius code)
         run: |
           python -m py_compile tools/settings-json.py
-          python qa/settings-json-test.py
+          bash qa/no-warnings.sh python qa/settings-json-test.py
 
       - name: Trust-path behavior self-tests
         run: |
-          python -B qa/companions-test.py
-          python -B -m unittest discover -s qa/companions -v
-          python -B -m unittest discover -s qa/project_artifacts -v
-          bash qa/uninstall-test.sh
-          bash qa/doctor-test.sh
-          bash qa/payload-test.sh
-          bash qa/journal-report-test.sh
-          python -B qa/test-run-journal-test.py
-          python -B qa/memory-test.py
-          python -B -m unittest discover -s qa/session_env -v
-          python -B qa/lesson-recall-test.py
-          python -B qa/memory-restore-test.py
-          python -B qa/safe-undo-test.py
-          bash qa/bench-selftest.sh
+          bash qa/no-warnings.sh python -B qa/companions-test.py
+          bash qa/no-warnings.sh python -B -m unittest discover -s qa/companions -v
+          bash qa/no-warnings.sh python -B -m unittest discover -s qa/project_artifacts -v
+          bash qa/no-warnings.sh bash qa/uninstall-test.sh
+          bash qa/no-warnings.sh bash qa/doctor-test.sh
+          bash qa/no-warnings.sh bash qa/payload-test.sh
+          bash qa/no-warnings.sh bash qa/journal-report-test.sh
+          bash qa/no-warnings.sh python -B qa/test-run-journal-test.py
+          bash qa/no-warnings.sh python -B qa/memory-test.py
+          bash qa/no-warnings.sh python -B -m unittest discover -s qa/session_env -v
+          bash qa/no-warnings.sh python -B qa/lesson-recall-test.py
+          bash qa/no-warnings.sh python -B qa/memory-restore-test.py
+          bash qa/no-warnings.sh python -B qa/safe-undo-test.py
+          bash qa/no-warnings.sh bash qa/bench-selftest.sh
 
       - name: Per-project verification evidence
-        run: python -B -m unittest discover -s qa/evidence -v
+        run: bash qa/no-warnings.sh python -B -m unittest discover -s qa/evidence -v
 
       - name: Recoverable CLI updates
-        run: python -B -m unittest discover -s qa/updater -v
+        run: bash qa/no-warnings.sh python -B -m unittest discover -s qa/updater -v
 
       - name: Unified first install and GitHub bootstrap
-        run: python -B -m unittest discover -s qa/bootstrap -v
+        run: bash qa/no-warnings.sh python -B -m unittest discover -s qa/bootstrap -v
 
       - name: Graphify semantic update guard
-        run: python -B qa/graphify-check-test.py -v
+        run: bash qa/no-warnings.sh python -B qa/graphify-check-test.py -v
 
       - name: Recoverable Graphify update (real engine and fault injection)
         env:
@@ -81,7 +84,7 @@ jobs:
           PYTHONIOENCODING: utf-8
         run: |
           python -m pip install 'graphifyy==0.9.67'
-          python -B -m unittest discover -s qa/graph_refresh -v
+          bash qa/no-warnings.sh python -B -m unittest discover -s qa/graph_refresh -v
 
       - name: Sandbox install smoke test (never touches the runner's real config)
         run: |
@@ -92,7 +95,7 @@ jobs:
           HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" PATH="$SB/bin:$PATH" \
             bash install.sh --language English --skip-companions </dev/null
           HOME="$SB/home" CLAUDE_CONFIG_DIR="$SB/home/.claude" \
-            bash tools/doctor.sh
+            bash qa/no-warnings.sh bash tools/doctor.sh
           grep -q 'Answer in English' "$SB/home/.claude/CLAUDE.md"
 
       - name: Shellcheck (errors only; ubuntu ships it preinstalled)

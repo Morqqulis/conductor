@@ -153,6 +153,12 @@ expect_fail "layout rule removed from the digest body" \
     "layout rule (short paragraphs, lists, bold key point) missing in adapters/core-body.md" \
     adapters/core-body.md
 
+# --- case 9d: absence-claim rule removed ----------------------------------------------
+sed -i 's/needs the FULL output of every check scanned/needs a look at the checks/' "$WORK/runtime/playbooks/verification.md"
+expect_fail "absence-claim rule removed from the verification playbook" \
+    "absence-claim rule (scan the full output, show the count) missing in runtime/playbooks/verification.md" \
+    runtime/playbooks/verification.md
+
 # --- case 10: Cyrillic injected into the deploy corpus -------------------------------
 printf '\nПроверка связи.\n' >> "$WORK/deploy/global-CLAUDE.md"
 expect_fail "Cyrillic text injected into deploy/global-CLAUDE.md" \

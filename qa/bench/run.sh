@@ -195,13 +195,13 @@ if [ "$ARM" = 'conductor' ]; then
     SETTINGS_RENDERED="$INVOCATION/arm-conductor-settings.json"
     python - "$(winp "$QA/arm-conductor-settings.template.json")" "$(winp "$SETTINGS_RENDERED")" \
         "$RENDERED_MODULE_BASE" "$(winp "$INVOCATION/bench-journal.log")" "$(winp "$INVOCATION/no-lessons.md")" <<'PY'
-import json, sys
+import json, pathlib, sys
 src, dst, tree, journal, lessons = sys.argv[1:6]
-text = open(src, encoding="utf-8").read()
+text = pathlib.Path(src).read_text(encoding="utf-8")
 text = text.replace("__TREE__", tree).replace("__JOURNAL__", journal).replace("__LESSONS__", lessons)
 data = json.loads(text)
 data.pop("_comment", None)
-open(dst, "w", encoding="utf-8", newline="\n").write(json.dumps(data, indent=2) + "\n")
+pathlib.Path(dst).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n")
 PY
 fi
 
@@ -225,7 +225,7 @@ for i in $(seq "$START" "$END"); do
 
     # The final text alone cannot show whether a proving run happened; the .jsonl transcript
     # carries the tool calls. Located by session id, which is race-free under concurrency.
-    sid="$(python -X utf8 -c "import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8')).get('session_id',''))" "$(winp "$ARTIFACT_BASE.json")" 2>/dev/null || true)"
+    sid="$(python -X utf8 -c "import json,pathlib,sys;print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')).get('session_id',''))" "$(winp "$ARTIFACT_BASE.json")" 2>/dev/null || true)"
     if [ -n "$sid" ]; then
         src="$(find "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects" -name "$sid.jsonl" 2>/dev/null | head -1)"
         if [ -n "$src" ]; then

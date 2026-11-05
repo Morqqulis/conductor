@@ -6,6 +6,7 @@ and a mechanical proxy (Latin-script words outside code, glossed status token).
 """
 import hashlib
 import json
+import pathlib
 import re
 import subprocess
 import sys
@@ -50,13 +51,14 @@ def main():
     order = sorted(pairs, key=lambda p: hashlib.sha256(p[1].encode()).hexdigest())
     results = []
     for blind, (label, path) in enumerate(order):
-        run = json.load(open(path, encoding="utf-8"))
+        run = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
         text = run.get("result", "")
         score = judge(text)
         results.append({"blind_id": blind, "label": label, "run_cost_usd": run.get("total_cost_usd"),
                         "turns": run.get("num_turns"), **mechanical(text), **score})
         print(f"scored blind #{blind}", file=sys.stderr)
-    json.dump(results, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    with open(out_path, "w", encoding="utf-8") as output:
+        json.dump(results, output, ensure_ascii=False, indent=1)
 
 
 if __name__ == "__main__":

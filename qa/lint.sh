@@ -116,6 +116,10 @@ for f in "$DEPLOY_MD" "$ADAPTERS/core-body.md"; do
     fi
 done
 
+# --- absence claims: "no warnings" proven from summary lines let a CI warning ship ------
+tr '\n' ' ' < "$RUNTIME/playbooks/verification.md" | grep -qF 'needs the FULL output of every check scanned' || \
+    check 1 "absence-claim rule (scan the full output, show the count) missing in runtime/playbooks/verification.md"
+
 # --- placeholders: a rule that says "TBD" is a rule the agent will improvise around ----
 while IFS= read -r f; do
     for bad in 'TBD' 'TODO' 'add appropriate' 'fill in' 'similar to'; do

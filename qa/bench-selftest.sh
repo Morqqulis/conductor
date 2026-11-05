@@ -10,8 +10,8 @@ fail() { printf 'bench-selftest: %s\n' "$1" >&2; exit 1; }
 expect() { "$@" || fail "assertion failed: $*"; }
 json_field() {
     python - "$1" "$2" <<'PY'
-import json, sys
-value = json.load(open(sys.argv[1], encoding="utf-8"))
+import json, pathlib, sys
+value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
 for part in sys.argv[2].split("."):
     value = value[part]
 print(value)
@@ -44,12 +44,12 @@ PY
 }
 transcript_for_call() {
     python - "$SANDBOX/repo/qa/bench/transcripts" "$1" <<'PY'
-import glob, json, os, sys
+import glob, json, os, pathlib, sys
 directory, call_id = sys.argv[1:]
 matches = []
 for path in glob.glob(os.path.join(directory, "*.json")):
     try:
-        data = json.load(open(path, encoding="utf-8"))
+        data = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         continue
     if isinstance(data, dict) and data.get("call_id") == call_id:
@@ -101,7 +101,7 @@ done
     printf '%s\n' "${FAKE_CLAUDE_CALL_ID:-uncategorized}" > "$CLAUDE_CONFIG_DIR/projects/fake/fake-session.jsonl"
 }
 python - "$settings" "${args[@]}" <<'PY'
-import json, os, re, sys
+import json, os, pathlib, re, sys
 settings = sys.argv[1]
 result = {
     "type": "result", "subtype": "success", "is_error": False,
@@ -121,11 +121,11 @@ elif mode == "blank-result":
 elif mode == "no-session":
     result.pop("session_id")
 if settings:
-    data = json.load(open(settings, encoding="utf-8"))
+    data = json.loads(pathlib.Path(settings).read_text(encoding="utf-8"))
     command = data["hooks"]["SessionStart"][0]["hooks"][0]["command"]
     tree = re.search(r'bash "(.+)/hooks/session-start\.sh"', command).group(1)
     result["tree"] = tree
-    result["core"] = open(os.path.join(tree, "core.md"), encoding="utf-8").read()
+    result["core"] = pathlib.Path(os.path.join(tree, "core.md")).read_text(encoding="utf-8")
 print(json.dumps(result))
 PY
 [ "$mode" != partial7 ] || { printf 'FAKE_PARTIAL_EXIT_7\n' >&2; exit 7; }
@@ -229,12 +229,12 @@ SH
 chmod +x "$SANDBOX/bin/cp"
 
 python - "$SANDBOX/repo/runtime/core.md" <<'PY'
-import sys
+import pathlib, sys
 path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
+text = pathlib.Path(path).read_text(encoding="utf-8")
 old = "## MODULES (base: __CONDUCTOR_DIR__/)"
 assert old in text
-open(path, "w", encoding="utf-8", newline="\n").write(text.replace(old, "## MODULES (base: BROKEN_MODULE_BASE/)"))
+pathlib.Path(path).write_text(text.replace(old, "## MODULES (base: BROKEN_MODULE_BASE/)"), encoding="utf-8", newline="\n")
 PY
 BROKEN_CALL_LOG="$SANDBOX/broken-claude.log"
 set +e
@@ -251,21 +251,21 @@ if find "$SANDBOX/repo/qa/bench/transcripts" -name 'verify-conductor-8-*.manifes
     fail 'runner wrote a manifest for an invalid rendered core'
 fi
 python - "$SANDBOX/repo/runtime/core.md" <<'PY'
-import sys
+import pathlib, sys
 path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
+text = pathlib.Path(path).read_text(encoding="utf-8")
 old = "## MODULES (base: BROKEN_MODULE_BASE/)"
 assert old in text
-open(path, "w", encoding="utf-8", newline="\n").write(text.replace(old, "## MODULES (base: __CONDUCTOR_DIR__/)") )
+pathlib.Path(path).write_text(text.replace(old, "## MODULES (base: __CONDUCTOR_DIR__/)") , encoding="utf-8", newline="\n")
 PY
 
 python - "$SANDBOX/repo/runtime/core.md" <<'PY'
-import sys
+import pathlib, sys
 path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
+text = pathlib.Path(path).read_text(encoding="utf-8")
 old = "# CONDUCTOR CORE (sentinel: CONDUCTOR-CORE-v1-7f3a)"
 assert old in text
-open(path, "w", encoding="utf-8", newline="\n").write(text.replace(old, "# CONDUCTOR CORE (sentinel: BROKEN-SENTINEL)"))
+pathlib.Path(path).write_text(text.replace(old, "# CONDUCTOR CORE (sentinel: BROKEN-SENTINEL)"), encoding="utf-8", newline="\n")
 PY
 SENTINEL_CALL_LOG="$SANDBOX/sentinel-claude.log"
 set +e
@@ -282,12 +282,12 @@ if find "$SANDBOX/repo/qa/bench/transcripts" -name 'verify-conductor-7-*.manifes
     fail 'runner wrote a manifest for a core without the exact sentinel'
 fi
 python - "$SANDBOX/repo/runtime/core.md" <<'PY'
-import sys
+import pathlib, sys
 path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
+text = pathlib.Path(path).read_text(encoding="utf-8")
 old = "# CONDUCTOR CORE (sentinel: BROKEN-SENTINEL)"
 assert old in text
-open(path, "w", encoding="utf-8", newline="\n").write(text.replace(old, "# CONDUCTOR CORE (sentinel: CONDUCTOR-CORE-v1-7f3a)"))
+pathlib.Path(path).write_text(text.replace(old, "# CONDUCTOR CORE (sentinel: CONDUCTOR-CORE-v1-7f3a)"), encoding="utf-8", newline="\n")
 PY
 
 cat > "$SANDBOX/claude-config/settings.json" <<'JSON'
@@ -306,8 +306,8 @@ if find "$SANDBOX/repo/qa/bench/work" -type d -name conductor-tree | grep -q .; 
     fail 'baseline rendered a conductor tree'
 fi
 python - "$BASELINE" <<'PY'
-import json, sys
-args = json.load(open(sys.argv[1], encoding="utf-8"))["args"]
+import json, pathlib, sys
+args = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["args"]
 sources = [args[index + 1] for index, value in enumerate(args[:-1]) if value == "--setting-sources"]
 assert sources == ["project,local"], args
 assert "--settings" not in args, args
@@ -339,8 +339,8 @@ expect test -f "$FIRST_BASE.jsonl"
 [ "$(json_field "$FIRST_MANIFEST" artifact_base)" = "$(winp "$FIRST_BASE")" ] || fail 'manifest artifact base is wrong'
 [ -n "$(json_field "$FIRST_MANIFEST" invocation_id)" ] || fail 'manifest invocation id is missing'
 python - "$FIRST" <<'PY'
-import json, sys
-args = json.load(open(sys.argv[1], encoding="utf-8"))["args"]
+import json, pathlib, sys
+args = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["args"]
 sources = [args[index + 1] for index, value in enumerate(args[:-1]) if value == "--setting-sources"]
 settings = [args[index + 1] for index, value in enumerate(args[:-1]) if value == "--settings"]
 assert sources == ["project,local"], args
@@ -350,10 +350,10 @@ EXPECTED_DIGEST="$(tree_digest "$SNAPSHOT")"
 [ "$(json_field "$FIRST_MANIFEST" runtime_sha256)" = "$EXPECTED_DIGEST" ] || fail 'manifest digest does not describe copied pre-render runtime'
 
 python - "$SANDBOX/repo/runtime/core.md" <<'PY'
-import sys
+import pathlib, sys
 path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
-open(path, "w", encoding="utf-8", newline="\n").write(text.replace("BENCH-FRESHNESS-V1", "BENCH-FRESHNESS-V2"))
+text = pathlib.Path(path).read_text(encoding="utf-8")
+pathlib.Path(path).write_text(text.replace("BENCH-FRESHNESS-V1", "BENCH-FRESHNESS-V2"), encoding="utf-8", newline="\n")
 PY
 
 run ignored second

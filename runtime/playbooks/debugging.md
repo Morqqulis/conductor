@@ -42,25 +42,17 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user
    confirmed it is a different bug. At 3 failed attempts -> STOP per core counter rules and
    consult the human.
-6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks). Use SAFE UNDO
-   in implementing.md and probes.md#dirty-tree. Copy CURRENT files, including dirty and
-   untracked files and the CURRENT regression test, into an isolated disposable directory.
-   Reverse only your own fix hunks there; retain test hunks even in the SAME file. A whole
-   file snapshot or path-scoped stash can remove the test and user edits along with the fix.
-   Before undo/reapply, compare with the expected post-edit bytes/existence; mismatch,
-   active writer or ambiguous ownership -> preserve both states and ask, never overwrite.
-   ```
-   identify/write a regression test for the ORIGINAL symptom
-   run in CURRENT isolated copy -> MUST pass
-   disarm ONLY own fix hunks, keeping the CURRENT test and user content
-   run  -> MUST FAIL   # MUST FAIL = the regression test's own assertion fails;
-                       # a collection/import/runtime error or a missing test is NOT a valid
-                       # failure — preserve evidence and repair the isolated setup
-   reapply ONLY those hunks after the same expected-state check
-   run  -> MUST pass
-   ```
-   pass/FAIL/pass = proven. Disarmed run PASSES -> repair the test, repeat. Final FAIL ->
-   repair the isolated restore, repeat. Initial FAIL -> incomplete fix: back to step 5.
+6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks): the regression
+   test for the ORIGINAL symptom must fail without the fix and pass with it.
+   Default: `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/falsify.py --test
+   "<test command>" <fix files>` - an isolated copy of the CURRENT tree, fix files back to
+   their pre-edit snapshot (else HEAD), expects FAIL then PASS; paste its verdict. It never
+   writes the real tree and refuses test files.
+   Fix and test in ONE file (e.g. Rust #[cfg(test)]): a whole-file swap would drop the test,
+   so disarm only own hunks per "Guarded hunks" below, run pass/FAIL/pass the same way.
+   MUST FAIL = the test's own assertion fails; an import/collection error or a missing test
+   is not a valid failure. Disarmed run PASSES -> repair the test, repeat. Final FAIL ->
+   repair the restore. Initial FAIL -> incomplete fix: back to step 5.
 7. Completion gate (core), with the ritual's final run as the proving run.
 
 ## Guarded hunks (isolated copy)

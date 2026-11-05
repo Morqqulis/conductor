@@ -52,7 +52,7 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 # is dead weight that no session will ever read.
 declare -A BUDGETS=(
     [debugging.md]=7000 [implementing.md]=7300 [investigating.md]=6000
-    [orchestration.md]=7000 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
+    [orchestration.md]=7400 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
     [verification.md]=5600
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
@@ -125,6 +125,8 @@ tr '\n' ' ' < "$RUNTIME/playbooks/implementing.md" | grep -qF 'every path a pers
     check 1 "reach rule (every place, every path, every sibling instance) missing in runtime/playbooks/implementing.md"
 tr '\n' ' ' < "$RUNTIME/playbooks/debugging.md" | grep -qF 'other instances of the same defect' || \
     check 1 "reach rule for fixes (other instances of the same defect) missing in runtime/playbooks/debugging.md"
+tr '\n' ' ' < "$RUNTIME/playbooks/debugging.md" | grep -qF 'conductor/evidence/falsify.py' || \
+    check 1 "falsification command (evidence/falsify.py) missing in runtime/playbooks/debugging.md"
 for loaded in debugging implementing; do
     tr '\n' ' ' < "$RUNTIME/playbooks/$loaded.md" | grep -qF 'not verified in the real environment' || \
         check 1 "reality/absence claims missing in runtime/playbooks/$loaded.md (verification.md alone is rarely loaded)"

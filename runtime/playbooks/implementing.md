@@ -73,8 +73,8 @@ a test that pins a date leaves no real clock anywhere, database column defaults 
 Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,
 email or a third-party default is "not verified in the real environment" unless run in one;
 "no warnings / no errors / nothing left" needs the FULL output scanned, with the count shown.
-A NEW guard needs remove-only proof at T2+: disarm its protection in an isolated CURRENT
-copy under SAFE UNDO; the guard must fail, then pass after reapplying only those hunks.
+A NEW guard needs remove-only proof at T2+: `conductor/evidence/falsify.py` (debugging.md
+step 6) or, for hunks sharing a file with the test, an isolated copy; fail, then pass.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.
 A guard that reads source text (grep for a literal, a match count) proves one spelling, not the
 class; prefer the compiler, linter or type boundaries.

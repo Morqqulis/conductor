@@ -40,8 +40,9 @@ A dispatch prompt contains EXACTLY these slots — never inherited history:
 3. contracts — signatures/types it must honor
 4. constraints — what it must not do
 5. output contract — report file path (OUTSIDE the repo tree, e.g. system temp — litter in
-   the working tree trips the dirty-tree probe) + "final message <= 15 lines" + the coverage
-   map (contract duty: each dispatch requirement -> where satisfied, or MISSING)
+   the working tree trips the dirty-tree probe; a read-only agent cannot write one: its report
+   is the final message) + "final message <= 15 lines" + the coverage map (contract duty:
+   each dispatch requirement -> where satisfied, or MISSING)
 6. Conductor preset — mandatory, verbatim shape, immediately followed by the full body of the
    relevant playbook:
 ```
@@ -92,7 +93,9 @@ products in rules or prompts — generations rotate)
 After all agents return, apply the INTERSECTION RULE first: any file named by two or more
 agents from DIFFERENT angles is a coupling hotspot — read it yourself before accepting any
 conclusion about it. Inspect evidence applicability per verification.md; run only missing
-checks of changed interactions. Accept valid agent/CI runs without duplicating them. At T3,
+checks of changed interactions. Accept valid agent/CI runs without duplicating them. Merge
+the base INTO the branch first and verify that tree; after merging, `git diff --quiet HEAD
+<branch>` proves main's tree equals the verified one, so nothing reruns. At T3,
 dispatch skeptic.md on the integrated result, and after the skeptic passes, the core T3
 checkpoint applies: get explicit user approval BEFORE merging/integrating. Rigor peaks here —
 at integration, not dispatch.

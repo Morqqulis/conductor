@@ -61,6 +61,7 @@ jobs:
           bash qa/no-warnings.sh python -B qa/test-run-journal-test.py
           bash qa/no-warnings.sh python -B qa/memory-test.py
           bash qa/no-warnings.sh python -B qa/edits-test.py
+          bash qa/no-warnings.sh python -B qa/falsify-test.py
           bash qa/no-warnings.sh python -B -m unittest discover -s qa/session_env -v
           bash qa/no-warnings.sh python -B qa/lesson-recall-test.py
           bash qa/no-warnings.sh python -B qa/memory-restore-test.py

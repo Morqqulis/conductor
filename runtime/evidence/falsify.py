@@ -147,7 +147,9 @@ def main(argv=None):
             if state[0] == "TOOBIG":
                 raise ValueError(f"{relative}: the pre-edit snapshot was too big to keep; pass --base instead")
             current = path.read_bytes()
-            if state[0] == "ORIG" and state[1] == current:
+            # Compare with line endings ignored: git on Windows checks files out with CRLF
+            # while the blob holds LF, so identical text would look like a real fix.
+            if state[0] == "ORIG" and state[1].replace(b"\r\n", b"\n") == current.replace(b"\r\n", b"\n"):
                 raise ValueError(f"{relative} is identical to its pre-fix state ({source}): nothing to falsify")
             plan.append((relative, state, current, source))
     except (ValueError, OSError, subprocess.TimeoutExpired) as error:

@@ -132,10 +132,12 @@ class FalsifyTest(unittest.TestCase):
                 self.assertEqual(code, 2, output)
                 self.assertIn(reason, output)
                 self.assertFalse((self.repo / "ran-anyway").exists())
-        (self.repo / "calc.py").write_text("def add(a, b):\n    return a - b\n", encoding="utf-8")
-        code, output = self.falsify("calc.py")
-        self.assertEqual(code, 2, output)
-        self.assertIn("nothing to falsify", output)
+        for ending in (b"\n", b"\r\n"):  # Windows checkouts turn LF into CRLF
+            with self.subTest(ending=ending):
+                (self.repo / "calc.py").write_bytes(b"def add(a, b):" + ending + b"    return a - b" + ending)
+                code, output = self.falsify("calc.py")
+                self.assertEqual(code, 2, output)
+                self.assertIn("nothing to falsify", output)
 
 
 if __name__ == "__main__":

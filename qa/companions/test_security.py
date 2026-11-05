@@ -6,13 +6,12 @@ from pathlib import Path
 import runpy
 import sys
 import tarfile
-import zipfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 import urllib.request
 
-from test_download import API, BASE, Response
+from test_download import API, BASE, Response, archive
 
 HELPER = Path(__file__).resolve().parents[2] / "tools/companion-download.py"
 
@@ -116,11 +115,9 @@ class SecurityTest(unittest.TestCase):
 
 
     def zip_archive(self, entries):
-        stream = io.BytesIO()
-        with zipfile.ZipFile(stream, "w") as package:
-            for name, data in entries:
-                package.writestr(name, data)
-        return stream.getvalue()
+        # Shared builder: it silences only zipfile's warning for the duplicate member that
+        # some hostile cases contain on purpose.
+        return archive(entries)
 
     def tar_archive(self, entries, link=None):
         stream = io.BytesIO()

@@ -32,6 +32,9 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
 5. VERIFY: run the repro command fresh.
    - Pass -> REACH: search the code for other instances of the same defect (the same expression,
      a copied formula, a sibling path to the same goal); fix each or name it unfixed. Then step 6.
+   Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,
+   email or a third-party default is "not verified in the real environment" unless run in one;
+   "no warnings / no errors / nothing left" needs the FULL output scanned, with the count shown.
    - Fail -> attempt N is FAILED, permanently. Renaming it "a refinement of attempt N" is the
      named violation. Increment N and return to step 2.
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user
@@ -81,7 +84,8 @@ Ask whether the ENVIRONMENT is alive before hunting a regression: a stopped cont
 expired credential, a full disk or a revoked token produces a red that looks exactly like
 broken code. Two tells that it is the environment: the failing tests are ones nobody edited,
 and they die on CONNECT/startup rather than on an assertion. Cascading panics from a dead
-dependency read as memory corruption in the output.
+dependency read as memory corruption in the output. A timeout while the machine is busy
+(an install, a build, another suite) is not a verdict on the code: rerun it alone.
 
 ## Tripwires (in your own output)
 - "should work now" / "probably fixes" -> that is a hypothesis; run the repro command.

@@ -265,7 +265,9 @@ Commits belong to the owner of the work, never to the AI.
   "only", "all" or "nobody" about the system - in a reply, a document, or text for customers
   - search the code for its most likely counterexample (logs, error reports, analytics,
   backups, third-party clients). Found one -> name it instead of the claim. Not checked ->
-  say so. This holds even when the task is only to write text.
+  say so. This holds even when the task is only to write text. Text with facts about the
+  system that leaves the session (a letter, a guide, documentation) is checked before
+  hand-off by an independent reviewer - a subagent given only that text and the code.
 
 ---
 # graphify

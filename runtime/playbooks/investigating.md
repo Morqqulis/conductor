@@ -27,6 +27,8 @@ methods.md RUN-BEFORE-JUDGING AUDIT: reading alone does not complete it.
 2. MAP in this order: entry points -> boundary contracts (types/schemas) -> data flow -> storage.
 3. ANSWER with the map; each statement cites file:line. An unverified inference must be marked
    "inferred, not verified" explicitly.
+An absence finding ("nothing calls X", "no warnings", "never sent outside") needs the FULL
+search or output scanned, with the count shown; logs, error reports and analytics count.
 
 ## Tripwires (in your own output)
 - "this framework usually…" / "typically this means…" -> priors are not evidence; open the

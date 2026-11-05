@@ -68,6 +68,9 @@ unreachable race can pass. Source assertions anchor on symbols/normalized text, 
 Tests that deceive: a threshold is tested AT its boundary (exactly half under "more than half");
 a test that pins a date leaves no real clock anywhere, database column defaults included; a
 "never leaks" test feeds input that could leak.
+Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,
+email or a third-party default is "not verified in the real environment" unless run in one;
+"no warnings / no errors / nothing left" needs the FULL output scanned, with the count shown.
 A NEW guard needs remove-only proof at T2+: disarm its protection in an isolated CURRENT
 copy under SAFE UNDO; the guard must fail, then pass after reapplying only those hunks.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.

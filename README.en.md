@@ -149,6 +149,19 @@ recoverable snapshot in `~/.local/state/conductor/updates/<id>/`. Reinstallation
 manual changes to registered files. Unknown program files and commands are not overwritten.
 Lessons, project memory and foreign settings are preserved.
 
+### Claude Code cloud sessions (claude.ai/code)
+
+A cloud session runs in a fresh container that has no installation. Add this line once to
+the cloud environment's **setup script** (the environment menu in the session title →
+Edit → Setup script), with your language:
+
+```bash
+set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language en --skip-companions
+```
+
+Every new cloud session of that environment then starts with Conductor, no commands needed.
+The install takes seconds; `--skip-companions` leaves out RTK and Graphify for a fast start.
+
 ### Install, update and remove from any directory
 
 The global command lives in `~/.local/bin` (`conductor.cmd` on Windows).

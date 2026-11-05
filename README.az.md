@@ -149,6 +149,20 @@ Cursor qaydasını əvvəlki kimi əl ilə aktivləşdirmək lazımdır; quraşd
 Qeydiyyatlı fayllardakı şəxsi dəyişikliklər təkrar quraşdırmanı dayandırır.
 Yad proqramlar və əmrlər əvəz edilmir. Dərslər, layihə yaddaşı və yad parametrlər qorunur.
 
+### Claude Code bulud sessiyaları (claude.ai/code)
+
+Bulud sessiyası quraşdırma olmayan təzə konteynerdə işləyir. Bu sətri bulud mühitinin
+**quraşdırma skriptinə** bir dəfə əlavə edin (sessiya başlığındakı mühit menyusu → Edit →
+Setup script):
+
+```bash
+set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conductor/main/bootstrap.sh | bash -s -- --language az --skip-companions
+```
+
+Bundan sonra həmin mühitin hər yeni bulud sessiyası Conductor ilə başlayır, heç bir əmr
+lazım deyil. Quraşdırma bir neçə saniyə çəkir; `--skip-companions` sürətli start üçün RTK və
+Graphify-ı qoymur.
+
 ### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 
 Qlobal əmr `~/.local/bin` daxilindədir (Windows: `conductor.cmd`).

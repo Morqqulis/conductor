@@ -26,7 +26,7 @@ expect "clean output passes and says what it scanned" 0 "0 own warning lines" \
 expect "a Python UserWarning fails the check" 1 "1 warning line(s)" \
     "$PYTHON" -c "import warnings; warnings.warn('stray')"
 expect "a ResourceWarning hidden by default is shown and fails" 1 "ResourceWarning" \
-    "$PYTHON" -c "import gc; f = open('$GUARD'); del f; gc.collect()"
+    "$PYTHON" -c "import gc, sys; f = open(sys.executable, 'rb'); del f; gc.collect()"
 expect "a DeprecationWarning hidden by default is shown and fails" 1 "DeprecationWarning" \
     "$PYTHON" -c "import warnings; warnings.warn('old', DeprecationWarning)"
 expect "a doctor WARN line fails" 1 "WARN  journal" \

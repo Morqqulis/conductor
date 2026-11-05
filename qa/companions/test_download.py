@@ -16,6 +16,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = ROOT / "tools/companion-download.py"
+sys.path.insert(0, str(ROOT / "runtime/updater"))
+import companion_download  # noqa: E402,F401 - the target of the host() patch
 API = "https://api.github.com/repos/rtk-ai/rtk/releases/latest"
 BASE = "https://github.com/rtk-ai/rtk/releases/download/v1.2.3/"
 ASSET = "rtk-x86_64-pc-windows-msvc.zip"
@@ -72,8 +74,7 @@ class DownloadTest(unittest.TestCase):
 
         output, errors = io.StringIO(), io.StringIO()
         with patch("urllib.request.OpenerDirector.open", transport), \
-                patch("platform.system", return_value=platform_name), \
-                patch("platform.machine", return_value=machine), \
+                patch("companion_download.host", return_value=(platform_name, machine)), \
                 patch.object(sys, "argv", [str(HELPER), "--dest", str(dest)]), \
                 contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
             try:

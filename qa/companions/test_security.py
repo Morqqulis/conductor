@@ -1,11 +1,14 @@
 """The downloader's HTTPS and archive trust boundaries, without external I/O."""
 import gzip
 import io
+import os
 from pathlib import Path
 import runpy
+import sys
 import tarfile
 import zipfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 import urllib.request
 
@@ -58,13 +61,44 @@ class SecurityTest(unittest.TestCase):
                  ("Darwin", "x86_64", "rtk-x86_64-apple-darwin.tar.gz", "rtk")]
         for system, machine, asset, binary in cases:
             with self.subTest(system=system, machine=machine), \
-                    patch("platform.system", return_value=system), patch("platform.machine", return_value=machine):
+                    patch.dict(self.api["target"].__globals__, host=lambda s=system, m=machine: (s, m)):
                 self.assertEqual(self.api["target"](), (asset, binary))
         for system, machine in (("Windows", "ARM64"), ("Linux", "i686"), ("FreeBSD", "x86_64")):
             with self.subTest(system=system, machine=machine), \
-                    patch("platform.system", return_value=system), patch("platform.machine", return_value=machine):
+                    patch.dict(self.api["target"].__globals__, host=lambda s=system, m=machine: (s, m)):
                 with self.assertRaisesRegex(ValueError, "no official prebuilt"):
                     self.api["target"]()
+
+    def test_host_detection_starts_no_process_and_skips_platform_uname(self):
+        # platform.uname() on Windows may run the shell command `ver`; choosing a download
+        # must not depend on it. Any process or uname call here is a failure.
+        refuse = AssertionError("host detection must not start a process or call platform.uname")
+        with patch("platform.uname", side_effect=refuse), patch("subprocess.run", side_effect=refuse), \
+                patch("subprocess.Popen", side_effect=refuse):
+            asset, binary = self.api["target"]()
+        self.assertTrue(asset.startswith("rtk-") and binary in ("rtk", "rtk.exe"))
+
+    def test_windows_architecture_comes_from_the_environment(self):
+        host = self.api["host"]
+        cases = [({"PROCESSOR_ARCHITECTURE": "AMD64"}, "AMD64"),
+                 ({"PROCESSOR_ARCHITECTURE": "x86", "PROCESSOR_ARCHITEW6432": "AMD64"}, "AMD64"),
+                 ({"PROCESSOR_ARCHITECTURE": "ARM64"}, "ARM64"),
+                 ({}, "")]
+        for environment, expected in cases:
+            with self.subTest(environment=environment), patch.object(sys, "platform", "win32"), \
+                    patch.dict(os.environ, environment, clear=True):
+                self.assertEqual(host(), ("Windows", expected))
+        with patch.object(sys, "platform", "win32"), patch.dict(os.environ, {}, clear=True), \
+                patch.dict(host.__globals__, host=host):
+            with self.assertRaisesRegex(ValueError, "no official prebuilt"):
+                self.api["target"]()
+
+    def test_posix_family_and_machine(self):
+        host = self.api["host"]
+        for name, expected in (("linux", "Linux"), ("darwin", "Darwin"), ("freebsd14", "freebsd14")):
+            with self.subTest(platform=name), patch.object(sys, "platform", name), \
+                    patch("os.uname", create=True, return_value=SimpleNamespace(machine="x86_64")):
+                self.assertEqual(host(), (expected, "x86_64"))
 
     def test_tar_decompression_is_bounded_before_parsing_metadata(self):
         # A huge ignored PAX header or trailing gzip payload must not bypass the

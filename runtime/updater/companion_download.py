@@ -12,8 +12,8 @@ import hmac
 import http.client
 import io
 import json
+import os
 from pathlib import Path
-import platform
 import re
 import stat
 import sys
@@ -87,8 +87,27 @@ def download(url, limit):
         return bytes(data)
 
 
+def host():
+    """Return (system, machine) without starting any process.
+
+    platform.system() and platform.machine() build the whole platform.uname(). On Windows
+    that asks WMI for the OS version and, when WMI does not answer, runs the shell command
+    `ver`: slow at best, and on the owner's machine the reason every RTK step failed in the
+    companion tests. Picking a download needs only the OS family and the CPU architecture,
+    which the interpreter and the environment already know.
+    """
+    if sys.platform == "win32":
+        # PROCESSOR_ARCHITEW6432 is set for a 32-bit process on 64-bit Windows and names the
+        # real architecture, which is the one the downloaded binary runs on.
+        machine = os.environ.get("PROCESSOR_ARCHITEW6432") or os.environ.get("PROCESSOR_ARCHITECTURE", "")
+        return "Windows", machine
+    system = {"linux": "Linux", "darwin": "Darwin"}.get(sys.platform, sys.platform)
+    return system, os.uname().machine
+
+
 def target():
-    system, machine = platform.system(), platform.machine().lower()
+    system, machine = host()
+    machine = machine.lower()
     arch = {"amd64": "x86_64", "x86_64": "x86_64",
             "arm64": "aarch64", "aarch64": "aarch64"}.get(machine)
     targets = {("Windows", "x86_64"): "x86_64-pc-windows-msvc",

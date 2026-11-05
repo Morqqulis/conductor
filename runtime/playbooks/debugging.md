@@ -30,6 +30,8 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    attempt and MUST be pre-registered; an unregistered behavior-changing edit counts as a
    failed attempt.
 5. VERIFY: run the repro command fresh.
+   - A premise over a whole category ("the response always...", "every caller...") -> check the
+     member it fails for (a branch splitting the category nearby) before trusting the fix.
    - Pass -> REACH: search the code for other instances of the same defect (the same expression,
      a copied formula, a sibling path to the same goal); fix each or name it unfixed. Then step 6.
    Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,

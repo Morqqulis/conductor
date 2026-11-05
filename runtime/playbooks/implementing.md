@@ -74,6 +74,11 @@ email or a third-party default is "not verified in the real environment" unless 
 A NEW guard needs remove-only proof at T2+: disarm its protection in an isolated CURRENT
 copy under SAFE UNDO; the guard must fail, then pass after reapplying only those hunks.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.
+A guard that reads source text (grep for a literal, a match count) proves one spelling, not the
+class; prefer the compiler, linter or type boundaries.
+A premise stated over a whole category ("the response always has X", "every caller passes Y")
+-> ask WHICH members; a branch that splits the category nearby (a 204 with no body, a second
+caller) is the tell. Make that member the acceptance test.
 Integrity guards run when their invariant is affected (registrations, naming, config),
 not on every task. Explicit project-required checks still apply; see verification.md.
 

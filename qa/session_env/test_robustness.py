@@ -7,7 +7,7 @@ import subprocess
 import time
 import unittest
 
-from fixture import BASH, GUARD, LESSONS_HOOK, SESSION, GuardCase, codex_block, distinct_lines
+from guard_fixture import BASH, GUARD, LESSONS_HOOK, SESSION, GuardCase, codex_block, distinct_lines
 
 
 class RobustnessTest(GuardCase):
@@ -17,7 +17,7 @@ class RobustnessTest(GuardCase):
     def test_append_between_check_and_rename_is_carried_over(self):
         # The fake mv appends to the ORIGINAL file right before the real rename replaces it:
         # the exact window that the content comparison cannot see.
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 5)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 5)
         prefix = self.fake_tool("mv", 'if [ ! -e "$FAKE_MARKER" ]; then\n'
                                 '    : > "$FAKE_MARKER"\n'
                                 '    printf "%s\\n" "export LATE_WRITER=\'new\'" >> "$FAKE_TARGET"\n'
@@ -35,7 +35,7 @@ class RobustnessTest(GuardCase):
         # Their text is unknown, so nothing in the session may be collapsed; sizes still count.
         (self.session_dir / "sessionstart-hook-1.sh").mkdir()
         text = distinct_lines(7000) + codex_block() * 3
-        kept = self.write("sessionstart-hook-2.sh", text)
+        kept = self.write_env_file("sessionstart-hook-2.sh", text)
         fifo = None
         if hasattr(os, "mkfifo"):
             fifo = self.session_dir / "sessionstart-hook-3.sh"
@@ -59,8 +59,8 @@ class RobustnessTest(GuardCase):
 
     def test_time_budget_stops_new_rewrites_and_still_reports(self):
         for index in range(5):
-            self.write(f"sessionstart-hook-{index}.sh", codex_block() * 2)
-        self.write("cwdchanged-hook-1.sh", distinct_lines(7000))
+            self.write_env_file(f"sessionstart-hook-{index}.sh", codex_block() * 2)
+        self.write_env_file("cwdchanged-hook-1.sh", distinct_lines(7000))
         prefix = self.fake_tool("cmp", 'sleep 1.5\nexec "$REAL_CMP" "$@"\n')
         started = time.monotonic()
         result = self.run_hook(path_prefix=prefix, extra_env={"REAL_CMP": self.real("cmp")})
@@ -79,7 +79,7 @@ class RobustnessTest(GuardCase):
         # rewritten, and the warning still sees every size.
         text = codex_block() * 12
         for index in range(4):
-            self.write(f"sessionstart-hook-{index}.sh", text)
+            self.write_env_file(f"sessionstart-hook-{index}.sh", text)
         calls = self.root / "awk-calls"
         prefix = self.fake_tool("awk", 'printf x >> "$FAKE_COUNT"\nsleep 1.5\nexec "$REAL_AWK" "$@"\n')
         result = self.run_hook(path_prefix=prefix, extra_env={"REAL_AWK": self.real("awk"), "FAKE_COUNT": str(calls)})
@@ -96,7 +96,7 @@ class RobustnessTest(GuardCase):
         if os.name != "nt" and not os.path.exists("/usr/bin/timeout"):
             self.skipTest("no GNU timeout at /usr/bin/timeout on this system")
         (self.home / "lessons.md").write_text("2026-10-29 | fixture | KEEP_RULE\n", encoding="utf-8")
-        self.write("sessionstart-hook-3.sh", codex_block() * 3)
+        self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
         prefix = self.fake_tool("cmp", "sleep 20\n")
         started = time.monotonic()
         result = self.run_hook(script=LESSONS_HOOK, path_prefix=prefix)
@@ -112,7 +112,7 @@ class RobustnessTest(GuardCase):
     @unittest.skipIf(os.name == "nt", "Git for Windows bash puts its own tool folders back on PATH")
     def test_missing_tool_is_reported_not_retried(self):
         # bash started by absolute path with an empty PATH: no awk/cmp/... - say so once.
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 3)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
         bare = self.root / "bare-bin"
         bare.mkdir()
         env = dict(self.env, CLAUDE_ENV_FILE=self.env_file(), PATH=str(bare))
@@ -131,17 +131,17 @@ class RobustnessTest(GuardCase):
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
 
     def test_inherited_noclobber_does_not_disable_the_cleanup(self):
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 3)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
         result = self.run_hook(extra_env={"SHELLOPTS": "braceexpand:hashall:interactive-comments:noclobber"})
         self.assertEqual((result.returncode, result.stderr), (0, b""))
         self.assertEqual(path.read_bytes(), codex_block().encode("utf-8"))
 
     def test_stale_temporaries_are_swept_and_fresh_ones_kept(self):
-        stale = self.write(".conductor-env.AbC123", "export OLD='1'\n")
-        fresh = self.write(".conductor-env.XyZ789.new", "export NEW='1'\n")
+        stale = self.write_env_file(".conductor-env.AbC123", "export OLD='1'\n")
+        fresh = self.write_env_file(".conductor-env.XyZ789.new", "export NEW='1'\n")
         hour_ago = time.time() - 3600
         os.utime(stale, (hour_ago, hour_ago))
-        self.write("sessionstart-hook-3.sh", codex_block())
+        self.write_env_file("sessionstart-hook-3.sh", codex_block())
         self.run_hook()
         self.assertFalse(stale.exists(), "an orphaned copy older than 10 minutes was kept")
         self.assertTrue(fresh.exists(), "a recent temporary file of a running guard was removed")
@@ -197,7 +197,7 @@ class RobustnessTest(GuardCase):
 
     @unittest.skipIf(os.name == "nt", "POSIX permission bits")
     def test_rewritten_file_keeps_its_mode(self):
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 3)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
         path.chmod(0o640)
         self.run_hook()
         self.assertEqual(path.read_bytes(), codex_block().encode("utf-8"))

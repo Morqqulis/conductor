@@ -75,7 +75,7 @@ class GuardCase(unittest.TestCase):
         return json.dumps({"session_id": session, "transcript_path": "C:/work/t.jsonl",
                            "cwd": "C:/work", "hook_event_name": "SessionStart", "source": "resume"})
 
-    def write(self, name, text, session=SESSION):
+    def write_env_file(self, name, text, session=SESSION):
         path = self.sessions / session / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(text.encode("utf-8"))

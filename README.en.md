@@ -262,7 +262,8 @@ Adapters for a specific project (the rules will be versioned along with it):
 bash install-project.sh --repo "/d/path/to/project"
 ```
 
-After installation, restart Cursor and Antigravity (hook configs are read at startup).
+After installation, restart Cursor and Antigravity so they pick up the new rule (the
+installer adds no hooks there; it only removes old Conductor entries).
 Global operations retain snapshots; a conflict stops repeated installation.
 
 ## Safe Graphify map updates
@@ -467,6 +468,8 @@ docs/             the spec with its deploy log, the portability plan
 install*.sh       installers; uninstall.sh — removal
 ```
 
-Changes go only into `runtime/` and `adapters/core-body.md`, then
+Changes to what ships go only into its sources: `runtime/`, `adapters/core-body.md` and the
+digest headers `adapters/*/header.*`, `deploy/global-CLAUDE.md`, and the shipped tools
+`tools/settings-json.py` and `tools/migrate-lessons.sh`; then
 `bash tools/build-digests.sh`, `bash qa/lint.sh` and an installer: the repository is the
 source of truth, and the live copies are always built from it.

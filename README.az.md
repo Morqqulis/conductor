@@ -263,8 +263,8 @@ Adapterləri konkret layihəyə qoymaq (qaydalar layihə ilə birlikdə versiyal
 bash install-project.sh --repo "/d/layihə/yolu"
 ```
 
-Quraşdırmadan sonra Cursor və Antigravity-ni yenidən başladın (hook konfiqurasiyaları
-startda oxunur). Qlobal əməliyyatlar nüsxələri saxlayır; ziddiyyət təkrar quraşdırmanı dayandırır.
+Quraşdırmadan sonra yeni qaydanı götürmələri üçün Cursor və Antigravity-ni yenidən başladın
+(quraşdırıcı orada öz hook-larını qoymur, yalnız köhnə Conductor qeydlərini silir). Qlobal əməliyyatlar nüsxələri saxlayır; ziddiyyət təkrar quraşdırmanı dayandırır.
 
 ## Graphify xəritəsinin təhlükəsiz yenilənməsi
 
@@ -474,6 +474,8 @@ docs/             deploy jurnalı ilə spesifikasiya, daşınabilirlik planı
 install*.sh       quraşdırıcılar, uninstall.sh — silinmə
 ```
 
-Dəyişikliklər yalnız `runtime/` və `adapters/core-body.md` içində edilir, sonra
+Quraşdırılan hissənin dəyişiklikləri yalnız onun mənbələrində edilir: `runtime/`,
+`adapters/core-body.md` və digest başlıqları `adapters/*/header.*`, `deploy/global-CLAUDE.md`,
+quraşdırılan alətlər `tools/settings-json.py` və `tools/migrate-lessons.sh`; sonra
 `bash tools/build-digests.sh`, `bash qa/lint.sh` və quraşdırıcı: repozitori — həqiqət
 mənbəyidir, canlı nüsxələr həmişə ondan yığılır.

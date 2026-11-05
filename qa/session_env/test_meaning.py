@@ -2,7 +2,7 @@
 import subprocess
 import unittest
 
-from fixture import BASH, GuardCase, codex_block
+from guard_fixture import BASH, GuardCase, codex_block
 
 
 class MeaningTest(GuardCase):
@@ -24,7 +24,7 @@ class MeaningTest(GuardCase):
             with self.subTest(label):
                 self.log.unlink(missing_ok=True)
                 text = line * 3 + codex_block() * 3
-                path = self.write("sessionstart-hook-1.sh", text)
+                path = self.write_env_file("sessionstart-hook-1.sh", text)
                 result = self.run_hook()
                 self.assertEqual((result.returncode, result.stderr), (0, b""))
                 self.assertEqual(path.read_bytes(), text.encode("utf-8"))
@@ -33,9 +33,9 @@ class MeaningTest(GuardCase):
     def test_integer_declared_in_a_neighbouring_file_blocks_the_whole_session(self):
         # setup-hook-1 runs first and makes COUNT an integer, so each COUNT='COUNT+1' that
         # follows - a plain line on its own - adds one: collapsing the two would end at 1, not 2.
-        self.write("setup-hook-1.sh", "declare -i COUNT=0\n")
+        self.write_env_file("setup-hook-1.sh", "declare -i COUNT=0\n")
         text = "COUNT='COUNT+1'\n" * 2 + codex_block() * 3
-        path = self.write("sessionstart-hook-2.sh", text)
+        path = self.write_env_file("sessionstart-hook-2.sh", text)
         self.assertEqual(self.final_state(["COUNT"]), "COUNT=2\n")
         result = self.run_hook()
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
@@ -48,8 +48,8 @@ class MeaningTest(GuardCase):
         # awk fails on hook-2 only: its text stays unknown, so hook-1 must keep its repeats.
         real = subprocess.check_output([BASH, "-c", "command -v awk"], text=True).strip()
         prefix = self.fake_tool("awk", 'case "${@: -1}" in *hook-2.sh) exit 2 ;; esac\nexec "$REAL_AWK" "$@"\n')
-        repeated = self.write("sessionstart-hook-1.sh", codex_block() * 3)
-        self.write("sessionstart-hook-2.sh", "export ONLY='1'\n")
+        repeated = self.write_env_file("sessionstart-hook-1.sh", codex_block() * 3)
+        self.write_env_file("sessionstart-hook-2.sh", "export ONLY='1'\n")
         result = self.run_hook(path_prefix=prefix, extra_env={"REAL_AWK": real})
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
         self.assertEqual(repeated.read_bytes(), (codex_block() * 3).encode("utf-8"))
@@ -58,7 +58,7 @@ class MeaningTest(GuardCase):
     def test_values_holding_equals_or_plus_are_still_collapsed(self):
         # Ordinary settings such as NODE_OPTIONS carry = and + inside quotes: still plain text.
         block = "export NODE_OPTIONS='--max-old-space-size=4096'\nexport KEY_B64=\"a+b/c==\"\n"
-        path = self.write("sessionstart-hook-1.sh", (block + codex_block()) * 4)
+        path = self.write_env_file("sessionstart-hook-1.sh", (block + codex_block()) * 4)
         names = ["NODE_OPTIONS", "KEY_B64", "CODEX_COMPANION_SESSION_ID", "CLAUDE_PLUGIN_DATA"]
         before = self.final_state(names)
         result = self.run_hook()

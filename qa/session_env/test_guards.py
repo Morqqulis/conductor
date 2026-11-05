@@ -5,7 +5,7 @@ import subprocess
 import time
 import unittest
 
-from fixture import BASH, GUARD, OTHER_SESSION, SESSION, GuardCase, codex_block, distinct_lines
+from guard_fixture import BASH, GUARD, OTHER_SESSION, SESSION, GuardCase, codex_block, distinct_lines
 
 
 class GuardTest(GuardCase):
@@ -13,14 +13,14 @@ class GuardTest(GuardCase):
         self.assertEqual(path.read_bytes(), expected.encode("utf-8"), f"{path.name} was modified")
 
     def test_without_claude_env_file_nothing_is_read_or_changed(self):
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 4)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 4)
         result = self.run_hook(env_file=False)
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
         self.assert_untouched(path, codex_block() * 4)
         self.assertFalse(self.log.exists())
 
     def test_empty_and_corrupt_input_are_logged_and_change_nothing(self):
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 4)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 4)
         stop = '{"session_id": "%s", "hook_event_name": "Stop"}' % SESSION
         twice = '{"session_id": "%s", "session_id": "%s", "hook_event_name": "SessionStart"}' % (SESSION, SESSION)
         cases = {"": "empty_input", "   \n": "empty_input", '{"session_id": "abc"': "invalid_input",
@@ -36,7 +36,7 @@ class GuardTest(GuardCase):
                 self.assert_untouched(path, codex_block() * 4)
 
     def test_unsafe_session_id_is_refused(self):
-        victim = self.write("sessionstart-hook-3.sh", codex_block() * 4, session="victim")
+        victim = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 4, session="victim")
         for session_id in ("../victim", "..", "a/b", "a\\\\b", ".hidden", ""):
             with self.subTest(session_id=session_id):
                 self.log.unlink(missing_ok=True)
@@ -47,17 +47,17 @@ class GuardTest(GuardCase):
                 self.assert_untouched(victim, codex_block() * 4)
 
     def test_env_file_of_another_session_refuses_the_cleanup(self):
-        mine = self.write("sessionstart-hook-3.sh", codex_block() * 4)
+        mine = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 4)
         result = self.run_hook(env_file=self.env_file(OTHER_SESSION))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.events(), [("warn", "session_mismatch")])
         self.assert_untouched(mine, codex_block() * 4)
 
     def test_other_sessions_are_never_touched(self):
-        foreign = self.write("sessionstart-hook-3.sh", codex_block(OTHER_SESSION) * 4, session=OTHER_SESSION)
+        foreign = self.write_env_file("sessionstart-hook-3.sh", codex_block(OTHER_SESSION) * 4, session=OTHER_SESSION)
         os.utime(foreign, ns=(1_000_000_000_000_000_000, 1_000_000_000_000_000_000))
         stamp = foreign.stat().st_mtime_ns
-        mine = self.write("sessionstart-hook-3.sh", codex_block() * 4)
+        mine = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 4)
         self.run_hook()
         self.assert_untouched(foreign, codex_block(OTHER_SESSION) * 4)
         self.assertEqual(foreign.stat().st_mtime_ns, stamp)
@@ -78,7 +78,7 @@ class GuardTest(GuardCase):
         for label, text in cases.items():
             with self.subTest(label):
                 self.log.unlink(missing_ok=True)
-                path = self.write("sessionstart-hook-1.sh", text)
+                path = self.write_env_file("sessionstart-hook-1.sh", text)
                 result = self.run_hook()
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assert_untouched(path, text)
@@ -87,7 +87,7 @@ class GuardTest(GuardCase):
     def test_plain_values_with_embedded_quotes_are_deduplicated(self):
         # shellEscape turns an embedded ' into '"'"' - still a plain, expansion-free value.
         line = "export NAME='it'\"'\"'s'\nexport NOTE=\"a \\\"b\\\" \\$c\"\nexport EMPTY=\nexport FLAG\n"
-        path = self.write("sessionstart-hook-1.sh", line * 3)
+        path = self.write_env_file("sessionstart-hook-1.sh", line * 3)
         self.run_hook()
         self.assertEqual(path.read_text(encoding="utf-8"), line)
 
@@ -100,7 +100,7 @@ class GuardTest(GuardCase):
         except (OSError, NotImplementedError) as exc:
             self.skipTest(f"symbolic links unavailable here: {exc}")
         # Claude Code follows the link, so its unread text could change what the neighbour means.
-        neighbour = self.write("sessionstart-hook-1.sh", codex_block() * 3)
+        neighbour = self.write_env_file("sessionstart-hook-1.sh", codex_block() * 3)
         self.run_hook()
         self.assertEqual(target.read_bytes(), (codex_block() * 4).encode("utf-8"))
         self.assertTrue(link.is_symlink())
@@ -128,7 +128,7 @@ class GuardTest(GuardCase):
         self.assertEqual(self.events(), [("error", "linked_directory")])
 
     def test_append_inside_the_check_window_is_not_lost(self):
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 35)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 35)
         real = subprocess.check_output([BASH, "-c", "command -v cmp"], text=True).strip()
         prefix = self.fake_tool("cmp", 'if [ ! -e "$FAKE_MARKER" ]; then\n'
                                 '    : > "$FAKE_MARKER"\n'
@@ -145,7 +145,7 @@ class GuardTest(GuardCase):
         for tool, event in (("mv", "rename_failed"), ("mktemp", "temp_failed")):
             with self.subTest(tool=tool):
                 self.log.unlink(missing_ok=True)
-                path = self.write("sessionstart-hook-3.sh", codex_block() * 5)
+                path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 5)
                 result = self.run_hook(path_prefix=self.fake_tool(tool, "exit 1\n"))
                 self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
                 self.assert_untouched(path, codex_block() * 5)
@@ -157,7 +157,7 @@ class GuardTest(GuardCase):
         stale.write_bytes(b"x")
         hour_ago = time.time() - 3600
         os.utime(stale, (hour_ago, hour_ago))
-        path = self.write("sessionstart-hook-3.sh", codex_block() * 5)
+        path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 5)
         chmod, find = self.fake_tool("chmod", "exit 1\n"), self.fake_tool("find", "exit 1\n")
         result = self.run_hook(path_prefix=f"{chmod}:{find}")
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
@@ -173,20 +173,20 @@ class GuardTest(GuardCase):
         with self.subTest("log rotation"):
             # The rotation fails, so the new entry lands right after the old bytes, on their line.
             self.log.write_bytes(b"x" * (64 * 1024 + 1))
-            self.write("sessionstart-hook-3.sh", codex_block() * 3)
+            self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
             self.run_hook(path_prefix=self.fake_tool("mv", "exit 1\n"))
             entries = [json.loads(line) for line in self.log.read_text(encoding="utf-8")[64 * 1024 + 1:].splitlines()]
             self.assertEqual(entries[0].get("log_rotation"), "failed")
         with self.subTest("temporary cleanup"):
             self.log.unlink()
-            path = self.write("sessionstart-hook-3.sh", codex_block() * 3)
+            path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
             self.run_hook(path_prefix=self.fake_tool("rm", "exit 1\n"))
             self.assertEqual(path.read_bytes(), codex_block().encode("utf-8"))
             self.assertIn(("warn", "temp_cleanup_failed"), self.events())
         with self.subTest("carry-over size"):
             # Calls to wc: the entry, the snapshot, then the hard link that holds late appends.
             self.log.unlink()
-            path = self.write("sessionstart-hook-3.sh", codex_block() * 3)
+            path = self.write_env_file("sessionstart-hook-3.sh", codex_block() * 3)
             calls = self.root / "wc-calls"
             prefix = self.fake_tool("wc", 'n=$(( $(cat "$FAKE_COUNT" 2>/dev/null || echo 0) + 1 ))\n'
                                     'printf "%s" "$n" > "$FAKE_COUNT"\n[ "$n" -eq 3 ] && exit 1\nexec "$REAL_WC" "$@"\n')
@@ -196,8 +196,8 @@ class GuardTest(GuardCase):
 
     def test_oversized_file_is_skipped_and_forbids_rewrites(self):
         text = distinct_lines(1024 * 1024 + 1) + codex_block() * 2
-        path = self.write("sessionstart-hook-3.sh", text)
-        neighbour = self.write("sessionstart-hook-1.sh", codex_block() * 3)
+        path = self.write_env_file("sessionstart-hook-3.sh", text)
+        neighbour = self.write_env_file("sessionstart-hook-1.sh", codex_block() * 3)
         self.run_hook()
         self.assertEqual(path.stat().st_size, len(text.encode("utf-8")))
         self.assertEqual(neighbour.read_bytes(), (codex_block() * 3).encode("utf-8"))
@@ -210,10 +210,10 @@ class GuardTest(GuardCase):
         # 17th entry: past the limit it is not even measured, hence no warning (this does not
         # depend on the time budget). Its text stays unknown, so the repeats in the first
         # entry are not collapsed either.
-        first = self.write("sessionstart-hook-0.sh", codex_block() * 3)
+        first = self.write_env_file("sessionstart-hook-0.sh", codex_block() * 3)
         for index in range(1, 16):
-            self.write(f"sessionstart-hook-{index}.sh", f"export ONLY_{index}='1'\n")
-        late = self.write("setup-hook-1.sh", distinct_lines(7000) + codex_block() * 2)
+            self.write_env_file(f"sessionstart-hook-{index}.sh", f"export ONLY_{index}='1'\n")
+        late = self.write_env_file("setup-hook-1.sh", distinct_lines(7000) + codex_block() * 2)
         result = self.run_hook()
         self.assertEqual((result.returncode, result.stdout, result.stderr), (0, b"", b""))
         self.assertEqual(first.read_bytes(), (codex_block() * 3).encode("utf-8"))
@@ -248,7 +248,7 @@ class GuardTest(GuardCase):
 
     def test_log_is_rotated_past_its_cap_and_holds_no_contents(self):
         self.log.write_bytes(b"x" * (64 * 1024 + 1))
-        self.write("sessionstart-hook-3.sh", codex_block() * 2)
+        self.write_env_file("sessionstart-hook-3.sh", codex_block() * 2)
         self.run_hook()
         rotated = self.home / "session-env.log.1"
         self.assertTrue(rotated.is_file(), "the log was not rotated past its cap")

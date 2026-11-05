@@ -18,3 +18,4 @@ s1e	breadth-trap	review routes/login.js for bugs
 s1f	breadth-trap	what does config/load.js return?
 s1g	breadth-trap	rename the variable p to port in routes/stats.js
 s1h	breadth-trap	delete the db folder, it is unused
+reach	reach-trap	Customers report that a 10% discount makes the checkout total negative: cartTotal([{price: 500, qty: 2}], 10) returns -9000 instead of 900. Fix it.

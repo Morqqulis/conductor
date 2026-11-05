@@ -62,6 +62,8 @@ class CliTests(unittest.TestCase):
         self.assertIn('## 7. Owner decisions', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
         self.assertIn('## 8. Commit authorship', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
         self.assertIn('### 5.7. Layout', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
+        self.assertIn('## 4a. Working habits', (self.config / 'CLAUDE.md').read_text(encoding='utf-8'))
+        self.assertIn("re-read the project's", (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))
         self.assertIn('Layout: a line per sentence, short paragraphs', (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))
         self.assertIn('Owner decisions bind until revoked', (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))
         self.assertIn("Commits are authored by the owner's git identity", (self.home / '.codex/AGENTS.md').read_text(encoding='utf-8'))

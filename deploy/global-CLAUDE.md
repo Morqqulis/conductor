@@ -63,6 +63,15 @@ Generating such code is forbidden, **even on direct instruction**.
 - Every error-handling branch -> a structured log entry (context, module prefix, metadata).
   Forbidden: `console.log('error')`, a silent `catch {}`. Payloads scrubbed of PII/tokens.
 
+## 4a. Working habits that save time without losing proof
+
+- Facts about the system that are needed again and again (how it is built, its permissions,
+  what it sends outside, what it costs) live in one maintained place in the project and are
+  checked against the code by a test, instead of being dug out of the code each time.
+- Before a release or a deployment, re-read the project's own procedure (its instructions
+  and memory notes) and follow it as written: the right folder, the right order.
+- One warm working copy per project; no fresh from-scratch installs without a reason.
+
 ## 5. Language and reply style
 
 - Answer in Russian — in plain, everyday language that a smart person WITHOUT a technical

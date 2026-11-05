@@ -52,8 +52,8 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 # is dead weight that no session will ever read.
 declare -A BUDGETS=(
     [debugging.md]=6000 [implementing.md]=6500 [investigating.md]=6000
-    [orchestration.md]=7000 [skeptic.md]=6000 [distill.md]=3000 [methods.md]=6000
-    [verification.md]=5000
+    [orchestration.md]=7000 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
+    [verification.md]=5600
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
 core_text="$(cat "$CORE")"
@@ -119,6 +119,14 @@ done
 # --- absence claims: "no warnings" proven from summary lines let a CI warning ship ------
 tr '\n' ' ' < "$RUNTIME/playbooks/verification.md" | grep -qF 'needs the FULL output of every check scanned' || \
     check 1 "absence-claim rule (scan the full output, show the count) missing in runtime/playbooks/verification.md"
+
+# --- reach / reality / claim: errors came from places nobody looked at ---------------
+tr '\n' ' ' < "$RUNTIME/playbooks/implementing.md" | grep -qF 'every path a person takes to the same goal' || \
+    check 1 "reach rule (every place, every path, every sibling instance) missing in runtime/playbooks/implementing.md"
+tr '\n' ' ' < "$RUNTIME/playbooks/verification.md" | grep -qF 'not verified in the real environment' || \
+    check 1 "reality rule (realistic environment or vendor docs) missing in runtime/playbooks/verification.md"
+tr '\n' ' ' < "$RUNTIME/playbooks/skeptic.md" | grep -qF 'most likely counterexample' || \
+    check 1 "claim rule (universal words, independent review of outward text) missing in runtime/playbooks/skeptic.md"
 
 # --- placeholders: a rule that says "TBD" is a rule the agent will improvise around ----
 while IFS= read -r f; do

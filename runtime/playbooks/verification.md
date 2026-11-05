@@ -49,7 +49,12 @@ and raw output may contain secrets; keep this local data private and outside Git
 - Use the project's actual runner and affected-test support when available; otherwise name a
   scoped test command. Discovery of a full-suite command does not make running it mandatory.
 - Widen when a shared interface, dependency/config change or failing result exposes more reach.
-  Full tests, full builds and whole-project integrity guards each need an impact or project reason.
+  Full tests, full builds and whole-project integrity guards each need an impact or project reason:
+  shared foundations (sign-in, access rules, database schema, shared packages, installers) or a
+  release that reaches live users.
+- Behavior that depends on cloud settings, external sign-in, a browser, email or a third-party
+  default is proven by a run in a realistic environment or by the vendor's documentation;
+  otherwise the claim says "not verified in the real environment".
 - A release may need a build to produce its artifact. That delivery step is distinct from a
   verification build; do not duplicate it merely because a commit or push follows.
 

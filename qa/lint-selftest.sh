@@ -159,6 +159,20 @@ expect_fail "absence-claim rule removed from the verification playbook" \
     "absence-claim rule (scan the full output, show the count) missing in runtime/playbooks/verification.md" \
     runtime/playbooks/verification.md
 
+# --- case 9e-9g: reach, reality and claim rules removed ----------------------------------
+sed -i 's/every path a person takes to the same goal/the main path/' "$WORK/runtime/playbooks/implementing.md"
+expect_fail "reach rule removed" \
+    "reach rule (every place, every path, every sibling instance) missing in runtime/playbooks/implementing.md" \
+    runtime/playbooks/implementing.md
+sed -i 's/not verified in the real environment/probably fine/' "$WORK/runtime/playbooks/verification.md"
+expect_fail "reality rule removed" \
+    "reality rule (realistic environment or vendor docs) missing in runtime/playbooks/verification.md" \
+    runtime/playbooks/verification.md
+sed -i 's/most likely counterexample/usual case/' "$WORK/runtime/playbooks/skeptic.md"
+expect_fail "claim rule removed" \
+    "claim rule (universal words, independent review of outward text) missing in runtime/playbooks/skeptic.md" \
+    runtime/playbooks/skeptic.md
+
 # --- case 10: Cyrillic injected into the deploy corpus -------------------------------
 printf '\nПроверка связи.\n' >> "$WORK/deploy/global-CLAUDE.md"
 expect_fail "Cyrillic text injected into deploy/global-CLAUDE.md" \

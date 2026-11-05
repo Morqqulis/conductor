@@ -33,6 +33,8 @@ EXPLICITLY; a named improvisation is reviewable, a silent one is not.
   question: ask the user to de-escalate or shrink N — never silently drop the method's
   spine (the baseline measurement, the second candidate, the separate critique pass).
 - A lesson in the ledger contradicts the chosen method -> the lesson wins; say so.
+- A heavy job (install, build, another suite) beside a timing-sensitive check -> run them
+  apart: a timeout under load is not a verdict on the code. Long independent work runs in parallel.
 - A justification stated over a whole CATEGORY ("the response", "the caller", "the event")
   that holds for one member and fails for another -> ask WHICH ones, then make the
   acceptance test the scene the justification calls impossible. The tell is usually already

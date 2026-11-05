@@ -73,6 +73,12 @@ preconditions, then tag each PROVEN (you ran/read it) or ASSUMED. Every ASSUMED 
 is a candidate finding — an unverified assumption is the usual place a plausible claim is
 actually wrong. This is the depth move: it converts confidence into a checkable list.
 
+## Universal and outward claims
+"Never", "only", "all", "nobody" are tested against their most likely counterexample before
+they stand. Text stating facts about the system that leaves the session (a letter, a guide,
+documentation) is reviewed before hand-off by an independent verifier given only that text
+and the code, never the author's conclusions.
+
 ## A guard's prose is a claim, not evidence
 What a guard says about itself is untested text. Probe each claim it makes:
 - "catches X" -> compile one probe per spelling of X; the spellings the compiler accepts are

@@ -65,11 +65,19 @@ Measure preconditions: create explicit fixtures/markers, measure budgets before 
 check ALL members, and fake environments completely so no action leaks into real state.
 Read what ran: counts, interleavings and bytes, not only exit codes. Zero tests or an
 unreachable race can pass. Source assertions anchor on symbols/normalized text, not formatting.
+Tests that deceive: a threshold is tested AT its boundary (exactly half under "more than half");
+a test that pins a date leaves no real clock anywhere, database column defaults included; a
+"never leaks" test feeds input that could leak.
 A NEW guard needs remove-only proof at T2+: disarm its protection in an isolated CURRENT
 copy under SAFE UNDO; the guard must fail, then pass after reapplying only those hunks.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.
 Integrity guards run when their invariant is affected (registrations, naming, config),
 not on every task. Explicit project-required checks still apply; see verification.md.
+
+## Reach — before "done" and before any text leaves the session
+List every place that shows or uses the changed thing (screens, emails, documents, public
+pages, programmatic access), every path a person takes to the same goal, and every other
+instance of the same class of defect. Each one is checked or named as unchecked.
 
 ## Cleanup sweep — any delete, rename, or move (file, symbol, config key, DB object)
 Search the old name across code, configs, docs and deployed/generated copies. Complete

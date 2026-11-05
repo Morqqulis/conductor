@@ -81,7 +81,10 @@ def payload(source, paths, scopes, reply):
                   '"YYYY-MM-DD | instruction | revisit when"; then say in plain words what you recorded.\n'
                   'Commits are authored by the owner\'s git identity, never an AI identity (if the environment\n'
                   'forces its own committer, keep it and pass `--author`); add no AI co-author trailer,\n'
-                  '"Generated with" line or session link to commit messages or pull request descriptions.\n\n')
+                  '"Generated with" line or session link to commit messages or pull request descriptions.\n'
+                  'Keep facts about the system (structure, permissions, outbound data, costs) in one place\n'
+                  'checked against the code by a test; before a release or deployment, re-read the project\'s\n'
+                  'own procedure and follow it as written; keep one warm working copy per project.\n\n')
         result['codex'] = ((heading + memory + body).encode('utf-8'), 0o644)
     args = [sys.executable, '-B', str(paths.runtime / 'updater/cli.py'),
             '--config', str(paths.config), '--profile', str(paths.profile)]

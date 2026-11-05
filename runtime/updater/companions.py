@@ -8,7 +8,7 @@ import uuid
 
 from companion_inventory import clean_env, command, discover, latest, version_of
 from companion_journal import recover, restore, finish_operation
-from companion_update import probe, upgrade
+from companion_update import probe, prune_versions, upgrade
 from companion_wiring import wire
 from companion_activation import activate, finish as finish_activation
 from companion_activation import restore as restore_activation, recover_activation
@@ -33,6 +33,18 @@ def refuse_telemetry(executable):
     except Exception as error:
         reason = str(error) if isinstance(error, ValueError) else type(error).__name__
         return f'; telemetry refusal NOT recorded ({reason}); telemetry stays off unless consent is given'
+
+
+def old_versions_note(root, name):
+    """Remove superseded version folders after a verified sync; report, never fail on it."""
+    try:
+        removed, failed = prune_versions(root, name)
+    except (OSError, ValueError) as error:
+        return f'; old versions not checked ({type(error).__name__})'
+    note = f'; removed {removed} old version folder(s)' if removed else ''
+    if failed:
+        note += f'; could not remove {len(failed)} old version folder(s) (in use?): {", ".join(failed)}'
+    return note
 
 
 def sync(paths: Paths, mode: str, *, skip=False) -> list[dict]:
@@ -98,6 +110,7 @@ def sync(paths: Paths, mode: str, *, skip=False) -> list[dict]:
                           detail=f'verified executable and wiring: {executable}')
             if name == 'rtk':
                 result['detail'] += refuse_telemetry(executable)
+            result['detail'] += old_versions_note(root, name)
         except Exception as error:
             result['status'] = 'FAILED'
             result['detail'] = str(error) if isinstance(error, ValueError) else type(error).__name__

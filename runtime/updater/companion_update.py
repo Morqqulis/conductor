@@ -1,7 +1,10 @@
 """Prepare immutable candidates; publish only a runnable exact stable version."""
 import os
 from pathlib import Path
+import json
 import shutil
+import stat
+import sys
 import uuid
 
 from companion_download import acquire as acquire_rtk
@@ -62,3 +65,42 @@ def upgrade(found: dict | None, name: str, version: str, root: Path, profile: Pa
     if on_commit is not None:
         on_commit(journal)
     return destination
+
+
+def _clear_readonly(function, path, _error):
+    # Windows refuses to delete read-only files (Python's own venv ships some); clear and retry.
+    os.chmod(path, stat.S_IWRITE)
+    function(path)
+
+
+def prune_versions(root, name):
+    """Keep the version folder the receipt points to and the newest other one; remove the rest.
+
+    Each update to a new release installs into a fresh versions/<name>/<version>-<id> folder
+    and nothing removed the old ones, so every release left a full copy behind (for Graphify a
+    whole Python environment). The previous folder stays as a manual fallback. Returns
+    (removed_count, failed_folder_names); a folder in use or locked is reported, never fatal.
+    """
+    receipt = plain(root / 'receipts' / (name + '.json'))
+    base = plain(root / 'versions' / name)
+    if not receipt.is_file() or not base.is_dir():
+        return 0, []
+    candidate = Path(json.loads(receipt.read_text(encoding='utf-8')).get('candidate', ''))
+    try:
+        current = base / plain(candidate).relative_to(base).parts[0]
+    except (ValueError, IndexError):
+        return 0, []  # receipt does not point inside the managed folder: touch nothing
+    others = [entry for entry in base.iterdir()
+              if entry != current and not entry.is_symlink() and entry.is_dir()]
+    others.sort(key=lambda entry: entry.stat().st_mtime, reverse=True)
+    removed, failed = 0, []
+    for entry in others[1:]:
+        try:
+            if sys.version_info >= (3, 12):
+                shutil.rmtree(entry, onexc=_clear_readonly)
+            else:
+                shutil.rmtree(entry, onerror=_clear_readonly)
+            removed += 1
+        except OSError:
+            failed.append(entry.name)
+    return removed, failed

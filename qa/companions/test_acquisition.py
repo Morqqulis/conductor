@@ -90,6 +90,49 @@ esac
         processes = (self.fixture / "processes").read_text()
         self.assertIn("graphifyy==1.9.0", processes)
 
+    def test_repeat_run_neither_downloads_nor_reinstalls(self):
+        self.run_installer()
+        versions = sorted(p.relative_to(self.dest) for p in (self.dest / "versions").glob("*/*"))
+        network = (self.fixture / "network").read_text().splitlines()
+        processes = (self.fixture / "processes").read_text().splitlines()
+        self.assertEqual(self.run_installer().count(": CURRENT"), 2)
+        new_network = (self.fixture / "network").read_text().splitlines()[len(network):]
+        new_processes = (self.fixture / "processes").read_text().splitlines()[len(processes):]
+        # Only the two "which version is latest?" checks; no archive, no package install.
+        self.assertEqual(sorted(new_network), ["https://api.github.com/repos/rtk-ai/rtk/releases/latest",
+                                               "https://pypi.org/pypi/graphifyy/json"])
+        self.assertFalse([p for p in new_processes if "venv" in p or "pip" in p or "graphifyy" in p], new_processes)
+        self.assertEqual(sorted(p.relative_to(self.dest) for p in (self.dest / "versions").glob("*/*")), versions)
+
+    def test_superseded_version_folders_are_pruned_keeping_one_fallback(self):
+        self.run_installer()
+        base = self.dest / "versions" / "rtk"
+        current = next(base.iterdir())
+        stale = []
+        for index, label in enumerate(("0.9.0-old", "1.0.0-older", "1.1.0-previous")):
+            folder = base / label
+            folder.mkdir()
+            (folder / "rtk").write_bytes(b"old copy")
+            os.utime(folder, (1_000_000 + index, 1_000_000 + index))
+            stale.append(folder)
+        outside = self.fixture / "outside-keep"
+        outside.mkdir()
+        (outside / "keep").write_bytes(b"not ours")
+        link = base / "linked"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            link = None
+        output = self.run_installer()
+        self.assertIn("removed 2 old version folder(s)", output)
+        self.assertTrue(current.is_dir(), "the version the receipt points to was removed")
+        self.assertTrue(stale[2].is_dir(), "the newest previous version must stay as a fallback")
+        self.assertFalse(stale[0].exists() or stale[1].exists(), output)
+        self.assertEqual((outside / "keep").read_bytes(), b"not ours")
+        if link is not None:
+            self.assertTrue(link.is_symlink(), "a linked folder is never followed or removed")
+        self.assertEqual(self.run_installer().count("removed"), 0, "nothing more to prune on the next run")
+
     def test_unknown_existing_binaries_are_preserved_and_fail(self):
         for tool in ("rtk", "graphify"):
             self.script(tool + (".exe" if os.name == "nt" else ""), binary_script(tool))

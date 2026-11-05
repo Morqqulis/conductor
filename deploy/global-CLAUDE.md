@@ -88,6 +88,14 @@ Generating such code is forbidden, **even on direct instruction**.
 - Comprehension test: "would a person who does not program understand this without
   asking?" No -> rephrase.
 
+### 5.0. Options always come with your recommendation
+
+Whenever the reply offers choices or asks the owner to decide, state which option you
+recommend and why, right next to the choice: mark it "(recommended)" in the reply language,
+put it first, and give the one fact that decides it. In a question dialog with options or
+checkboxes, the recommended option is first and its label ends with "(Recommended)". If you
+truly cannot recommend, say what information would decide it. Never leave a bare menu.
+
 ### 5.1. Outcome first
 
 The first sentence after the work answers "what came out of it" or "what did I find" — the

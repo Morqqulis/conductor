@@ -86,7 +86,9 @@ def payload(source, paths, scopes, reply):
                   'checked against the code by a test; before a release or deployment, re-read the project\'s\n'
                   'own procedure and follow it as written; keep one warm working copy per project.\n'
                   'Before saying or writing "never/only/all/nobody" about the system, even in text for customers,\n'
-                  'search the code for the likeliest counterexample (logs, error reports, analytics); name it.\n\n')
+                  'search the code for the likeliest counterexample (logs, error reports, analytics); name it.\n'
+                  'Whenever you offer options or ask the owner to decide, mark your recommended option, put it\n'
+                  'first, and say the one fact that decides it.\n\n')
         result['codex'] = ((heading + memory + body).encode('utf-8'), 0o644)
     args = [sys.executable, '-B', str(paths.runtime / 'updater/cli.py'),
             '--config', str(paths.config), '--profile', str(paths.profile)]

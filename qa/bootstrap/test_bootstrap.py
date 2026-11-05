@@ -87,6 +87,50 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(calls, ['https://api.github.com/repos/Morqqulis/conductor/commits/main',
                                  f'https://codeload.github.com/Morqqulis/conductor/zip/{SHA}'])
 
+    def test_refused_github_download_falls_back_to_git_and_still_validates(self):
+        # Cloud setup scripts reach GitHub from shared addresses the API answers with 403.
+        import urllib.error
+
+        def refused(url, limit):
+            raise urllib.error.HTTPError(url, 403, 'Forbidden', {}, None)
+        good = archive([(f'conductor-{SHA}/install.sh', 'installer')])
+        with patch.object(self.api, 'download', refused), \
+                patch.object(self.api, 'git_archive', return_value=(SHA, good)) as fallback:
+            self.assertEqual(self.api.acquire(self.target, 'main'), SHA)
+        fallback.assert_called_once_with('main')
+        self.assertEqual((self.target / 'install.sh').read_text(), 'installer')
+        hostile = archive([(f'conductor-{SHA}/../escape', 'x')])
+        target = Path(self.temp.name) / 'second'
+        with patch.object(self.api, 'download', refused), \
+                patch.object(self.api, 'git_archive', return_value=(SHA, hostile)):
+            with self.assertRaises(ValueError):
+                self.api.acquire(target, 'main')
+        self.assertFalse(target.exists(), 'the git fallback must pass the same archive checks')
+
+    def test_git_archive_reads_a_real_repository_without_network(self):
+        import shutil
+        import subprocess
+        git = shutil.which('git')
+        if not git:
+            self.skipTest('git is not installed')
+        repo = Path(self.temp.name) / 'origin'
+        repo.mkdir()
+        def run(*args):
+            return subprocess.run([git, '-C', str(repo), *args], check=True, capture_output=True,
+                                  stdin=subprocess.DEVNULL).stdout.decode().strip()
+        run('init', '--quiet', '-b', 'main')
+        (repo / 'install.sh').write_text('installer', encoding='utf-8')
+        run('add', 'install.sh')
+        run('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '--quiet', '-m', 'one')
+        head = run('rev-parse', 'HEAD')
+        with patch.object(self.api, 'REPOSITORY', repo.as_uri()):
+            commit, data = self.api.git_archive('main')
+            self.assertEqual(commit, head)
+            self.api.extract(data, self.target, commit)
+            self.assertEqual((self.target / 'install.sh').read_text(encoding='utf-8'), 'installer')
+            with self.assertRaises(ValueError):
+                self.api.git_archive('b' * 40)
+
     def test_invalid_ref_and_commit_never_extract(self):
         for ref in ('../other', 'main;echo bad', '', 'http://example.com', '--upload-pack=bad'):
             with patch.object(self.api, 'download') as request:

@@ -113,17 +113,62 @@ def extract(data, destination, commit):
             target.chmod(0o755 if mode & 0o111 else 0o644)
 
 
+REPOSITORY = 'https://github.com/Morqqulis/conductor.git'
+GIT_SECONDS = 180
+
+
+def git_archive(ref):
+    """(commit, zip bytes) for `ref` fetched with plain git over HTTPS.
+
+    The fallback when GitHub's API or codeload refuses an anonymous request: cloud setup
+    scripts run from shared addresses that the API rate-limits (HTTP 403), while git
+    fetches from github.com still work. The archive gets the same conductor-<commit>/ root
+    as codeload's, so extract() applies every one of its checks unchanged.
+    """
+    git = shutil.which('git')
+    if not git:
+        raise ValueError('Git is required')
+    env = dict(os.environ, GIT_TERMINAL_PROMPT='0', GIT_CONFIG_NOSYSTEM='1')
+    with tempfile.TemporaryDirectory(prefix='conductor-git-') as temporary:
+        def run(*args, capture=False):
+            result = subprocess.run([git, '-C', temporary, *args], env=env, stdin=subprocess.DEVNULL,
+                                    capture_output=True, timeout=GIT_SECONDS)
+            if result.returncode:
+                raise ValueError(f'git {args[0]} failed (exit {result.returncode})')
+            return result.stdout
+        run('init', '--quiet', '--bare')
+        run('fetch', '--quiet', '--depth', '1', '--no-tags', REPOSITORY, ref)
+        commit = run('rev-parse', 'FETCH_HEAD^{commit}').decode('ascii', 'replace').strip()
+        if not re.fullmatch(r'[a-f0-9]{40}', commit):
+            raise ValueError('git did not return a valid commit')
+        if re.fullmatch(r'[a-f0-9]{40}', ref.lower()) and commit != ref.lower():
+            raise ValueError('git returned a different commit than requested')
+        data = run('archive', '--format=zip', f'--prefix=conductor-{commit}/', commit)
+    if len(data) > MAX_BYTES:
+        raise ValueError('archive exceeds size limit')
+    return commit, data
+
+
 def acquire(destination, ref):
     if not REF.fullmatch(ref):
         raise ValueError('ref must be main, a version tag or a full commit identifier')
-    if re.fullmatch(r'[a-fA-F0-9]{40}', ref):
-        commit = ref.lower()
-    else:
-        info = json.loads(download(f'https://api.github.com/repos/Morqqulis/conductor/commits/{ref}', 1024 * 1024))
-        commit = info.get('sha') if isinstance(info, dict) else None
-    if not isinstance(commit, str) or not re.fullmatch(r'[a-f0-9]{40}', commit):
-        raise ValueError('GitHub did not return a valid commit')
-    extract(download(f'https://codeload.github.com/Morqqulis/conductor/zip/{commit}', MAX_BYTES), destination, commit)
+    try:
+        if re.fullmatch(r'[a-fA-F0-9]{40}', ref):
+            commit = ref.lower()
+        else:
+            info = json.loads(download(f'https://api.github.com/repos/Morqqulis/conductor/commits/{ref}', 1024 * 1024))
+            commit = info.get('sha') if isinstance(info, dict) else None
+        if not isinstance(commit, str) or not re.fullmatch(r'[a-f0-9]{40}', commit):
+            raise ValueError('GitHub did not return a valid commit')
+        data = download(f'https://codeload.github.com/Morqqulis/conductor/zip/{commit}', MAX_BYTES)
+    except (urllib.error.URLError, OSError, ValueError) as error:
+        # Only a refused or failed transfer falls back; a malformed answer stays an error.
+        if isinstance(error, ValueError) and 'time limit' not in str(error):
+            raise
+        print(f'Conductor bootstrap: GitHub download refused ({error}); fetching with git instead.',
+              file=sys.stderr)
+        commit, data = git_archive(ref)
+    extract(data, destination, commit)
     return commit
 
 

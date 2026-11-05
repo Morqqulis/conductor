@@ -192,7 +192,9 @@ if [ -f "$JOURNAL" ]; then
     lines="$(wc -l < "$JOURNAL" | tr -d '[:space:]')"
     pass "test-run journal: $lines line(s) (see tools/journal-report.sh)"
 else
-    warn "test-run journal has no data yet ($JOURNAL) - either no journaled test runs, or the journal hook never fired"
+    # An empty journal is the normal state of a fresh install, not a defect: whether its hook
+    # can fire is decided by the registration audit in section 1, which FAILs on its own.
+    pass "test-run journal: no test runs recorded yet (normal after a fresh install; hook registration checked above)"
 fi
 
 echo

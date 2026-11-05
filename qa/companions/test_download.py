@@ -10,6 +10,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+import warnings
 from unittest.mock import patch
 import zipfile
 
@@ -22,9 +23,13 @@ ASSET = "rtk-x86_64-pc-windows-msvc.zip"
 
 def archive(entries=None):
     stream = io.BytesIO()
-    with zipfile.ZipFile(stream, "w") as package:
-        for name, data in (entries or [("rtk.exe", b"fixture executable")]):
-            package.writestr(name, data)
+    # Some cases build a hostile archive with a duplicate member on purpose; zipfile warns
+    # about that while writing, which is the scenario under test, not a defect to report.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Duplicate name", category=UserWarning)
+        with zipfile.ZipFile(stream, "w") as package:
+            for name, data in (entries or [("rtk.exe", b"fixture executable")]):
+                package.writestr(name, data)
     return stream.getvalue()
 
 

@@ -92,6 +92,14 @@ case "$DOCTOR_OUTPUT" in
         exit 1
         ;;
 esac
+# A fresh install has no test runs yet; that is normal and must not raise a warning.
+if [ -e "$CONDUCTOR_DIR/test-runs.log" ] || ! grep -qF 'PASS  test-run journal: no test runs recorded yet' <<< "$DOCTOR_OUTPUT" \
+        || grep -qF 'WARN  test-run journal' <<< "$DOCTOR_OUTPUT"; then
+    printf '%s\n' "$DOCTOR_OUTPUT"
+    echo "doctor test: an empty test-run journal on a fresh install was not a quiet PASS" >&2
+    exit 1
+fi
+echo "PASS  empty test-run journal on a fresh install is not a warning"
 printf '%s\n' "$DOCTOR_OUTPUT"
 
 expect_runtime_failure() {

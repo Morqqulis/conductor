@@ -217,6 +217,10 @@ class MemoryTest(unittest.TestCase):
         # The language menu read stdin even when it was a pipe nobody writes to, so an
         # installer started by an agent or a script hung until killed.
         hold = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], stdout=subprocess.PIPE)
+        # Reap the holder and close its pipe, or Python reports a still-running process and
+        # an unclosed file when the test ends.
+        self.addCleanup(hold.stdout.close)
+        self.addCleanup(hold.wait)
         self.addCleanup(hold.kill)
         result = subprocess.run([BASH, str(ROOT / "install.sh"), "--skip-global-md", "--skip-companions"],
                                 env=self.env, stdin=hold.stdout, capture_output=True, text=True,

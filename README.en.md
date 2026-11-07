@@ -149,6 +149,16 @@ recoverable snapshot in `~/.local/state/conductor/updates/<id>/`. Reinstallation
 manual changes to registered files. Unknown program files and commands are not overwritten.
 Lessons, project memory and foreign settings are preserved.
 
+### macOS: "linked destination is not allowed" on update
+
+Installations older than November 4, 2026 cannot update themselves on macOS: the macOS
+temporary folder sits behind a link (`/var` -> `/private/var`), which the old updater refuses.
+Update once with the physical temporary path; after that `conductor update` works as usual:
+
+```bash
+TMPDIR="$(cd "${TMPDIR:-/tmp}" && pwd -P)" conductor update
+```
+
 ### Claude Code cloud sessions (claude.ai/code)
 
 A cloud session runs in a fresh container that has no installation. Add this line once to

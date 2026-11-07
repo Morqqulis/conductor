@@ -149,6 +149,17 @@ Cursor qaydasını əvvəlki kimi əl ilə aktivləşdirmək lazımdır; quraşd
 Qeydiyyatlı fayllardakı şəxsi dəyişikliklər təkrar quraşdırmanı dayandırır.
 Yad proqramlar və əmrlər əvəz edilmir. Dərslər, layihə yaddaşı və yad parametrlər qorunur.
 
+### macOS: yeniləmədə «linked destination is not allowed»
+
+4 noyabr 2026-dan köhnə quraşdırmalar macOS-da özlərini yeniləyə bilmir: macOS-un müvəqqəti
+qovluğu keçid arxasındadır (`/var` -> `/private/var`), köhnə yeniləyici isə belə yolları rədd
+edir. Bir dəfə müvəqqəti qovluğun həqiqi yolu ilə yeniləyin; sonra `conductor update` adi
+qaydada işləyir:
+
+```bash
+TMPDIR="$(cd "${TMPDIR:-/tmp}" && pwd -P)" conductor update
+```
+
 ### Claude Code bulud sessiyaları (claude.ai/code)
 
 Bulud sessiyası quraşdırma olmayan təzə konteynerdə işləyir. Bu sətri bulud mühitinin

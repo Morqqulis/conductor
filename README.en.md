@@ -126,13 +126,15 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 ```
 
 These commands execute code from the official repository. To inspect it first, download
-the script, read it and run it locally. Git must already be installed; the bootstrap
-installs nothing silently and does not change the system execution policy. If Windows has
-no Python 3.10+, the installer asks whether to install it: only after the answer `y` it runs
-`winget`, installs the official Python install manager from the Microsoft Store source
-(accepting its license terms on your behalf) and, through it, the latest stable Python for
-your user account. Any other answer, no terminal or no `winget` — nothing is installed, and
-the installer explains how to install Python yourself.
+the script, read it and run it locally. Git must already be installed; the bootstrap does
+not install Git or Python without asking and does not change the system execution policy.
+If Windows has no Python 3.10+, the installer asks whether to install it: only after the
+answer `y` or `yes` it runs `winget`, installs the official Python install manager from the
+Microsoft Store source (accepting the package and source terms on your behalf) and, through
+it, the manager's default (latest stable) Python for your user account. If the manager is
+already present, `winget` is not run. Any other answer, an answer that could not be read, or
+neither the manager nor `winget` being available — Python is not installed, and the
+installer explains how to install it yourself.
 Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved language,
 or defaults to Russian. Set it explicitly with `-Language en` in PowerShell or replace
 the pipeline's final `bash` with `bash -s -- --language en`.
@@ -179,14 +181,18 @@ The install takes seconds; `--skip-companions` leaves out RTK and Graphify for a
 
 The cloud does not run the setup script for every session: its result is saved and reused
 (per the Claude Code documentation, for about a week or until the script changes). So that
-the version does not fall behind, a new cloud session updates Conductor itself before the
-rules are loaded: the ordinary `conductor update --skip-companions`, limited to 5 seconds
-(measured: about 2 seconds). If the update fails or runs out of time, the session starts on
-the installed version; each attempt leaves one line in `~/.claude/conductor/cloud-update.log`.
-This happens only in cloud sessions (where Claude Code itself sets
-`CLAUDE_CODE_REMOTE=true`) and only when a new session starts; local installations are
-updated only by `conductor update`. To turn it off, set `CONDUCTOR_AUTO_UPDATE=0` in the
-cloud environment's variables.
+the version does not fall behind, a new cloud session updates Conductor itself to the
+current `main` before the core rules are injected: the ordinary
+`conductor update --skip-companions`, interrupted after 5 seconds and force-stopped 2 seconds
+later (measured: about 2 seconds). If the update fails or runs out of time, the session
+starts on the installed version (an update force-stopped in the middle of writing is rolled
+back by the next `conductor update`); an attempt normally leaves one line in
+`cloud-update.log` in the Conductor folder. This happens only where `CLAUDE_CODE_REMOTE=true`
+is set (a Claude Code cloud session sets it itself) and only when a new session starts;
+local installations are never updated automatically — only when you run `conductor update`
+or the installer yourself. To turn it off, set `CONDUCTOR_AUTO_UPDATE=0` in the cloud
+environment's variables. Turn it off if your setup script pins a version with `--ref`:
+otherwise the auto-update moves the session to `main`.
 
 ### Install, update and remove from any directory
 

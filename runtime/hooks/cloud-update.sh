@@ -7,9 +7,11 @@
 # So a NEW cloud session updates the installation before session-start.sh reads core.md.
 #
 # Scope: only when CLAUDE_CODE_REMOTE=true (set by the cloud session itself, never locally)
-# and only for source "startup" - a resume, clear or compaction stays on the same machine,
-# which was already updated. Turn it off with CONDUCTOR_AUTO_UPDATE=0 in the environment's
-# variables. Local installations are never updated from here: `conductor update` is theirs.
+# and only for source "startup" - a resume, clear or compaction normally stays on the same
+# machine, which was already updated. Turn it off with CONDUCTOR_AUTO_UPDATE=0 in the
+# environment's variables - needed by anyone whose setup script pins a version with --ref,
+# because the update always moves to the current main. Local installations are never
+# updated from here: `conductor update` is theirs.
 #
 # Why no registration of its own: see session-env.sh - a new hook entry would roll back the
 # update of every existing installation.
@@ -34,9 +36,9 @@ CONDUCTOR_HOME="${CONDUCTOR_HOME:-$(cd "$HOOK_DIR/.." && pwd)}"
 LOG="$CONDUCTOR_HOME/cloud-update.log"
 LOG_MAX_BYTES=65536
 # Seconds before SIGINT, then 2 more before SIGKILL. With the 2 s input read below, 5 + 2
-# stays inside the hook's 10 s; a measured update takes 2-3 s.
+# stays inside the hook's 10 s (6 would reach it exactly); a measured update takes 2 s.
 LIMIT="${CONDUCTOR_AUTO_UPDATE_SECONDS:-5}"
-case "$LIMIT" in [1-6]) ;; *) LIMIT=5 ;; esac
+case "$LIMIT" in [1-5]) ;; *) LIMIT=5 ;; esac
 
 log_event() {
     # $1 event name, $2 exit code, $3 seconds. Fixed vocabulary and integers only.
@@ -83,6 +85,8 @@ code=$?
 elapsed=$((SECONDS - started))
 case "$code" in
     0) log_event updated-or-current 0 "$elapsed" ;;
+    # 137: SIGKILL after the grace period. Files already written stay as they are and the
+    # next `conductor update` (this step in the next new session) rolls them back first.
     124|137) log_event timed-out "$code" "$elapsed" ;;
     *) log_event failed "$code" "$elapsed" ;;
 esac

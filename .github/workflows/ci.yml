@@ -66,6 +66,7 @@ jobs:
           bash qa/no-warnings.sh python -B qa/lesson-recall-test.py
           bash qa/no-warnings.sh python -B qa/memory-restore-test.py
           bash qa/no-warnings.sh python -B qa/safe-undo-test.py
+          bash qa/no-warnings.sh python -B qa/cloud-update-test.py
           bash qa/no-warnings.sh bash qa/bench-selftest.sh
 
       - name: Per-project verification evidence

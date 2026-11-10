@@ -12,6 +12,14 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CORE="$HOOK_DIR/../core.md"
 
+# A new cloud session starts from a week-old snapshot, so it updates Conductor BEFORE the
+# core is read below (cloud-update.sh: cloud only, bounded, fails open, off with
+# CONDUCTOR_AUTO_UPDATE=0). It receives this hook's JSON on stdin and prints nothing. A
+# missing file (an update that wrote this hook but not that one yet) is simply skipped.
+if [ "${CLAUDE_CODE_REMOTE:-}" = true ] && [ -f "$HOOK_DIR/cloud-update.sh" ]; then
+    "${BASH:-bash}" "$HOOK_DIR/cloud-update.sh" >/dev/null 2>&1 || true
+fi
+
 fail() {
     printf 'conductor SessionStart hook FAILED: %s\n' "$1" >&2
     exit 1

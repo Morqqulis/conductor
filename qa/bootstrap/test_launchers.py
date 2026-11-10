@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -11,6 +12,11 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'runtime/updater'))
 from installation import bash_command
+
+
+def compact(text):
+    # Windows PowerShell wraps error text at the console width, even inside a word.
+    return re.sub(r'\s+', '', text)
 
 
 class LauncherTests(unittest.TestCase):
@@ -168,6 +174,105 @@ class LauncherTests(unittest.TestCase):
                                 capture_output=True, encoding='utf-8', errors='replace', timeout=25)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('--language', json.loads(result.stdout))
+
+    def powershells(self):
+        system = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
+        return [shell for shell in (shutil.which('pwsh'), str(system)) if shell and Path(shell).is_file()]
+
+    def run_with_fake_commands(self, powershell, commands, answer=''):
+        """Run install.ps1 with Get-Command and Read-Host replaced: no real PATH, winget or prompt."""
+        broken = self.folder / 'unavailable.cmd'
+        broken.write_text('@echo off\necho Python was not found 1>&2\nexit /b 9009\n', encoding='ascii')
+        winget = self.folder / 'winget.cmd'
+        winget.write_text('@echo off\necho winget %*>>"%STUB_LOG%"\nexit /b %WINGET_EXIT%\n', encoding='ascii')
+        manager = self.folder / 'pymanager.cmd'
+        manager.write_text('@echo off\necho pymanager %*>>"%STUB_LOG%"\n'
+                           'if "%1"=="list" echo %REAL_PYTHON%\nexit /b 0\n', encoding='ascii')
+        script = self.folder / 'fake-commands.ps1'
+        script.write_text(
+            "$ErrorActionPreference = 'Stop'\n"
+            'function Get-Command { [CmdletBinding()] param($Name,$CommandType) '
+            "$value = [Environment]::GetEnvironmentVariable('STUB_' + $Name); "
+            "if ($value) { foreach ($path in $value.Split(';')) { [pscustomobject]@{Source=$path} } } }\n"
+            'function Read-Host { param($Prompt) Add-Content -LiteralPath $env:STUB_LOG -Value "asked: $Prompt"; '
+            '$env:STUB_ANSWER }\n'
+            'function Invoke-WebRequest { param($Uri,$OutFile,[switch]$UseBasicParsing,$TimeoutSec) '
+            'Copy-Item -LiteralPath $env:FIXTURE -Destination $OutFile }\n'
+            '& $args[0] -Language English -SkipCompanions\n', encoding='utf-8')
+        names = {'broken': str(broken), 'real': sys.executable, 'winget': str(winget), 'manager': str(manager)}
+        log = self.folder / 'stub.log'
+        log.unlink(missing_ok=True)
+        env = dict(self.env, STUB_LOG=str(log), STUB_ANSWER=answer, REAL_PYTHON=sys.executable,
+                   WINGET_EXIT='0', LOCALAPPDATA=str(self.folder / 'no-local-appdata'))
+        env.pop('CONDUCTOR_PYTHON')
+        for name, value in commands.items():
+            env['STUB_' + name] = ';'.join(names[item] for item in value)
+        result = subprocess.run([powershell, '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                                 str(script), str(ROOT / 'install.ps1')], env=env, stdin=subprocess.DEVNULL,
+                                capture_output=True, encoding='utf-8', errors='replace', timeout=40)
+        return result, (log.read_text(encoding='utf-8', errors='replace') if log.exists() else '')
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_probes_each_same_named_python_on_path_separately(self):
+        # A real python.exe followed by the Microsoft Store shortcut of the same name, and the
+        # reverse order: Get-Command returns both, and each must be tried on its own.
+        for order in (['real', 'broken'], ['broken', 'real']):
+            for powershell in self.powershells():
+                with self.subTest(order=order, powershell=powershell):
+                    result, log = self.run_with_fake_commands(
+                        powershell, {'python3': ['broken'], 'python': order, 'winget': ['winget']})
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn('--language', json.loads(result.stdout))
+                    self.assertEqual(log, '', 'a found Python must not lead to a prompt or winget')
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_finds_python_through_the_py_launcher(self):
+        for powershell in self.powershells():
+            with self.subTest(powershell=powershell):
+                result, log = self.run_with_fake_commands(
+                    powershell, {'python3': ['broken'], 'python': ['broken'], 'py': ['real']})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('--language', json.loads(result.stdout))
+                self.assertEqual(log, '')
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_never_installs_python_without_an_explicit_yes(self):
+        missing = {'python3': ['broken'], 'python': ['broken'], 'winget': ['winget'], 'pymanager': ['manager']}
+        for answer in ('', 'n', 'maybe', 'yes please'):
+            for powershell in self.powershells():
+                with self.subTest(answer=answer, powershell=powershell):
+                    result, log = self.run_with_fake_commands(powershell, missing, answer=answer)
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn('nothingwasinstalled', compact(result.stdout + result.stderr))
+                    self.assertIn('asked:', log)
+                    self.assertNotIn('winget', log.replace('runs winget', ''))
+                    self.assertNotIn('pymanager', log)
+                    self.assertNotIn('[', result.stdout)
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_installs_latest_stable_python_after_consent(self):
+        missing = {'python3': ['broken'], 'python': ['broken'], 'winget': ['winget'], 'pymanager': ['manager']}
+        for answer in ('y', ' YES '):
+            for powershell in self.powershells():
+                with self.subTest(answer=answer, powershell=powershell):
+                    result, log = self.run_with_fake_commands(powershell, missing, answer=answer)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn('--language', json.loads(result.stdout.strip().splitlines()[-1]))
+                    self.assertIn('winget install 9NQ7512CXL7T -e', log)
+                    self.assertIn('--disable-interactivity', log)
+                    self.assertIn('pymanager install default', log)
+                    self.assertLess(log.index('asked:'), log.index('winget install'))
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_without_python_and_winget_explains_the_manual_install(self):
+        for powershell in self.powershells():
+            with self.subTest(powershell=powershell):
+                result, log = self.run_with_fake_commands(
+                    powershell, {'python3': ['broken'], 'python': ['broken']}, answer='y')
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('wingetisnotavailable', compact(result.stdout + result.stderr))
+                self.assertIn('python.org', compact(result.stdout + result.stderr))
+                self.assertEqual(log, '', 'no winget: nothing to ask about and nothing to run')
 
 
 if __name__ == '__main__':

@@ -1,4 +1,5 @@
-# Native Windows entrypoint. Git for Windows + Python 3.10+ are prerequisites.
+# Native Windows entrypoint. Git for Windows is a prerequisite; Python 3.10+ is found on
+# PATH or, with the user's explicit consent, installed with the official install manager.
 [CmdletBinding()]
 param(
     [string]$Language,
@@ -14,21 +15,77 @@ $ErrorActionPreference = 'Stop'
 if ($Ref -cnotmatch '^(main|[0-9a-fA-F]{40}|v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?)$') {
     throw 'Conductor bootstrap: -Ref must be main, a version tag (vX.Y.Z) or a full commit; nothing installed.'
 }
-$pythonExecutable = $null
-foreach ($candidate in @($env:CONDUCTOR_PYTHON, 'python3', 'python')) {
-    if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
-    $command = Get-Command $candidate -CommandType Application -ErrorAction SilentlyContinue
-    if ($command) {
-        try {
-            & $command.Source -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>$null
-            if ($LASTEXITCODE -eq 0) { $pythonExecutable = $command.Source; break }
-        } catch {
-            # Windows PowerShell promotes native stderr to NativeCommandError under Stop.
-            [Console]::Error.WriteLine('[conductor.bootstrap] Python probe failed; trying the next candidate.')
-        }
+
+function Test-ConductorPython {
+    param([string]$Path)
+    # Continue: Windows PowerShell promotes native stderr to a terminating NativeCommandError
+    # under Stop, and the Microsoft Store shortcut answers every call on stderr.
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $Path -c 'import sys; sys.exit(sys.version_info < (3, 10))' 2>$null | Out-Null
+        return ($LASTEXITCODE -eq 0)
+    } catch {
+        [Console]::Error.WriteLine("[conductor.bootstrap] Python probe could not start $Path; trying the next candidate.")
+        return $false
     }
 }
-if (-not $pythonExecutable) { throw 'Conductor requires Python 3.10+ on PATH.' }
+
+function Find-ConductorPython {
+    foreach ($candidate in @($env:CONDUCTOR_PYTHON, 'python3', 'python', 'py')) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
+        # Get-Command returns EVERY match on PATH (a real python.exe AND the Store shortcut of
+        # the same name), so each match is probed on its own; invoking the whole result would
+        # join the paths into one unrunnable command name.
+        foreach ($command in @(Get-Command $candidate -CommandType Application -ErrorAction SilentlyContinue)) {
+            if (-not $command) { continue }
+            $path = [string]$command.Source
+            if ($path -and (Test-ConductorPython $path)) { return $path }
+        }
+    }
+    return $null
+}
+
+function Install-ConductorPython {
+    $manual = 'Install Python 3.10 or newer from https://www.python.org/downloads/ , open a new terminal and run this command again.'
+    $winget = @(Get-Command 'winget' -CommandType Application -ErrorAction SilentlyContinue) | Select-Object -First 1
+    if (-not $winget) { throw "Conductor requires Python 3.10+ and found none; winget is not available to install it. $manual" }
+    $answer = ''
+    try {
+        $answer = [string](Read-Host 'Conductor needs Python 3.10+ and found none. Install the latest stable Python for your user account now? This runs winget to install the official Python install manager from the Microsoft Store source and accepts its license terms for you. [y/N]')
+    } catch {
+        [Console]::Error.WriteLine('[conductor.bootstrap] No interactive answer is available; Python is not installed automatically.')
+    }
+    if ($answer.Trim() -notmatch '^(y|yes)$') { throw "Conductor requires Python 3.10+ and found none; nothing was installed. $manual" }
+    & ([string]$winget.Source) install 9NQ7512CXL7T -e --accept-package-agreements --accept-source-agreements --disable-interactivity | Out-Host
+    if ($LASTEXITCODE -ne 0) { throw "winget could not install the Python install manager (exit $LASTEXITCODE). $manual" }
+    $managers = @(Get-Command 'pymanager' -CommandType Application -ErrorAction SilentlyContinue | ForEach-Object { [string]$_.Source })
+    if ($env:LOCALAPPDATA) {
+        # The command alias is not always visible to the terminal that installed the package.
+        $pattern = Join-Path $env:LOCALAPPDATA 'Microsoft\WindowsApps\PythonSoftwareFoundation.PythonManager_*\pymanager.exe'
+        $managers += @(Get-Item -Path $pattern -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+    }
+    $manager = $managers | Where-Object { $_ } | Select-Object -First 1
+    if (-not $manager) { throw "The Python install manager was installed, but its pymanager command was not found. $manual" }
+    $previousConfirm = $env:PYTHON_MANAGER_CONFIRM
+    $env:PYTHON_MANAGER_CONFIRM = 'false'
+    try {
+        & $manager install default | Out-Host
+        if ($LASTEXITCODE -ne 0) { throw "The Python install manager could not install Python (exit $LASTEXITCODE). $manual" }
+        $listed = @(& $manager list --format=exe --one)
+    } finally {
+        $env:PYTHON_MANAGER_CONFIRM = $previousConfirm
+    }
+    foreach ($line in $listed) {
+        $path = ([string]$line).Trim()
+        if ($path -and (Test-Path -LiteralPath $path -PathType Leaf) -and (Test-ConductorPython $path)) { return $path }
+    }
+    $found = Find-ConductorPython
+    if ($found) { return $found }
+    throw 'Python was installed, but this terminal does not see it yet. Open a new terminal and run this command again.'
+}
+
+$pythonExecutable = Find-ConductorPython
+if (-not $pythonExecutable) { $pythonExecutable = Install-ConductorPython }
 $temporaryBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $temporaryDirectory = Join-Path $temporaryBase ('conductor-bootstrap-' + [guid]::NewGuid().ToString('N'))
 $bootstrapFile = Join-Path $temporaryDirectory 'bootstrap.py'

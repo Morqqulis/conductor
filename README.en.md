@@ -126,8 +126,13 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 ```
 
 These commands execute code from the official repository. To inspect it first, download
-the script, read it and run it locally. Git and Python must already be installed; the
-bootstrap does not silently install them or change the system execution policy.
+the script, read it and run it locally. Git must already be installed; the bootstrap
+installs nothing silently and does not change the system execution policy. If Windows has
+no Python 3.10+, the installer asks whether to install it: only after the answer `y` it runs
+`winget`, installs the official Python install manager from the Microsoft Store source
+(accepting its license terms on your behalf) and, through it, the latest stable Python for
+your user account. Any other answer, no terminal or no `winget` — nothing is installed, and
+the installer explains how to install Python yourself.
 Choose Russian, English or Azerbaijani. Without a terminal it keeps the saved language,
 or defaults to Russian. Set it explicitly with `-Language en` in PowerShell or replace
 the pipeline's final `bash` with `bash -s -- --language en`.
@@ -171,6 +176,17 @@ Edit → Setup script), with your language:
 
 Every new cloud session of that environment then starts with Conductor, no commands needed.
 The install takes seconds; `--skip-companions` leaves out RTK and Graphify for a fast start.
+
+The cloud does not run the setup script for every session: its result is saved and reused
+(per the Claude Code documentation, for about a week or until the script changes). So that
+the version does not fall behind, a new cloud session updates Conductor itself before the
+rules are loaded: the ordinary `conductor update --skip-companions`, limited to 5 seconds
+(measured: about 2 seconds). If the update fails or runs out of time, the session starts on
+the installed version; each attempt leaves one line in `~/.claude/conductor/cloud-update.log`.
+This happens only in cloud sessions (where Claude Code itself sets
+`CLAUDE_CODE_REMOTE=true`) and only when a new session starts; local installations are
+updated only by `conductor update`. To turn it off, set `CONDUCTOR_AUTO_UPDATE=0` in the
+cloud environment's variables.
 
 ### Install, update and remove from any directory
 

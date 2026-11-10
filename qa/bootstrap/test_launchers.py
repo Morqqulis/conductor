@@ -15,8 +15,9 @@ from installation import bash_command
 
 
 def compact(text):
-    # Windows PowerShell wraps error text at the console width, even inside a word.
-    return re.sub(r'\s+', '', text)
+    # Windows PowerShell wraps error text at the console width, even inside a word, and
+    # PowerShell 7 starts every continuation line with a "|" gutter.
+    return re.sub(r'[\s|]+', '', text)
 
 
 class LauncherTests(unittest.TestCase):
@@ -179,12 +180,18 @@ class LauncherTests(unittest.TestCase):
         system = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
         return [shell for shell in (shutil.which('pwsh'), str(system)) if shell and Path(shell).is_file()]
 
-    def run_with_fake_commands(self, powershell, commands, answer=''):
-        """Run install.ps1 with Get-Command and Read-Host replaced: no real PATH, winget or prompt."""
+    def run_with_fake_commands(self, powershell, commands, answer='', manager_after_winget=False):
+        """Run install.ps1 with Get-Command and Read-Host replaced: no real PATH, winget or prompt.
+
+        manager_after_winget: the pymanager command exists only once the winget stub has run,
+        as on a computer where the install manager is not installed yet.
+        """
         broken = self.folder / 'unavailable.cmd'
-        broken.write_text('@echo off\necho Python was not found 1>&2\nexit /b 9009\n', encoding='ascii')
+        broken.write_text('@echo off\necho probe auto=%PYTHON_MANAGER_AUTOMATIC_INSTALL%>>"%PROBE_LOG%"\n'
+                          'echo Python was not found 1>&2\nexit /b 9009\n', encoding='ascii')
         winget = self.folder / 'winget.cmd'
-        winget.write_text('@echo off\necho winget %*>>"%STUB_LOG%"\nexit /b %WINGET_EXIT%\n', encoding='ascii')
+        winget.write_text('@echo off\necho winget %*>>"%STUB_LOG%"\n'
+                          'echo installed>"%STUB_MANAGER_MARKER%"\nexit /b 0\n', encoding='ascii')
         manager = self.folder / 'pymanager.cmd'
         manager.write_text('@echo off\necho pymanager %*>>"%STUB_LOG%"\n'
                            'if "%1"=="list" echo %REAL_PYTHON%\nexit /b 0\n', encoding='ascii')
@@ -193,6 +200,8 @@ class LauncherTests(unittest.TestCase):
             "$ErrorActionPreference = 'Stop'\n"
             'function Get-Command { [CmdletBinding()] param($Name,$CommandType) '
             "$value = [Environment]::GetEnvironmentVariable('STUB_' + $Name); "
+            "if ($Name -eq 'pymanager' -and $env:STUB_MANAGER_AFTER_WINGET -eq '1' -and "
+            '-not (Test-Path -LiteralPath $env:STUB_MANAGER_MARKER)) { $value = $null }; '
             "if ($value) { foreach ($path in $value.Split(';')) { [pscustomobject]@{Source=$path} } } }\n"
             'function Read-Host { param($Prompt) Add-Content -LiteralPath $env:STUB_LOG -Value "asked: $Prompt"; '
             '$env:STUB_ANSWER }\n'
@@ -201,9 +210,15 @@ class LauncherTests(unittest.TestCase):
             '& $args[0] -Language English -SkipCompanions\n', encoding='utf-8')
         names = {'broken': str(broken), 'real': sys.executable, 'winget': str(winget), 'manager': str(manager)}
         log = self.folder / 'stub.log'
-        log.unlink(missing_ok=True)
+        self.probe_log = self.folder / 'probe.log'
+        marker = self.folder / 'manager-installed.marker'
+        for leftover in (log, self.probe_log, marker):
+            leftover.unlink(missing_ok=True)
         env = dict(self.env, STUB_LOG=str(log), STUB_ANSWER=answer, REAL_PYTHON=sys.executable,
-                   WINGET_EXIT='0', LOCALAPPDATA=str(self.folder / 'no-local-appdata'))
+                   PROBE_LOG=str(self.probe_log), STUB_MANAGER_MARKER=str(marker),
+                   STUB_MANAGER_AFTER_WINGET='1' if manager_after_winget else '0',
+                   LOCALAPPDATA=str(self.folder / 'no-local-appdata'))
+        env.pop('PYTHON_MANAGER_AUTOMATIC_INSTALL', None)
         env.pop('CONDUCTOR_PYTHON')
         for name, value in commands.items():
             env['STUB_' + name] = ';'.join(names[item] for item in value)
@@ -239,15 +254,29 @@ class LauncherTests(unittest.TestCase):
     def test_powershell_never_installs_python_without_an_explicit_yes(self):
         missing = {'python3': ['broken'], 'python': ['broken'], 'winget': ['winget'], 'pymanager': ['manager']}
         for answer in ('', 'n', 'maybe', 'yes please'):
-            for powershell in self.powershells():
-                with self.subTest(answer=answer, powershell=powershell):
-                    result, log = self.run_with_fake_commands(powershell, missing, answer=answer)
-                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertIn('nothingwasinstalled', compact(result.stdout + result.stderr))
-                    self.assertIn('asked:', log)
-                    self.assertNotIn('winget', log.replace('runs winget', ''))
-                    self.assertNotIn('pymanager', log)
-                    self.assertNotIn('[', result.stdout)
+            for after_winget in (True, False):
+                for powershell in self.powershells():
+                    with self.subTest(answer=answer, after_winget=after_winget, powershell=powershell):
+                        result, log = self.run_with_fake_commands(powershell, missing, answer=answer,
+                                                                  manager_after_winget=after_winget)
+                        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertIn('nothingwasinstalled', compact(result.stdout + result.stderr))
+                        self.assertIn('asked:', log)
+                        self.assertNotIn('winget install', log)
+                        self.assertNotIn('pymanager', log)
+                        self.assertNotIn('[', result.stdout)
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_probing_never_lets_the_install_manager_install_on_its_own(self):
+        # The install manager's own python/py commands download a runtime when none exists;
+        # a probe must switch that off, or Python would be installed before anyone is asked.
+        for powershell in self.powershells():
+            with self.subTest(powershell=powershell):
+                self.run_with_fake_commands(powershell, {'python3': ['broken'], 'python': ['broken'],
+                                                         'py': ['broken']})
+                probes = self.probe_log.read_text(encoding='ascii', errors='replace').split()
+                self.assertEqual(probes.count('auto=false'), 3, probes)
+                self.assertEqual([item for item in probes if item.startswith('auto=') and item != 'auto=false'], [])
 
     @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
     def test_powershell_installs_latest_stable_python_after_consent(self):
@@ -255,13 +284,28 @@ class LauncherTests(unittest.TestCase):
         for answer in ('y', ' YES '):
             for powershell in self.powershells():
                 with self.subTest(answer=answer, powershell=powershell):
-                    result, log = self.run_with_fake_commands(powershell, missing, answer=answer)
+                    result, log = self.run_with_fake_commands(powershell, missing, answer=answer,
+                                                              manager_after_winget=True)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertIn('--language', json.loads(result.stdout.strip().splitlines()[-1]))
                     self.assertIn('winget install 9NQ7512CXL7T -e', log)
                     self.assertIn('--disable-interactivity', log)
                     self.assertIn('pymanager install default', log)
                     self.assertLess(log.index('asked:'), log.index('winget install'))
+                    self.assertLess(log.index('winget install'), log.index('pymanager install default'))
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_reuses_an_install_manager_that_is_already_present(self):
+        # winget reports an error for a package that is installed and current, so it is skipped.
+        present = {'python3': ['broken'], 'python': ['broken'], 'winget': ['winget'], 'pymanager': ['manager']}
+        for powershell in self.powershells():
+            with self.subTest(powershell=powershell):
+                result, log = self.run_with_fake_commands(powershell, present, answer='y')
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('--language', json.loads(result.stdout.strip().splitlines()[-1]))
+                self.assertIn('asked:', log)
+                self.assertNotIn('winget install', log)
+                self.assertIn('pymanager install default', log)
 
     @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
     def test_powershell_without_python_and_winget_explains_the_manual_install(self):

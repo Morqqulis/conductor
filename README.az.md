@@ -127,13 +127,14 @@ set -o pipefail; curl -fsSL https://raw.githubusercontent.com/Morqqulis/conducto
 
 Bu əmrlər rəsmi repozitoriyanın kodunu icra edir. Əvvəlcə yoxlamaq istəyirsinizsə,
 skripti yükləyin, oxuyun və yerli başladın. Git əvvəlcədən quraşdırılmalıdır; yükləyici
-heç nəyi səssiz quraşdırmır və sistemin təhlükəsizlik siyasətini dəyişmir. Windows-da
-Python 3.10+ tapılmasa, quraşdırıcı onu qurmağı təklif edir: yalnız `y` cavabından sonra
-`winget`-i işə salır, Microsoft Store mənbəyindən rəsmi Python quraşdırma menecerini qurur
-(lisenziya şərtlərini sizin adınızdan qəbul edərək) və onun vasitəsilə istifadəçi hesabınız
-üçün Python-un son stabil versiyasını quraşdırır. Hər hansı başqa cavab, terminalın və ya
-`winget`-in olmaması halında heç nə quraşdırılmır və quraşdırıcı Python-u özünüz necə
-quraşdıracağınızı izah edir.
+Git və Python-u soruşmadan quraşdırmır və sistemin təhlükəsizlik siyasətini dəyişmir.
+Windows-da Python 3.10+ tapılmasa, quraşdırıcı onu qurmağı təklif edir: yalnız `y` və ya
+`yes` cavabından sonra `winget`-i işə salır, Microsoft Store mənbəyindən rəsmi Python
+quraşdırma menecerini qurur (paketin və mənbənin şərtlərini sizin adınızdan qəbul edərək) və
+onun vasitəsilə istifadəçi hesabınız üçün menecerin standart olaraq qurduğu (son stabil)
+Python versiyasını quraşdırır. Menecer artıq varsa, `winget` işə salınmır. Hər hansı başqa
+cavab, oxunması mümkün olmayan cavab və ya həm menecerin, həm də `winget`-in olmaması halında
+Python quraşdırılmır və quraşdırıcı onu özünüz necə quraşdıracağınızı izah edir.
 Rus, ingilis və ya Azərbaycan dilini seçin. Terminal yoxdursa, saxlanmış dil,
 o da yoxdursa rus dili istifadə olunur. PowerShell-də `-Language az` əlavə edin
 və ya konveyerin son `bash` əmrini `bash -s -- --language az` ilə əvəz edin.
@@ -182,14 +183,18 @@ Graphify-ı qoymur.
 
 Bulud quraşdırma skriptini hər sessiyada işlətmir: nəticə saxlanılır və təkrar istifadə
 olunur (Claude Code sənədlərinə görə — təxminən bir həftə və ya skript dəyişənədək).
-Versiyanın geri qalmaması üçün yeni bulud sessiyası qaydalar yüklənməzdən əvvəl Conductor-u
-özü yeniləyir: adi `conductor update --skip-companions`, 5 saniyə ilə məhdudlaşdırılıb
-(ölçmə — təxminən 2 saniyə). Yeniləmə alınmasa və ya vaxtı çatmasa, sessiya quraşdırılmış
-versiya ilə başlayır; hər cəhd `~/.claude/conductor/cloud-update.log` faylına bir sətir
-yazır. Bu yalnız bulud sessiyalarında (Claude Code-un özünün `CLAUDE_CODE_REMOTE=true`
-təyin etdiyi yerdə) və yalnız yeni sessiya başlayanda baş verir; yerli quraşdırmalar yalnız
-`conductor update` əmri ilə yenilənir. Söndürmək üçün bulud mühitinin dəyişənlərində
-`CONDUCTOR_AUTO_UPDATE=0` təyin edin.
+Versiyanın geri qalmaması üçün yeni bulud sessiyası əsas qaydalar daxil edilməzdən əvvəl
+Conductor-u özü cari `main` versiyasına yeniləyir: adi `conductor update --skip-companions`,
+5 saniyədən sonra kəsilir və daha 2 saniyədən sonra məcburi dayandırılır (ölçmə — təxminən
+2 saniyə). Yeniləmə alınmasa və ya vaxtı çatmasa, sessiya quraşdırılmış versiya ilə başlayır
+(yazı ortasında məcburi dayandırılmış yeniləməni növbəti `conductor update` geri qaytarır);
+cəhd adətən Conductor qovluğundakı `cloud-update.log` faylına bir sətir yazır. Bu yalnız
+`CLAUDE_CODE_REMOTE=true` təyin olunan yerdə (Claude Code bulud sessiyası onu özü təyin
+edir) və yalnız yeni sessiya başlayanda baş verir; yerli quraşdırmalar heç vaxt avtomatik
+yenilənmir — yalnız `conductor update` əmrini və ya quraşdırıcını özünüz işə saldıqda.
+Söndürmək üçün bulud mühitinin dəyişənlərində `CONDUCTOR_AUTO_UPDATE=0` təyin edin. Quraşdırma
+skriptiniz `--ref` ilə versiyanı sabitləyirsə, onu söndürün: əks halda avtomatik yeniləmə
+sessiyanı `main` versiyasına keçirir.
 
 ### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 

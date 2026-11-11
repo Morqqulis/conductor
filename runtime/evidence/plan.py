@@ -38,6 +38,7 @@ from plan_state import git, name  # noqa: E402
 
 
 SEEN = plan_state.SPACE + 'seen/'
+LOCK = plan_state.SPACE + 'lock/'
 
 
 class Refused(Exception):
@@ -168,6 +169,9 @@ def start(args, plan, state):
     # From the plan's first start on, every commit that reaches the integration branch
     # outside `accept` is named (plan_state.read). Created once; a lost race is the same value.
     git(args.repo, 'update-ref', SEEN + plan.branch, state.integration, '', ok=(0, 1, 128))
+    if not exists(args.repo, SEEN + plan.branch):
+        print(f'WARNING: could not record where {plan.branch} stands ({SEEN + plan.branch}; a leftover '
+              f'record of another plan may be in the way): plan.py status will name it', file=sys.stderr)
     print(f'started {args.id}: branch {branch} at {base[:9]}' + (f' (early, on {args.on})' if args.on else ''))
     print(f'next: git worktree add <new directory> {branch}')
     return 0
@@ -195,7 +199,7 @@ def handin(args, plan, state):
         raise Refused(f'{branch} does not contain the commit it started from ({row.base[:9]}); '
                       f'after a rebase run plan.py rebased {args.id} <new base> first')
     target = row.base if row.speculative or not state.integration else state.integration
-    stray = plan_state.outside(args.repo, row.step, sha, target)
+    stray = plan_state.outside(args.repo, row.step, sha, target, state.integration)
     if stray:
         raise Refused(f'merging {args.id} would change files outside its area ({", ".join(row.step.area)}):\n  '
                       + '\n  '.join(plan_state.safe(path) for path in stray))
@@ -226,6 +230,27 @@ def accept(args, plan, state):
     tree = state.trees.get(plan.branch)
     if not tree:
         raise Refused(f'{plan.branch} is checked out nowhere: it needs a worktree of its own to merge in')
+    # One acceptance at a time: the merge and its commit are two steps in one worktree, and
+    # a second accept in between would abort the first one's merge or commit over it.
+    lock = LOCK + plan.branch
+    try:
+        git(args.repo, 'update-ref', lock, row.handin, '')
+    except ValueError as error:
+        if exists(args.repo, lock):
+            raise Refused(f'another plan.py accept is merging into {plan.branch} right now: run this again '
+                          f'in a moment. (If none is running, one was killed midway: check the worktree '
+                          f'{tree}, then git update-ref -d {lock})')
+        raise ValueError(f'cannot take the acceptance lock: {error}')
+    try:
+        return merge_in(args, plan, state, row, branch, tree)
+    finally:
+        git(args.repo, 'update-ref', '-d', lock, ok=(0, 1, 128))
+
+
+def merge_in(args, plan, state, row, branch, tree):
+    before = git(tree, 'rev-parse', 'HEAD')[1].strip()
+    if before != state.integration:
+        raise Refused(f'{plan.branch} moved while this was being read: run plan.py accept {args.id} again')
     # Never touch work somebody left in that worktree: an unfinished merge or an edit of a
     # tracked file is refused BEFORE anything runs, so the abort below only ever undoes ours.
     busy = git(tree, 'rev-parse', '--verify', '--quiet', 'MERGE_HEAD', ok=(0, 1, 128))[0] == 0
@@ -254,9 +279,11 @@ def accept(args, plan, state):
         raise Refused(f'git could not merge {row.handin[:9]} into {plan.branch}; nothing was changed, '
                       f'try again once this is fixed: {error}')
     git(args.repo, 'update-ref', name('accepted', plan, args.id), row.handin, '')
-    # Move `seen` past our own merge only: anything that arrived by hand before it stays named.
+    # Move `seen` past our own merge only (from `before` to the commit whose first parent
+    # it is): anything that arrived by hand before or during it stays named.
     tip = git(args.repo, 'rev-parse', plan_state.HEADS + plan.branch)[1].strip()
-    git(args.repo, 'update-ref', SEEN + plan.branch, tip, state.integration, ok=(0, 1, 128))
+    if git(args.repo, 'rev-parse', tip + '^1')[1].strip() == before:
+        git(args.repo, 'update-ref', SEEN + plan.branch, tip, before, ok=(0, 1, 128))
     print(f'accepted {args.id}: {row.handin[:9]} merged into {plan.branch}')
     print(f'next: remove the worktree of {branch}, then git branch -D {branch}')
     return 0

@@ -415,6 +415,60 @@ class PlanTest(unittest.TestCase):
                 subprocess.run(["git", "-C", str(self.repo), "branch", "-D", f"plan/demo--{identifier}"],
                                capture_output=True)
 
+    def test_two_acceptances_at_once_never_mix(self):
+        rows = "".join(f"S{n} | part {n} | d{n}/ | - | true | light\n" for n in range(10))
+        self.write_map("integration branch: plan/demo\nid | step | area | needs | proof | weight\n" + rows)
+        tree = self.top / "integration"
+        for first, second in (("S0", "S1"), ("S2", "S3"), ("S4", "S5"), ("S6", "S7"), ("S8", "S9")):
+            for identifier in (first, second):
+                self.ok("start", identifier)
+                self.ok("handin", identifier, self.commit(identifier, f"d{identifier[1]}/file.txt"))
+            runs = [subprocess.Popen([PY, "-B", str(PLAN), "accept", identifier], cwd=str(self.repo),
+                                     env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    for identifier in (first, second)]
+            results = [(run.communicate(timeout=120)[0], run.returncode) for run in runs]
+            self.assertIn(0, [code for _, code in results], results)
+            self.assertEqual(self.git("status", "--porcelain", cwd=tree), "", results)  # nobody's half merge
+            for (output, code), identifier in zip(results, (first, second)):
+                if code:
+                    self.assertIn("another plan.py accept is merging", output)
+                    self.ok("accept", identifier)  # the one that gave way simply runs again
+                self.drop(identifier)
+            self.ok("status")
+        self.assertIn("10/10 accepted", self.ok("status"))
+        self.assertEqual(self.git("for-each-ref", "refs/conductor/lock"), "")
+
+    def test_a_lock_left_by_a_killed_acceptance_is_named_not_broken_through(self):
+        self.ok("start", "C")
+        self.ok("handin", "C", self.commit("C", "docs/guide.md"))
+        self.git("update-ref", "refs/conductor/lock/plan/demo", "main")
+        before = self.git("rev-parse", "plan/demo")
+        self.refused("git update-ref -d refs/conductor/lock/plan/demo", "accept", "C")
+        self.assertEqual(self.git("rev-parse", "plan/demo"), before)
+        self.git("update-ref", "-d", "refs/conductor/lock/plan/demo")
+        self.ok("accept", "C")
+
+    def test_an_early_step_updated_from_the_integration_branch_is_not_blamed_for_others_work(self):
+        self.ok("start", "A")
+        self.ok("handin", "A", self.commit("A", "src/money.py", "CENTS = 1\n"))
+        self.ok("start", "B", "--on", "A")
+        self.commit("B", "src/invoice.py")
+        self.accept("C", "docs/guide.md")
+        self.git("merge", "--quiet", "--no-ff", "-m", "update", "plan/demo", cwd=self.tree("B"))
+        self.assertIn("speculative on A", self.ok("status"))  # C's docs are not B's change
+        self.ok("handin", "B", "plan/demo--B")
+        self.ok("accept", "A")
+        self.drop("A")
+        self.ok("accept", "B")
+
+    def test_a_missing_record_of_the_integration_branch_is_named(self):
+        self.ok("start", "C")
+        self.ok("status")
+        self.git("update-ref", "-d", "refs/conductor/seen/plan/demo")
+        self.finding("no record of where plan.py last saw plan/demo")
+        self.ok("acknowledge")
+        self.ok("status")
+
     def test_an_accepted_step_stays_accepted_whatever_the_history_does_next(self):
         self.accept("A", "src/money.py")
         self.ok("start", "C")

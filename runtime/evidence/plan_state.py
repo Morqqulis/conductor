@@ -83,17 +83,30 @@ def changed(repo, older, newer):
     return [path for path in out.split('\0') if path]
 
 
-def outside(repo, step, tip, target):
-    """Files outside the step's area that merging `tip` into `target` would change: what
-    differs between the point where the two last met and the tip. `target` is the
-    integration branch, or for a step started early the hand-in it was started from. This
-    asks what the merge will DO, not how the branch came to be: a file brought in from a
-    third branch, or accepted work the branch dropped, counts like any other change.
-    (plan.py accept asks the same of the real merge before it commits it.)"""
+def outside(repo, step, tip, target, integration):
+    """Files outside the step's area that merging `tip` would change. This asks what the
+    merge will DO, not how the branch came to be: a file brought in from a third branch,
+    or accepted work the branch dropped, counts like any other change. (plan.py accept
+    asks the same of the real merge before it commits it.)
+
+    `target` is the integration branch - then git itself forecasts the merge (merge-tree,
+    git 2.38+). For a step started early `target` is the hand-in it was started from, and
+    on an older git: the difference between the tip and the point where the two last met,
+    less the files the tip holds exactly as the integration branch does (work merged INTO
+    the step's branch is not the step's change)."""
+    if integration and target == integration:
+        code, out = git(repo, 'merge-tree', '--write-tree', '--no-messages', integration, tip, ok=(0, 1, 128, 129))
+        if code in (0, 1) and out.strip():
+            files = changed(repo, integration, out.split()[0])
+            return [path for path in files if not plan_map.in_area(step, path)]
     code, met = git(repo, 'merge-base', tip, target, ok=(0, 1))
     if code:
         raise ValueError(f'{tip[:9]} shares no history with {target[:9]}')
-    return [path for path in changed(repo, met.strip(), tip) if not plan_map.in_area(step, path)]
+    files = changed(repo, met.strip(), tip)
+    if integration and files:
+        differs = set(changed(repo, integration, tip))
+        files = [path for path in files if path in differs]
+    return [path for path in files if not plan_map.in_area(step, path)]
 
 
 @dataclass
@@ -239,7 +252,8 @@ def read(repo, plan):
         if not row.handin and row.commits and HEADS + branch in merged:
             findings.append(f'{identifier}: {branch} is merged into {plan.branch} without a hand-in: '
                             f'its area was never checked')
-        stray = outside(repo, step, row.tip, row.base if open_needs or not integration else integration)
+        stray = outside(repo, step, row.tip, row.base if open_needs or not integration else integration,
+                        integration)
         if stray:
             shown = ', '.join(safe(path) for path in stray[:5])
             findings.append(f'{identifier} changed files outside its area: {shown}'
@@ -250,6 +264,9 @@ def read(repo, plan):
             if ref.startswith(lead) and ref[len(lead):].split('/')[0] not in plan.steps:
                 findings.append(f'{safe(ref)} belongs to no step of the map')
     seen = refs.get(SPACE + 'seen/' + plan.branch)
+    if integration and not seen and any(row.base for row in rows.values()):
+        findings.append(f'no record of where plan.py last saw {plan.branch}: commits that reach it by hand '
+                        f'cannot be named. Inspect the branch, then plan.py acknowledge')
     if integration and seen and seen != integration:
         new = git(repo, 'rev-list', integration, '--not', seen)[1].split()
         if new:

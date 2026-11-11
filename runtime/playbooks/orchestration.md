@@ -18,13 +18,14 @@ Delegate large independent scopes to reduce main-session context, not to multipl
   worktrees (run probes.md#dirty-tree first) and names each agent's worktree path in slot 2.
 
 ## ASYNC (the controller does not idle)
-After dispatch, continue independent work. Reuse a long-lived agent for related subtasks when
+After dispatch, continue independent work: scheduling.md (work map, WAIT LADDER) names which.
+Reuse a long-lived agent for related subtasks when
 supported, preserving its context. Intervene on drift or missing context without waiting for
 the other agents.
 
 ## FLEET (size and shape — structure decides, never a favorite number)
 - Size = independent angles x verification votes. Research: one agent per angle, blind
-  to each other. Review: one per lens. Skeptic: exactly ONE (skeptic.md).
+  to each other. Review: one per lens. Skeptic: exactly ONE per audited result (skeptic.md).
 - Unknown-size discovery -> loop until dry: stop only when a FULL extra round finds
   nothing new — fixed counters undercount the tail.
 - Wide design choice -> judge panel: independent candidates from different angles,
@@ -76,8 +77,8 @@ products in rules or prompts — generations rotate)
   area — the difference must be empty. Any file outside it is a finding, including edits
   beside a boundary refusal. Then the impact-selected checks, then the skeptic when required
   by its invocation rules; no automatic full suite for independent, proven leaf edits.
-- Dispatch the longest task first; do not pair two heavy acceptances — the controller's
-  acceptance work does not parallelize.
+- Dispatch the longest task first. Acceptance follows scheduling.md ACCEPTANCE PIPELINE:
+  skeptics run in parallel on frozen hand-ins; only the controller's decisions stay serial.
 
 ## Routing (controller-side, per returned status)
 - DONE -> verify by artifact: inspect the diff / run the check yourself. The report is never

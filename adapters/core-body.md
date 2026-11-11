@@ -48,9 +48,9 @@ or rebuild. Pending CI is not green; independent work may proceed. Disclose know
 3. PROVE the top cause (read / trace / add logging - observational only) BEFORE any fix
    edit. Evidence contradicts it -> back to step 2 with the new fact; do not edit.
 4. Fix at the proven cause, minimally; re-run the reproduction fresh - it must pass.
-5. At T2/T3 (T1 only if asked), falsify in an isolated CURRENT copy: reverse ONLY own fix
-   hunks, keep the CURRENT test even in the same file. Require pass/assertion-FAIL/pass.
-   A missing test is not failure evidence; a passing disarm means fix the check. Use SAFE UNDO.
+5. At T2/T3 (T1 only if asked) see the test FAIL without the fix. Red first: write and run
+   it BEFORE fixing. Written after -> isolated CURRENT copy, reverse ONLY own fix hunks,
+   keep the test: pass/assertion-FAIL/pass, SAFE UNDO. A missing test is not failure evidence.
 6. Three failed fix attempts -> STOP: the frame is wrong, not the hypothesis. Ask the human.
 
 ## Investigating (how / why / where questions)

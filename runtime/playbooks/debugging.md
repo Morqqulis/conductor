@@ -47,7 +47,10 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    consult the human.
 6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks): the regression
    test for the ORIGINAL symptom must fail without the fix and pass with it.
-   Default: `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/falsify.py --test
+   RED FIRST (default): write that test BEFORE the fix edit - step 1's repro made a test -
+   and run it on the unfixed code: it MUST FAIL. That run is the red; after the fix the same
+   test must pass. Paste both; no undo run is needed.
+   Test written AFTER the fix: `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/falsify.py --test
    "<test command>" <fix files>` - an isolated copy of the CURRENT tree, fix files back to
    their pre-edit snapshot (else HEAD), expects FAIL then PASS; paste its verdict. It never
    writes the real tree and refuses test files.

@@ -5,11 +5,14 @@ integration of delegated work; a checkpoint in a long autonomous run; a review w
 /code-review skill; or tempted to trust a report.
 
 ## Invocation
-Default: exactly ONE skeptic agent — more only if the user explicitly asks. Dispatch after the
-implementer's completion gate passes and BEFORE reporting DONE to the user.
+Default: exactly ONE skeptic agent per audited result — more only if the user explicitly
+asks. Dispatch after the implementer's completion gate passes and BEFORE reporting DONE to
+the user.
 No subagent capability available -> inline mode (below).
 A verdict binds only a tree that did not change during the round: with parallel mutators
-still active, serialize first (orchestration.md) — a verdict over a moving tree is void.
+still active IN THAT TREE, serialize first (orchestration.md) — a verdict over a moving tree
+is void. A hand-in frozen in its own worktree is a still tree: its skeptic runs while other
+executors work elsewhere (scheduling.md).
 
 NOT a skeptic's job: re-checking your own edit with applicable proof. That verifier only
 re-derives evidence you already hold, and pays a full context to

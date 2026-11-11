@@ -98,12 +98,13 @@ expect_fail "core payload over budget" \
 # --- case 3: playbook dead-wiring ----------------------------------------------------
 # No playbook is referenced ONLY from core.md - lint's wiring is transitive over
 # core + hooks + peer playbooks, and every playbook has at least one peer/hook edge.
-# skeptic.md has exactly two inbound edges (core.md, orchestration.md); severing both
-# is the minimal mutation that makes a playbook genuinely dead.
-sed -i 's/skeptic\.md/skepticX.md/g' "$WORK/runtime/core.md" "$WORK/runtime/playbooks/orchestration.md"
+# skeptic.md has exactly three inbound edges (core.md, orchestration.md, scheduling.md);
+# severing all of them is the minimal mutation that makes a playbook genuinely dead.
+sed -i 's/skeptic\.md/skepticX.md/g' "$WORK/runtime/core.md" "$WORK/runtime/playbooks/orchestration.md" \
+    "$WORK/runtime/playbooks/scheduling.md"
 expect_fail "playbook dead-wiring (skeptic.md unreferenced)" \
     "dead wiring: skeptic.md" \
-    runtime/core.md runtime/playbooks/orchestration.md
+    runtime/core.md runtime/playbooks/orchestration.md runtime/playbooks/scheduling.md
 
 # --- case 4: placeholder text in a runtime .md ---------------------------------------
 printf '\nTBD\n' >> "$WORK/runtime/playbooks/debugging.md"

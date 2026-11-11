@@ -32,6 +32,7 @@ as asked; do not silently change scope. Restraint never lowers production qualit
 ## Step 1 — Decomposition triage (before any detail work)
 Does the request contain more than one independently deliverable outcome? Yes -> split into
 units; each unit gets its own Step 0 record and its own counters. No -> continue.
+A plan of 2+ steps to deliver -> load scheduling.md (work map, wait ladder) before the first edit.
 
 ## Step 2 — Branch on an observable predicate
 At T2+, name "essence: <e> -> method: <m>" per playbooks/methods.md; uncertainty picks method.
@@ -76,8 +77,9 @@ email or a third-party default is "not verified in the real environment" unless 
 An automated run on the target platform exists (CI on that OS) -> use it BEFORE asking a
 person to test by hand: push a short-lived branch, read its result. A person's manual run is
 for what automation cannot reach.
-A NEW guard needs remove-only proof at T2+: `conductor/evidence/falsify.py` (debugging.md
-step 6) or, for hunks sharing a file with the test, an isolated copy; fail, then pass.
+A NEW guard needs proof at T2+ that its test bites: seen failing BEFORE the guard existed
+(red first), else `conductor/evidence/falsify.py` (debugging.md step 6) or, for hunks sharing
+a file with the test, an isolated copy; fail, then pass.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.
 A guard that reads source text (grep for a literal, a match count) proves one spelling, not the
 class; prefer the compiler, linter or type boundaries.

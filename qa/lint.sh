@@ -51,9 +51,9 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 # transitively, so a file referenced by any of the three is live; one referenced by none
 # is dead weight that no session will ever read.
 declare -A BUDGETS=(
-    [debugging.md]=7000 [implementing.md]=7500 [investigating.md]=6000
+    [debugging.md]=7000 [implementing.md]=7700 [investigating.md]=6000
     [orchestration.md]=7400 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
-    [verification.md]=5600
+    [verification.md]=5600 [scheduling.md]=6000
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
 core_text="$(cat "$CORE")"

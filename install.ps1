@@ -133,7 +133,11 @@ try {
     if ($SkipGlobalMd) { $bootstrapArguments += '--skip-global-md' }
     if ($ReplaceModified) { $bootstrapArguments += '--replace-modified' }
     & $pythonExecutable @bootstrapArguments
-    if ($LASTEXITCODE -ne 0) { throw "Conductor bootstrap failed (exit $LASTEXITCODE)." }
+    # Exit 3 is the installer's "Conductor is installed and verified, a companion tool was
+    # not": reporting it as a failed bootstrap would send the user to reinstall a working copy.
+    if ($LASTEXITCODE -eq 3) {
+        Write-Warning 'Conductor is installed and verified, but a companion tool (Superpowers, RTK or Graphify) was not set up: see its FAIL or FAILED line above. Conductor works without it; run the installer again to retry.'
+    } elseif ($LASTEXITCODE -ne 0) { throw "Conductor bootstrap failed (exit $LASTEXITCODE)." }
 } finally {
     # Exact files only; no recursive deletion and no persistent execution-policy changes.
     if (Test-Path -LiteralPath $bootstrapFile) { Remove-Item -LiteralPath $bootstrapFile }

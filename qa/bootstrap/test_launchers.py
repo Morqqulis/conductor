@@ -131,6 +131,25 @@ class LauncherTests(unittest.TestCase):
                                                              '--language', 'English', '--skip-companions'])
 
     @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
+    def test_powershell_reports_a_failed_companion_as_a_warning_not_a_failed_install(self):
+        # Exit 3: Conductor itself is installed and verified; only a companion tool failed.
+        script = self.folder / 'companion.ps1'
+        script.write_text("$ErrorActionPreference = 'Stop'\n"
+                          'function Invoke-WebRequest { param($Uri,$OutFile,[switch]$UseBasicParsing,$TimeoutSec) '
+                          'Copy-Item -LiteralPath $env:FIXTURE -Destination $OutFile }\n'
+                          '& $args[0] -Language English\n', encoding='utf-8')
+        for powershell in self.powershells():
+            with self.subTest(powershell=powershell):
+                result = subprocess.run([powershell, '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+                                         str(script), str(ROOT / 'install.ps1')],
+                                        env=dict(self.env, FIXTURE_EXIT='3'), capture_output=True,
+                                        encoding='utf-8', errors='replace', timeout=25)
+                output = compact(result.stdout + result.stderr)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('Conductorisinstalledandverified', output)
+                self.assertNotIn('bootstrapfailed', output)
+
+    @unittest.skipUnless(os.name == 'nt', 'PowerShell entrypoint on Windows')
     def test_powershell_downloads_second_stage_from_the_pinned_ref_and_rejects_bad_refs(self):
         powershell = shutil.which('pwsh') or shutil.which('powershell')
         log = self.folder / 'uri.log'

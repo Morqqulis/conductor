@@ -199,8 +199,8 @@ sessiyanı `main` versiyasına keçirir.
 Bir neçə agent eyni plan üzrə işləyəndə layihədə iş xəritəsi olur:
 `.conductor/work-map.md` (onu agent özü yaradır, git-ə düşmür). Xəritədə yalnız plan yazılır;
 kimin nəyi başladığını, təhvil verdiyini və nəyin qəbul edildiyini `evidence/plan.py`
-proqramı git-dən oxuyur və planla faktlar arasındakı hər uyğunsuzluğu adlandırır. Xəritə
-faylı mövcud olduqca hər mesajınıza bu vəziyyəti göstərən bir sətir əlavə olunur (3 saniyəyə
+proqramı git-dən oxuyur və planla faktlar arasında git-də görünən uyğunsuzluqları
+adlandırır. Xəritə faylı mövcud olduqca hər mesajınıza bu vəziyyəti göstərən bir sətir əlavə olunur (3 saniyəyə
 qədər; istənilən xətada sətir sadəcə əlavə olunmur). Sətri söndürmək üçün
 `CONDUCTOR_PLAN_STATUS=0` dəyişənini təyin edin.
 

@@ -163,9 +163,9 @@ class PlanTest(unittest.TestCase):
         self.git("worktree", "remove", "--force", str(self.top / f"wt-{identifier}"))
         self.git("branch", "-D", f"plan/demo--{identifier}")
 
-    def accept(self, identifier, relative):
+    def accept(self, identifier, relative, text="x\n"):
         self.ok("start", identifier)
-        sha = self.commit(identifier, relative)
+        sha = self.commit(identifier, relative, text)
         self.ok("handin", identifier, sha)
         self.assertIn(f"accepted {identifier}: {sha[:9]} merged into plan/demo", self.ok("accept", identifier))
         self.drop(identifier)
@@ -327,13 +327,61 @@ class PlanTest(unittest.TestCase):
                      "handin", "C", sha)
         self.finding("plan/demo--C is merged into plan/demo without a hand-in")
 
-    def test_a_later_clean_commit_does_not_launder_an_earlier_one_merged_by_hand(self):
+    def test_whatever_reaches_the_integration_branch_by_hand_is_named_until_acknowledged(self):
         self.ok("start", "C")
         bad = self.commit("C", "src/smuggled.py")
         self.merge(bad)  # by hand, around the check
         self.commit("C", "docs/guide.md")
-        self.refused("outside its area", "handin", "C", "plan/demo--C")
-        self.finding("C changed files outside its area: src/smuggled.py")
+        output = self.finding("2 commit(s) reached plan/demo outside plan.py accept: ")
+        self.assertIn("then plan.py acknowledge", output)
+        self.ok("handin", "C", "plan/demo--C")  # the later commit alone is clean...
+        self.ok("accept", "C")
+        self.drop("C")
+        # ...the smuggled one stays named (with everything after it, the acceptance included)
+        self.finding("4 commit(s) reached plan/demo outside plan.py accept: ")
+        output = self.ok("acknowledge")
+        self.assertIn("C: src/smuggled.py", output)  # what is being acknowledged is shown
+        self.ok("status")
+        tree = self.top / "integration"
+        (tree / "hotfix.txt").write_text("x\n", encoding="utf-8")
+        self.git("add", "-A", cwd=tree)
+        self.git("commit", "--quiet", "-m", "a direct commit", cwd=tree)
+        self.finding("1 commit(s) reached plan/demo outside plan.py accept: ")
+        self.git("reset", "--quiet", "--hard", "HEAD~1", cwd=tree)
+        self.ok("status")
+
+    def test_a_file_from_a_third_branch_does_not_ride_in_through_the_step(self):
+        self.ok("start", "C")
+        self.commit("C", "docs/guide.md")
+        self.git("branch", "side", "main")
+        self.git("worktree", "add", "--quiet", str(self.top / "side"), "side")
+        (self.top / "side/src/money.py").write_text("HACK\n", encoding="utf-8")
+        self.git("commit", "--quiet", "-am", "side", cwd=self.top / "side")
+        self.git("merge", "--quiet", "--no-ff", "-m", "take side", "side", cwd=self.tree("C"))
+        self.finding("C changed files outside its area: src/money.py")
+        self.refused("merging C would change files outside its area", "handin", "C", "plan/demo--C")
+
+    def test_a_step_cannot_silently_drop_accepted_work(self):
+        self.ok("start", "C")
+        self.commit("C", "docs/guide.md")
+        self.accept("A", "src/money.py", "CENTS = 1\n")
+        self.ok("status")
+        self.git("merge", "--quiet", "-s", "ours", "-m", "keep mine", "plan/demo", cwd=self.tree("C"))
+        self.finding("C changed files outside its area: src/money.py")  # merging it would undo A
+        self.refused("merging C would change files outside its area", "handin", "C", "plan/demo--C")
+
+    def test_accept_checks_the_real_merge_not_a_forecast(self):
+        before = self.git("rev-parse", "plan/demo")
+        self.accept("A", "src/money.py")
+        self.ok("start", "C")
+        self.commit("C", "docs/guide.md")
+        self.ok("handin", "C", "plan/demo--C")
+        tree = self.top / "integration"
+        self.git("reset", "--quiet", "--hard", before, cwd=tree)  # the ground moved after the hand-in
+        self.ok("acknowledge")
+        self.refused("merging C would change files outside its area (docs/); nothing was changed", "accept", "C")
+        self.assertEqual(self.git("rev-parse", "plan/demo"), before)
+        self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
 
     def test_work_built_on_a_returned_handin_is_named_until_it_is_rebased(self):
         self.ok("start", "A")
@@ -380,7 +428,10 @@ class PlanTest(unittest.TestCase):
         self.git("add", "owner.txt")
         self.git("commit", "--quiet", "-m", "the owner's own commit")
         self.git("merge", "--quiet", "main", cwd=self.top / "integration")  # fast-forwards back
-        output = self.ok("status")  # no false alarm about the owner's commit either
+        output = self.finding("2 commit(s) reached plan/demo outside plan.py accept")  # the owner's: named once
+        self.assertIn("2/4 accepted", output)
+        self.ok("acknowledge")
+        output = self.ok("status")
         self.assertIn("2/4 accepted", output)
         self.assertIn("ready now: B", output)
 
@@ -398,6 +449,8 @@ class PlanTest(unittest.TestCase):
                      "accept", "C")
         self.assertEqual(self.git("rev-parse", "plan/demo"), before)
         self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
+        self.finding("1 commit(s) reached plan/demo outside plan.py accept")  # the "meanwhile" commit
+        self.ok("acknowledge")
         self.assertIn("to accept: C", self.ok("status"))
         # the way out the refusal names: update the branch, withdraw the hand-in at no round, hand in again
         subprocess.run(["git", "-C", str(self.tree("C")), "merge", "plan/demo"], capture_output=True, env=self.env)

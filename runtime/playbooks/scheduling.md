@@ -57,10 +57,11 @@ info/exclude` prints - never committed. It holds the PLAN only: `integration bra
 their header row.
 State is computed. P = `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/plan.py`,
 run anywhere in the repository. `P status` reads from git which steps run, are handed in,
-accepted or returned, lists `ready now` and `to accept`, and names every disagreement
-between plan and facts (a file outside an area, a branch moved after its hand-in, a merge
-by hand, overlapping areas). Run it after writing the map, before each dispatch and
-acceptance, after a compaction; fix or report a finding
+accepted or returned, lists `ready now` and `to accept`, and names where plan and facts
+disagree (a file outside an area, a branch moved after its hand-in, overlapping areas,
+commits that reached the integration branch outside `P accept` - inspect those, then `P
+acknowledge`). Run it after writing the map, before each dispatch and acceptance, after a
+compaction; fix or report a finding
 before anything else starts. Who runs a step, or that it is blocked -> a free-text line in
 the map. P cannot run -> say so, keep the states in the todo entry. Attempt counters stay
 there.

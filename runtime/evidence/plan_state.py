@@ -17,9 +17,11 @@ running    started, nothing handed in (`returned` counts earlier rounds)
 ready      not started, every need accepted, no live step may write the same paths
 waiting    not started: a need is not accepted, or a live step holds part of its area
 
-Work that reached B around plan.py - a branch or hand-in merged by hand - is never read as
-accepted; it is named. Known limit: a commit made directly on B is not detected (it cannot
-be told from the owner's commits that reach B when their branch is merged in). refs/conductor/ is not a branch or tag namespace: `git push` and
+    refs/conductor/seen/B             B's tip as plan.py last left or acknowledged it
+
+Work that reached B around plan.py - a merge by hand, a direct commit, the owner's branch
+merged in - is never read as accepted: every commit in B beyond `seen` is named until
+somebody inspects it and runs plan.py acknowledge. refs/conductor/ is not a branch or tag namespace: `git push` and
 `git tag` never see it.
 """
 from dataclasses import dataclass, field
@@ -81,19 +83,17 @@ def changed(repo, older, newer):
     return [path for path in out.split('\0') if path]
 
 
-def outside(repo, step, base, tip):
-    """Files the step itself changed outside its area: files that differ between its start
-    and its tip AND were touched by a commit on the branch's own line (first parents; for a
-    merge commit only what the merge itself changed). Work merged INTO the step's branch
-    from the integration branch is on the other line and is not the step's change - and
-    this does not depend on what was merged where afterwards."""
-    files = changed(repo, base, tip)
-    if not files:
-        return []
-    out = git(repo, 'log', '--first-parent', '-c', '--name-only', '--no-renames', '--format=', '-z',
-              f'{base}..{tip}')[1]
-    own = {path.strip('\n') for path in out.split('\0')}
-    return [path for path in files if path in own and not plan_map.in_area(step, path)]
+def outside(repo, step, tip, target):
+    """Files outside the step's area that merging `tip` into `target` would change: what
+    differs between the point where the two last met and the tip. `target` is the
+    integration branch, or for a step started early the hand-in it was started from. This
+    asks what the merge will DO, not how the branch came to be: a file brought in from a
+    third branch, or accepted work the branch dropped, counts like any other change.
+    (plan.py accept asks the same of the real merge before it commits it.)"""
+    code, met = git(repo, 'merge-base', tip, target, ok=(0, 1))
+    if code:
+        raise ValueError(f'{tip[:9]} shares no history with {target[:9]}')
+    return [path for path in changed(repo, met.strip(), tip) if not plan_map.in_area(step, path)]
 
 
 @dataclass
@@ -239,7 +239,7 @@ def read(repo, plan):
         if not row.handin and row.commits and HEADS + branch in merged:
             findings.append(f'{identifier}: {branch} is merged into {plan.branch} without a hand-in: '
                             f'its area was never checked')
-        stray = outside(repo, step, row.base, row.tip)
+        stray = outside(repo, step, row.tip, row.base if open_needs or not integration else integration)
         if stray:
             shown = ', '.join(safe(path) for path in stray[:5])
             findings.append(f'{identifier} changed files outside its area: {shown}'
@@ -249,6 +249,16 @@ def read(repo, plan):
             lead = f'{SPACE}{kind}/{plan.branch}/'
             if ref.startswith(lead) and ref[len(lead):].split('/')[0] not in plan.steps:
                 findings.append(f'{safe(ref)} belongs to no step of the map')
+    seen = refs.get(SPACE + 'seen/' + plan.branch)
+    if integration and seen and seen != integration:
+        new = git(repo, 'rev-list', integration, '--not', seen)[1].split()
+        if new:
+            shown = ', '.join(sha[:9] for sha in new[:3]) + (f' (+{len(new) - 3} more)' if len(new) > 3 else '')
+            findings.append(f'{len(new)} commit(s) reached {plan.branch} outside plan.py accept: {shown}. '
+                            f'Inspect them (git log {seen[:9]}..{plan.branch}), then plan.py acknowledge')
+        else:
+            findings.append(f'{plan.branch} was moved back or rewritten since plan.py last saw it at '
+                            f'{seen[:9]}: inspect it, then plan.py acknowledge')
     files = _static(repo, plan, integration, findings)
     ready = []
     for identifier, row in rows.items():

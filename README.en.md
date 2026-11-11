@@ -197,7 +197,7 @@ otherwise the auto-update moves the session to `main`.
 When several agents work on one plan, the project holds a work map,
 `.conductor/work-map.md` (the agent creates it; it never enters git). The map records the
 plan only; who started, handed in and got accepted is read from git by `evidence/plan.py`,
-which names every disagreement between the plan and the facts. While the map file exists,
+which names the disagreements between the plan and the facts that git shows. While the map file exists,
 one line with that state is added to each of your messages (up to 3 seconds; on any error
 the line is simply not added). To turn the line off, set `CONDUCTOR_PLAN_STATUS=0`.
 

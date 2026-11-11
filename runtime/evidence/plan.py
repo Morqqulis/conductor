@@ -8,6 +8,8 @@ usage: plan.py status [--brief]        the table, what may start, what to accept
        plan.py accept ID               merge the hand-in into the integration branch (in that
                                        branch's own worktree) and record it: the only way a
                                        step becomes accepted
+       plan.py acknowledge             commits reached the integration branch outside accept
+                                       and somebody inspected them: stop naming them
        plan.py return ID               send the hand-in back; counts the round
        plan.py rebased ID SHA          the step's branch was rebased or updated: record the
                                        commit it now starts from; a hand-in is withdrawn
@@ -33,6 +35,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plan_map  # noqa: E402
 import plan_state  # noqa: E402
 from plan_state import git, name  # noqa: E402
+
+
+SEEN = plan_state.SPACE + 'seen/'
 
 
 class Refused(Exception):
@@ -160,6 +165,9 @@ def start(args, plan, state):
     except ValueError:
         git(args.repo, 'update-ref', '-d', record, ok=(0, 1, 128))
         raise
+    # From the plan's first start on, every commit that reaches the integration branch
+    # outside `accept` is named (plan_state.read). Created once; a lost race is the same value.
+    git(args.repo, 'update-ref', SEEN + plan.branch, state.integration, '', ok=(0, 1, 128))
     print(f'started {args.id}: branch {branch} at {base[:9]}' + (f' (early, on {args.on})' if args.on else ''))
     print(f'next: git worktree add <new directory> {branch}')
     return 0
@@ -186,12 +194,11 @@ def handin(args, plan, state):
     if not plan_state.is_ancestor(args.repo, row.base, sha):
         raise Refused(f'{branch} does not contain the commit it started from ({row.base[:9]}); '
                       f'after a rebase run plan.py rebased {args.id} <new base> first')
-    stray = plan_state.outside(args.repo, row.step, row.base, sha)
+    target = row.base if row.speculative or not state.integration else state.integration
+    stray = plan_state.outside(args.repo, row.step, sha, target)
     if stray:
-        raise Refused(f'{args.id} changed files outside its area ({", ".join(row.step.area)}):\n  '
-                      + '\n  '.join(plan_state.safe(path) for path in stray)
-                      + f'\n(a branch fast-forwarded onto newer work shows that work as its own: '
-                        f'plan.py rebased {args.id} <the commit it now builds on>)')
+        raise Refused(f'merging {args.id} would change files outside its area ({", ".join(row.step.area)}):\n  '
+                      + '\n  '.join(plan_state.safe(path) for path in stray))
     git(args.repo, 'update-ref', name('handin', plan, args.id), sha, '')
     print(f'handed in {args.id} at {sha[:9]}: area clean, {row.commits} commit(s)')
     return 0
@@ -228,7 +235,16 @@ def accept(args, plan, state):
                       + ': finish or clear that first; nothing was touched')
     message = f'Accept {args.id}: {row.step.title}'
     try:
-        git(tree, 'merge', '--no-ff', '--no-edit', '-m', message, row.handin)
+        git(tree, 'merge', '--no-ff', '--no-commit', row.handin)
+        # The fact that matters, asked of the merge itself: what does it change here?
+        staged = git(tree, 'diff', '--cached', '--name-only', '--no-renames', '-z', 'HEAD')[1]
+        stray = [path for path in staged.split('\0') if path and not plan_map.in_area(row.step, path)]
+        if stray:
+            git(tree, 'merge', '--abort', ok=(0, 1, 128))
+            raise Refused(f'merging {args.id} would change files outside its area '
+                          f'({", ".join(row.step.area)}); nothing was changed:\n  '
+                          + '\n  '.join(plan_state.safe(path) for path in stray))
+        git(tree, 'commit', '--no-edit', '-m', message)
     except ValueError as error:
         conflict = git(tree, 'diff', '--name-only', '--diff-filter=U', ok=(0, 1, 128))[1].strip()
         git(tree, 'merge', '--abort', ok=(0, 1, 128))
@@ -238,8 +254,23 @@ def accept(args, plan, state):
         raise Refused(f'git could not merge {row.handin[:9]} into {plan.branch}; nothing was changed, '
                       f'try again once this is fixed: {error}')
     git(args.repo, 'update-ref', name('accepted', plan, args.id), row.handin, '')
+    # Move `seen` past our own merge only: anything that arrived by hand before it stays named.
+    tip = git(args.repo, 'rev-parse', plan_state.HEADS + plan.branch)[1].strip()
+    git(args.repo, 'update-ref', SEEN + plan.branch, tip, state.integration, ok=(0, 1, 128))
     print(f'accepted {args.id}: {row.handin[:9]} merged into {plan.branch}')
     print(f'next: remove the worktree of {branch}, then git branch -D {branch}')
+    return 0
+
+
+def acknowledge(args, plan, state):
+    """Somebody looked at what reached the integration branch outside `accept`."""
+    if not state.integration:
+        raise Refused(f'the integration branch {plan.branch} does not exist')
+    code, seen = git(args.repo, 'rev-parse', '--verify', '--quiet', SEEN + plan.branch, ok=(0, 1, 128))
+    if code == 0 and seen.strip() != state.integration:
+        print(git(args.repo, 'log', '--format=%h %s', '-20', state.integration, '--not', seen.strip())[1].rstrip())
+    git(args.repo, 'update-ref', SEEN + plan.branch, state.integration)
+    print(f'acknowledged: {plan.branch} at {state.integration[:9]}')
     return 0
 
 
@@ -298,6 +329,7 @@ def finish(args, plan, state):
     out = git(args.repo, 'for-each-ref', '--format=%(refname)', plan_state.SPACE)[1]
     leads = tuple(f'{plan_state.SPACE}{kind}/{plan.branch}/' for kind in plan_state.KINDS)
     count = 0
+    git(args.repo, 'update-ref', '-d', SEEN + plan.branch, ok=(0, 1, 128))
     for ref in out.splitlines():
         if ref.startswith(leads):
             git(args.repo, 'update-ref', '-d', ref)
@@ -330,12 +362,14 @@ def main(argv=None):
     command('start', 'id').add_argument('--on')
     command('handin', 'id', 'sha')
     command('accept', 'id')
+    command('acknowledge')
     command('return', 'id')
     command('rebased', 'id', 'sha')
     command('release', 'id')
     command('finish').add_argument('--abandon', action='store_true')
     args = parser.parse_args(argv)
-    run = {'status': status, 'start': start, 'handin': handin, 'accept': accept, 'return': send_back,
+    run = {'status': status, 'start': start, 'handin': handin, 'accept': accept, 'acknowledge': acknowledge,
+           'return': send_back,
            'rebased': rebased, 'release': release, 'finish': finish}[args.command]
     try:
         plan, state = load(args)

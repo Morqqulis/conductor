@@ -92,11 +92,17 @@ def parse(text):
         if lowered.startswith('decided:'):
             decided.append(line.split(':', 1)[1].strip())
             continue
-        if '|' not in line or closed:
+        if '|' not in line:
             continue
         cells = _cells(line)
-        if header and len(cells) > len(COLUMNS):  # a "|" inside the proof command (a shell pipe)
-            cells = cells[:4] + [' | '.join(cells[4:-1]), cells[-1]]
+        if closed:
+            if len(cells) >= len(COLUMNS) and cells[-1].lower() in ('light', 'heavy'):
+                raise ValueError(f'work map line {number}: a step row after a blank line - the table '
+                                 f'must be one block, or this step would be silently left out')
+            continue
+        if header and len(cells) > len(COLUMNS):  # "|" inside the proof command: keep it as written
+            raw = line.strip().strip('|').split('|')
+            cells = cells[:4] + ['|'.join(raw[4:-1]).strip().strip('`').strip(), cells[-1]]
         if not header:
             if tuple(cell.lower() for cell in cells) == COLUMNS:
                 header = True
@@ -110,8 +116,9 @@ def parse(text):
         if not ID.fullmatch(identifier):
             raise ValueError(f'work map line {number}: id {identifier!r} must be 1-32 letters, digits, "_", '
                              f'or single "." and "-" between them')
-        if identifier in steps:
-            raise ValueError(f'work map line {number}: id {identifier!r} is already used on line {steps[identifier].line}')
+        twin = [known for known in steps if known.lower() == identifier.lower()]
+        if twin:  # ids become branch names, and some disks do not tell A from a
+            raise ValueError(f'work map line {number}: id {identifier!r} is already used on line {steps[twin[0]].line}')
         patterns = tuple(_pattern(item, number) for item in area.split(',') if item.strip())
         if not patterns:
             raise ValueError(f'work map line {number}: step {identifier} has an empty area')

@@ -66,6 +66,8 @@ class MapTest(unittest.TestCase):
             "empty area": head + "A | s | , | - | t | light\n",
             "no proof command": head + "A | s | a | - | - | light\n",
             "must be 1-32 letters": head + "A B | s | a | - | t | light\n",
+            "id 'a' is already used": head + "A | s | a | - | t | light\na | s | b | - | t | light\n",
+            "a step row after a blank line": head + "A | s | a | - | t | light\n\nB | s | b | - | t | heavy\n",
             "id 'a..b' must be": head + "a..b | s | a | - | t | light\n",
             "id 'a--b' must be": head + "a--b | s | a | - | t | light\n",
             "id 'z.' must be": head + "z. | s | a | - | t | light\n",
@@ -165,7 +167,7 @@ class PlanTest(unittest.TestCase):
         self.ok("start", identifier)
         sha = self.commit(identifier, relative)
         self.ok("handin", identifier, sha)
-        self.merge(sha)
+        self.assertIn(f"accepted {identifier}: {sha[:9]} merged into plan/demo", self.ok("accept", identifier))
         self.drop(identifier)
         return sha
 
@@ -194,7 +196,11 @@ class PlanTest(unittest.TestCase):
         self.assertIn("handed-in " + sha[:9], output)
         self.assertIn("to accept: A", output)
         self.assertIn("ready now: C", output)
-        self.merge(sha)
+        self.refused("only a handed-in step", "accept", "C")
+        self.ok("accept", "A")
+        self.assertEqual(self.git("log", "-1", "--format=%s%n%P", "plan/demo").splitlines()[0], "Accept A: money type")
+        self.assertEqual(self.git("status", "--porcelain", cwd=self.top / "integration"), "")
+        self.refused("only a handed-in step", "accept", "A")
         self.finding("A is accepted but its branch plan/demo--A still exists")
         self.drop("A")
         output = self.ok("status")
@@ -273,7 +279,8 @@ class PlanTest(unittest.TestCase):
         self.assertIn("to accept: A\n", output)
         self.assertNotIn("D --on B", output)
         self.refused("cannot start early on B", "start", "D", "--on", "B")
-        self.merge(sha)
+        self.refused("B needs A, which is not accepted", "accept", "B")
+        self.ok("accept", "A")
         self.drop("A")
         output = self.ok("status")
         self.assertIn("to accept: B", output)
@@ -303,20 +310,62 @@ class PlanTest(unittest.TestCase):
         sha = self.commit("C", "docs/guide.md")
         self.ok("handin", "C", sha)
         self.commit("C", "src/smuggled.py")
-        self.merge("plan/demo--C")  # merged by name: the tip, not the hand-in
+        self.refused("moved after the hand-in", "accept", "C")
+        self.merge("plan/demo--C")  # merged by hand and by name: the tip, not the hand-in
+        self.refused("is already inside plan/demo: it was merged by hand", "accept", "C")
         self.drop("C")
-        output = self.finding("its hand-in " + sha[:9] + " is inside plan/demo but was not merged as itself")
+        output = self.finding("its hand-in " + sha[:9] + " is inside plan/demo but plan.py accept never put it there")
         self.assertIn("0/4 accepted", output)
-        self.assertIn("2 commit(s) in plan/demo came from no accepted hand-in", output)  # C's own and the extra
+        self.refused("not accepted yet: A, B, C, D", "finish")
 
-    def test_a_commit_made_straight_on_the_integration_branch_is_named(self):
-        self.accept("C", "docs/guide.md")
-        self.ok("status")
+    def test_an_area_check_cannot_be_dodged_by_merging_first(self):
+        self.ok("start", "C")
+        sha = self.commit("C", "src/smuggled.py")
+        self.refused("outside its area", "handin", "C", sha)
+        self.merge(sha)
+        self.refused("is already inside plan/demo: it was merged by hand before its area was checked",
+                     "handin", "C", sha)
+        self.finding("plan/demo--C is merged into plan/demo without a hand-in")
+
+    def test_an_accepted_step_stays_accepted_whatever_the_history_does_next(self):
+        self.accept("A", "src/money.py")
+        self.ok("start", "C")
+        self.commit("C", "docs/guide.md")
+        self.git("merge", "--quiet", "--no-ff", "-m", "update", "plan/demo", cwd=self.tree("C"))
+        self.ok("handin", "C", "plan/demo--C")
+        self.ok("accept", "C")
+        self.drop("C")
+        self.git("merge", "--quiet", "--no-ff", "-m", "take the plan", "plan/demo")  # into main
+        (self.repo / "owner.txt").write_text("x\n", encoding="utf-8")
+        self.git("add", "owner.txt")
+        self.git("commit", "--quiet", "-m", "the owner's own commit")
+        self.git("merge", "--quiet", "main", cwd=self.top / "integration")  # fast-forwards back
+        output = self.ok("status")  # no false alarm about the owner's commit either
+        self.assertIn("2/4 accepted", output)
+        self.assertIn("ready now: B", output)
+
+    def test_accept_leaves_a_clean_worktree_when_the_merge_conflicts(self):
+        self.ok("start", "C")
+        sha = self.commit("C", "docs/guide.md", "from the step\n")
+        self.ok("handin", "C", sha)
         tree = self.top / "integration"
-        (tree / "hotfix.txt").write_text("x\n", encoding="utf-8")
+        (tree / "docs").mkdir()
+        (tree / "docs/guide.md").write_text("from somebody else\n", encoding="utf-8")
         self.git("add", "-A", cwd=tree)
-        self.git("commit", "--quiet", "-m", "hotfix", cwd=tree)
-        self.finding("1 commit(s) in plan/demo came from no accepted hand-in")
+        self.git("commit", "--quiet", "-m", "meanwhile", cwd=tree)
+        before = self.git("rev-parse", "plan/demo")
+        self.refused("does not merge into plan/demo cleanly", "accept", "C")
+        self.assertEqual(self.git("rev-parse", "plan/demo"), before)
+        self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
+        self.assertIn("to accept: C", self.ok("status"))
+        self.git("worktree", "remove", "--force", str(tree))
+        self.refused("is checked out nowhere", "accept", "C")
+
+    def test_an_accepted_commit_that_left_the_branch_is_named(self):
+        start = self.git("rev-parse", "plan/demo")
+        self.accept("C", "docs/guide.md")
+        self.git("reset", "--quiet", "--hard", start, cwd=self.top / "integration")
+        self.finding("C was accepted, but its commit is no longer in plan/demo")
 
     def test_an_early_step_merged_before_its_base_does_not_accept_the_base(self):
         self.ok("start", "A")
@@ -325,15 +374,18 @@ class PlanTest(unittest.TestCase):
         self.ok("start", "B", "--on", "A")
         second = self.commit("B", "src/invoice.py")
         self.ok("handin", "B", second)
-        self.merge(second)
-        output = self.finding("B is merged into plan/demo but A, which it needs, was never accepted")
-        self.assertIn("A  handed-in", output)
-        self.assertIn("A: its hand-in " + first[:9] + " is inside plan/demo but was not merged as itself", output)
-        self.assertNotIn("ready now: D", output)
+        self.git("merge", "--quiet", second, cwd=self.top / "integration")  # by hand, fast-forward
+        output = self.finding("B: its hand-in " + second[:9] + " is inside plan/demo but plan.py accept never")
+        self.assertIn("A: its hand-in " + first[:9] + " is inside plan/demo but plan.py accept never", output)
+        self.assertIn("0/4 accepted", output)
+        self.assertIn("ready now: C\n", output)
 
     def test_start_refuses_an_area_a_running_step_may_write(self):
         self.write_map(MAP.replace("| docs/ |", "| docs/, src/money.py |"))
         self.ok("start", "A")
+        code, output = self.plan("status")
+        self.assertIn("ready now: -", output)  # not offered while A may write the same file
+        self.assertIn("C  waiting for A to free a shared area", output)
         self.refused("C may write src/money.py, and so may A, which is running", "start", "C")
 
     def test_a_branch_updated_from_the_integration_branch_keeps_a_clean_area(self):
@@ -353,11 +405,16 @@ class PlanTest(unittest.TestCase):
         self.ok("start", "B", "--on", "A")
         self.assertIn("now starts from " + first[:9], self.ok("rebased", "B", first))  # no own commit yet
         self.ok("handin", "B", self.commit("B", "src/invoice.py"))
-        output = self.ok("rebased", "B", first)
+        self.refused("to send a hand-in back use plan.py return", "rebased", "B", first)
+        self.ok("return", "A")
+        fixed = self.commit("A", "src/money.py", "CENTS = 4\n")
+        self.ok("handin", "A", fixed)
+        self.git("rebase", "--quiet", "--onto", fixed, first, cwd=self.tree("B"))
+        output = self.ok("rebased", "B", fixed)
         self.assertIn("is withdrawn (no round counted)", output)
         output = self.ok("status")
         self.assertIn("B  running 1 commit(s)", output)
-        self.assertNotIn("returned", output)
+        self.assertNotIn("returned", output.split("\n  B  ")[1].split("\n")[0])  # B's row counts no round
         self.assertIn("released B", self.ok("release", "B"))
         self.refused("only a started", "release", "B")
         self.finding("plan/demo--B exists but the step was never started")
@@ -377,6 +434,8 @@ class PlanTest(unittest.TestCase):
         self.write_map(piped.replace("\n", "\r\n"))
         self.ok("status")
         self.assertEqual(plan_map.parse(piped).steps["B"].proof, "cargo test | grep ok")
+        either = plan_map.parse(MAP.replace("| python tests/invoice.py |", "| `make test || echo no` |"))
+        self.assertEqual(either.steps["B"].proof, "make test || echo no")  # kept as written
         marked = chr(0xFEFF) + "integration branch: p\nid | step | area | needs | proof | weight\nA | s | a | - | t | light\n"
         self.assertEqual(plan_map.parse(marked).branch, "p")  # the mark sits on the line that matters
         self.write_map(marked.replace("branch: p", "branch: plan/demo"))
@@ -459,7 +518,12 @@ class PlanTest(unittest.TestCase):
         self.accept("D", "src/report.py")
         output = self.ok("status")
         self.assertIn("4/4 accepted", output)
-        self.assertIn("8 record(s) dropped", self.ok("finish"))  # a start and a hand-in per step
+        # The owner said "merge": the integration branch is merged and deleted BEFORE finish.
+        self.git("merge", "--quiet", "--no-ff", "-m", "the plan", "plan/demo")
+        self.git("worktree", "remove", "--force", str(self.top / "integration"))
+        self.git("branch", "-D", "plan/demo")
+        self.assertIn("4/4 accepted", self.ok("status"))
+        self.assertIn("12 record(s) dropped", self.ok("finish"))  # start, hand-in, acceptance per step
         self.assertEqual(self.git("for-each-ref", "refs/conductor"), "")
 
     def test_two_sessions_claim_one_step_exactly_one_wins(self):

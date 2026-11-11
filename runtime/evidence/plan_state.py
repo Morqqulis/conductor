@@ -1,25 +1,25 @@
 """Read the state of a Conductor work map from git, and name where facts and plan disagree.
 
-Nothing here is written by hand, so nothing here can go stale. For the plan whose
-integration branch is B, the step with id X owns (plan.py creates and removes them):
+Nothing here is written from memory, so nothing here can go stale. Every record is made by
+plan.py at the moment of the act it records, and is checked against git on every read. For
+the plan whose integration branch is B, the step with id X owns:
 
     refs/heads/B--X                   the step's branch
-    refs/conductor/base/B/X           the commit the step started from
-    refs/conductor/handin/B/X         the commit handed in for acceptance
+    refs/conductor/base/B/X           the commit the step started from      (plan.py start)
+    refs/conductor/handin/B/X         the commit handed in for acceptance   (plan.py handin)
+    refs/conductor/accepted/B/X       the commit plan.py accept merged into B
     refs/conductor/returned/B/X/<n>   every hand-in that was returned (the round counter)
 
-accepted   the hand-in commit ITSELF was merged into B: it is on B's first-parent line or
-           is the merged-in parent of a commit there. A hand-in that reached B only inside
-           something else (a later commit of the same branch, a dependent step) is not
-           accepted, and is named.
+accepted   plan.py accept merged the hand-in into B. How B's history looks afterwards
+           (fast-forwards, B merged elsewhere and back) does not matter.
 handed-in  a hand-in exists and is not accepted
 running    started, nothing handed in (`returned` counts earlier rounds)
-ready      not started, every need accepted
-waiting    not started, a need is not accepted
+ready      not started, every need accepted, no live step may write the same paths
+waiting    not started: a need is not accepted, or a live step holds part of its area
 
-refs/conductor/ is not a branch or tag namespace: `git push` and `git tag` never see it.
-Known limit: when B is fast-forwarded to a step that was started early on another, both
-hand-ins lie on the first-parent line and both read as accepted.
+Work that reached B around plan.py - a branch or hand-in merged by hand - is never read as
+accepted; it is named. refs/conductor/ is not a branch or tag namespace: `git push` and
+`git tag` never see it.
 """
 from dataclasses import dataclass, field
 import subprocess
@@ -28,8 +28,7 @@ import plan_map
 
 HEADS = 'refs/heads/'
 SPACE = 'refs/conductor/'
-KINDS = ('base', 'handin', 'returned')
-HISTORY = 20000  # first-parent commits of the integration branch that are looked at
+KINDS = ('base', 'handin', 'accepted', 'returned')
 
 
 def git(repo, *args, ok=(0,)):
@@ -40,7 +39,7 @@ def git(repo, *args, ok=(0,)):
     except (OSError, subprocess.TimeoutExpired) as error:
         raise ValueError(f'git {args[0]} could not run: {error}')
     if result.returncode not in ok:
-        detail = result.stderr.decode('utf-8', 'replace').strip()[:300]
+        detail = (result.stderr or result.stdout).decode('utf-8', 'replace').strip()[:300]
         raise ValueError(f'git {args[0]} failed: {detail}')
     return result.returncode, result.stdout.decode('utf-8', 'replace')
 
@@ -84,7 +83,8 @@ def changed(repo, older, newer):
 def outside(repo, step, base, tip, integration):
     """Files the step itself changed outside its area. A file counts only when it differs
     both from the step's start and from the point where the branch last met the integration
-    branch: accepted work merged INTO the step's branch is not the step's own change."""
+    branch: accepted work merged INTO the step's branch is not the step's own change. (A tip
+    that is already inside the integration branch is refused before this is asked.)"""
     files = changed(repo, base, tip)
     if integration and files:
         code, met = git(repo, 'merge-base', tip, integration, ok=(0, 1))
@@ -105,6 +105,7 @@ class Row:
     commits: int = 0
     speculative: tuple = ()
     waiting: tuple = ()
+    held: str = None        # a live step that may write part of this step's area
     worktree: str = None
 
 
@@ -118,10 +119,25 @@ class State:
     accept: list    # handed in, every need accepted: the controller's turn
     early: list     # (id, need): may start early, playbook SPECULATIVE START decides
     files: tuple = field(default=())
+    trees: dict = field(default_factory=dict)
 
 
 def related(plan, first, second):
     return first in plan_map.ancestors(plan.steps, second) or second in plan_map.ancestors(plan.steps, first)
+
+
+def clash(plan, rows, files, identifier):
+    """(other id, shared path) for a live step that may write what `identifier` may, or None.
+    Steps ordered through needs are not compared: the later one builds on the earlier."""
+    for other, live in rows.items():
+        if other == identifier or not live.base or live.state == 'accepted':
+            continue
+        if related(plan, other, identifier):
+            continue
+        shared = plan_map.overlap(plan.steps[identifier], live.step, files)
+        if shared:
+            return other, shared
+    return None
 
 
 def _static(repo, plan, integration, findings):
@@ -139,43 +155,18 @@ def _static(repo, plan, integration, findings):
     return files
 
 
-def _merged(repo, plan, integration, refs, findings):
-    """(hand-in or branch refs reachable from the integration branch, commits merged as themselves)."""
-    if not integration:
-        findings.append(f'integration branch {plan.branch} does not exist: nothing can be started or accepted')
-        return set(), set()
-    out = git(repo, 'for-each-ref', '--merged=' + integration, '--format=%(refname)',
-              HEADS, SPACE + 'handin')[1]
-    direct = set()
-    lines = git(repo, 'rev-list', '--first-parent', '--parents', f'--max-count={HISTORY}', integration)[1]
-    for line in lines.splitlines():
-        parts = line.split()
-        direct.add(parts[0])
-        direct.update(parts[2:])
-    return set(out.splitlines()), direct
-
-
-def _strays(repo, plan, integration, refs, accepted, findings):
-    """Commits in the integration branch that no accepted hand-in brought there."""
-    lead = f'{SPACE}base/{plan.branch}/'
-    known = [sha for ref, sha in refs.items() if ref.startswith(lead)]
-    if not integration or not known:
-        return
-    known += [refs[name('handin', plan, identifier)] for identifier in accepted]
-    out = git(repo, 'rev-list', '--no-merges', integration, '--not', *sorted(set(known)))[1].split()
-    if out:
-        shown = ', '.join(sha[:9] for sha in out[:3]) + (f' (+{len(out) - 3} more)' if len(out) > 3 else '')
-        findings.append(f'{len(out)} commit(s) in {plan.branch} came from no accepted hand-in: {shown}')
-
-
 def read(repo, plan):
     out = git(repo, 'for-each-ref', '--format=%(objectname) %(refname)', HEADS, SPACE)[1]
     refs = {ref: sha for sha, ref in (line.split(' ', 1) for line in out.splitlines() if ' ' in line)}
     integration = refs.get(HEADS + plan.branch)
-    findings = []
-    merged, direct = _merged(repo, plan, integration, refs, findings)
+    findings, merged = [], set()
+    accepted = {i for i in plan.steps if name('accepted', plan, i) in refs}
+    if integration:
+        out = git(repo, 'for-each-ref', '--merged=' + integration, '--format=%(refname)', HEADS, SPACE)[1]
+        merged = set(out.splitlines())
+    elif len(accepted) < len(plan.steps):
+        findings.append(f'integration branch {plan.branch} does not exist: nothing can be started or accepted')
     _, trees = worktrees(repo)
-    accepted = {i for i in plan.steps if refs.get(name('handin', plan, i)) in direct}
     rows = {}
     for identifier, step in plan.steps.items():
         branch = key(plan, identifier)
@@ -188,9 +179,9 @@ def read(repo, plan):
         rows[identifier] = row
         if identifier in accepted:
             row.state = 'accepted'
-            if open_needs:
-                findings.append(f'{identifier} is merged into {plan.branch} but {", ".join(open_needs)}, '
-                                f'which it needs, was never accepted')
+            if integration and name('accepted', plan, identifier) not in merged:
+                findings.append(f'{identifier} was accepted, but its commit is no longer in {plan.branch} '
+                                f'(the branch was rewritten or reset)')
             if row.tip:
                 findings.append(f'{identifier} is accepted but its branch {branch} still exists: '
                                 f'remove its worktree and the branch')
@@ -203,9 +194,8 @@ def read(repo, plan):
             continue
         row.state = 'handed-in' if row.handin else 'running'
         if name('handin', plan, identifier) in merged:
-            findings.append(f'{identifier}: its hand-in {row.handin[:9]} is inside {plan.branch} but was not '
-                            f'merged as itself (a later commit or a dependent step was merged instead): '
-                            f'{identifier} was never accepted')
+            findings.append(f'{identifier}: its hand-in {row.handin[:9]} is inside {plan.branch} but '
+                            f'plan.py accept never put it there (merged by hand): {identifier} is not accepted')
         for need in open_needs:
             need_handin = refs.get(name('handin', plan, need))
             if not need_handin:
@@ -245,9 +235,15 @@ def read(repo, plan):
             lead = f'{SPACE}{kind}/{plan.branch}/'
             if ref.startswith(lead) and ref[len(lead):].split('/')[0] not in plan.steps:
                 findings.append(f'{safe(ref)} belongs to no step of the map')
-    _strays(repo, plan, integration, refs, accepted, findings)
     files = _static(repo, plan, integration, findings)
-    ready = [i for i, row in rows.items() if row.state == 'ready' and integration]
+    ready = []
+    for identifier, row in rows.items():
+        if row.state == 'ready' and integration:
+            found = clash(plan, rows, files, identifier)
+            if found:
+                row.state, row.held = 'waiting', found[0]
+            else:
+                ready.append(identifier)
     accept = [i for i, row in rows.items() if row.state == 'handed-in' and not row.speculative]
     early = []
     for identifier, row in rows.items():
@@ -255,4 +251,4 @@ def read(repo, plan):
             need = row.waiting[0]
             if rows[need].state == 'handed-in' and not rows[need].speculative:
                 early.append((identifier, need))
-    return State(plan, integration, rows, findings, ready, accept, early, files)
+    return State(plan, integration, rows, findings, ready, accept, early, files, trees)

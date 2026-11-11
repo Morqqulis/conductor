@@ -5,6 +5,9 @@ usage: plan.py status [--brief]        the table, what may start, what to accept
        plan.py start ID [--on NEED]    claim a step: its branch, from the integration branch
                                        (--on: early, from NEED's hand-in)
        plan.py handin ID SHA           record the executor's commit after checking its area
+       plan.py accept ID               merge the hand-in into the integration branch (in that
+                                       branch's own worktree) and record it: the only way a
+                                       step becomes accepted
        plan.py return ID               send the hand-in back; counts the round
        plan.py rebased ID SHA          the step's branch was rebased or updated: record the
                                        commit it now starts from; a hand-in is withdrawn
@@ -68,7 +71,7 @@ def exists(repo, ref):
 def describe(row):
     parts = [row.state]
     if row.state == 'waiting':
-        parts.append('for ' + ', '.join(row.waiting))
+        parts.append('for ' + (', '.join(row.waiting) if row.waiting else f'{row.held} to free a shared area'))
     if row.handin and row.state != 'accepted':
         parts.append(row.handin[:9])
     if row.state == 'running':
@@ -120,6 +123,10 @@ def start(args, plan, state):
         raise Refused(f'{args.id} is already {row.state}' + (f' in {row.worktree}' if row.worktree else ''))
     if row.tip:
         raise Refused(f'a branch {branch} already exists and was not made by plan.py: inspect it first')
+    found = plan_state.clash(plan, state.rows, state.files, args.id)
+    if found:
+        raise Refused(f'{args.id} may write {found[1]}, and so may {found[0]}, which is '
+                      f'{state.rows[found[0]].state}: wait for it, or order the two through needs')
     if row.state == 'ready' and not args.on:
         base = state.integration
     elif (args.id, args.on) in state.early:
@@ -131,15 +138,6 @@ def start(args, plan, state):
         hint = [need for identifier, need in state.early if identifier == args.id]
         raise Refused(f'{args.id} waits for {", ".join(row.waiting)}'
                       + (f'; early start is possible: --on {hint[0]} (SPECULATIVE START decides)' if hint else ''))
-    for other, live in state.rows.items():
-        if other == args.id or not live.base or live.state == 'accepted':
-            continue
-        if plan_state.related(plan, other, args.id):
-            continue
-        shared = plan_map.overlap(row.step, live.step, state.files)
-        if shared:
-            raise Refused(f'{args.id} may write {shared}, and so may {other}, which is {live.state}: '
-                          f'wait for it, or order the two through needs')
     record = name('base', plan, args.id)
     try:
         git(args.repo, 'update-ref', record, base, '')
@@ -149,6 +147,12 @@ def start(args, plan, state):
                 raise Refused(f'{args.id} was started by another session a moment ago')
             time.sleep(0.1)
         raise ValueError(f'cannot record the start of {args.id}: {error}')
+    # Two sessions may have claimed two steps with a shared area in the same moment, each
+    # before the other's record existed: look again, and the later id gives way.
+    found = plan_state.clash(plan, plan_state.read(args.repo, plan).rows, state.files, args.id)
+    if found and found[0] < args.id:
+        git(args.repo, 'update-ref', '-d', record, ok=(0, 1, 128))
+        raise Refused(f'{args.id} may write {found[1]}, and {found[0]} was started in the same moment')
     try:
         git(args.repo, 'branch', '--no-track', branch, base)
     except ValueError:
@@ -172,6 +176,9 @@ def handin(args, plan, state):
                       + (f' ({row.tip[:9]})' if row.tip else ' (the branch is gone)'))
     if sha == row.base:
         raise Refused(f'{branch} has no commit of its own: nothing to hand in')
+    if state.integration and plan_state.is_ancestor(args.repo, sha, state.integration):
+        raise Refused(f'{sha[:9]} is already inside {plan.branch}: it was merged by hand before its area '
+                      f'was checked. Undo that merge; plan.py accept does the merging')
     if sha in row.returned:
         raise Refused(f'{sha[:9]} was already returned: {branch} needs a new commit')
     if not plan_state.is_ancestor(args.repo, row.base, sha):
@@ -183,6 +190,37 @@ def handin(args, plan, state):
                       + '\n  '.join(plan_state.safe(path) for path in stray))
     git(args.repo, 'update-ref', name('handin', plan, args.id), sha, '')
     print(f'handed in {args.id} at {sha[:9]}: area clean, {row.commits} commit(s)')
+    return 0
+
+
+def accept(args, plan, state):
+    """The one way a step becomes accepted: merge its hand-in and record that in one act."""
+    row, branch = row_of(state, args.id), plan_state.key(plan, args.id)
+    if row.state != 'handed-in':
+        raise Refused(f'{args.id} is {row.state}: only a handed-in step can be accepted')
+    if row.speculative:
+        raise Refused(f'{args.id} needs {", ".join(row.speculative)}, which is not accepted: '
+                      f'a step is accepted only after its base')
+    if not state.integration:
+        raise Refused(f'the integration branch {plan.branch} does not exist')
+    if plan_state.is_ancestor(args.repo, row.handin, state.integration):
+        raise Refused(f'{row.handin[:9]} is already inside {plan.branch}: it was merged by hand. '
+                      f'Undo that merge first, so that what is accepted is exactly what was checked')
+    if row.tip != row.handin:
+        raise Refused(f'{branch} moved after the hand-in {row.handin[:9]}: that hand-in is void - '
+                      f'plan.py return {args.id}, then a new hand-in')
+    tree = state.trees.get(plan.branch)
+    if not tree:
+        raise Refused(f'{plan.branch} is checked out nowhere: it needs a worktree of its own to merge in')
+    message = f'Accept {args.id}: {row.step.title}'
+    code, out = git(tree, 'merge', '--no-ff', '--no-edit', '-m', message, row.handin, ok=(0, 1, 2, 128))
+    if code:
+        git(tree, 'merge', '--abort', ok=(0, 1, 128))
+        raise Refused(f'{row.handin[:9]} does not merge into {plan.branch} cleanly (or its worktree {tree} '
+                      f'is not clean). Merge {plan.branch} INTO {branch}, prove again, hand in the new commit')
+    git(args.repo, 'update-ref', name('accepted', plan, args.id), row.handin, '')
+    print(f'accepted {args.id}: {row.handin[:9]} merged into {plan.branch}')
+    print(f'next: remove the worktree of {branch}, then git branch -D {branch}')
     return 0
 
 
@@ -203,6 +241,8 @@ def rebased(args, plan, state):
     if not row.base or not row.tip or row.state == 'accepted':
         raise Refused(f'{args.id} is {row.state}: only a started, not accepted step with a branch can be rebased')
     sha = commit(args.repo, args.sha)
+    if row.handin and sha == row.base:
+        raise Refused(f'{args.id} already starts from {sha[:9]}: to send a hand-in back use plan.py return')
     if not plan_state.is_ancestor(args.repo, sha, row.tip):
         raise Refused(f'{sha[:9]} is not in {plan_state.key(plan, args.id)}')
     on_plan = state.integration and plan_state.is_ancestor(args.repo, sha, state.integration)
@@ -231,7 +271,8 @@ def release(args, plan, state):
 def finish(args, plan, state):
     left = [identifier for identifier, row in state.rows.items() if row.state != 'accepted']
     if left and not args.abandon:
-        raise Refused(f'not accepted yet: {", ".join(left)} (--abandon drops the records anyway)')
+        raise Refused(f'not accepted yet: {", ".join(left)} (--abandon drops the records and deletes '
+                      f'the map file anyway: copy what you still need from it first)')
     for line in plan.decided:
         print('decided: ' + line)
     out = git(args.repo, 'for-each-ref', '--format=%(refname)', plan_state.SPACE)[1]
@@ -268,12 +309,13 @@ def main(argv=None):
     command('status').add_argument('--brief', action='store_true')
     command('start', 'id').add_argument('--on')
     command('handin', 'id', 'sha')
+    command('accept', 'id')
     command('return', 'id')
     command('rebased', 'id', 'sha')
     command('release', 'id')
     command('finish').add_argument('--abandon', action='store_true')
     args = parser.parse_args(argv)
-    run = {'status': status, 'start': start, 'handin': handin, 'return': send_back,
+    run = {'status': status, 'start': start, 'handin': handin, 'accept': accept, 'return': send_back,
            'rebased': rebased, 'release': release, 'finish': finish}[args.command]
     try:
         plan, state = load(args)

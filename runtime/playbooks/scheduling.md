@@ -57,16 +57,17 @@ info/exclude` prints - never committed. It holds the PLAN only: `integration bra
 their header row.
 State is computed. P = `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/plan.py`,
 run anywhere in the repository. `P status` reads from git which steps run, are handed in,
-accepted or returned (rounds counted), lists `ready now` and `to accept`, and names every
-disagreement between plan and facts (a file outside an area, a branch moved after its
-hand-in, a step on unaccepted ground, unordered overlapping areas). Run it after writing
-the map, before each dispatch and acceptance, after a compaction; fix or report a finding
+accepted or returned, lists `ready now` and `to accept`, and names every disagreement
+between plan and facts (a file outside an area, a branch moved after its hand-in, a merge
+by hand, overlapping areas). Run it after writing the map, before each dispatch and
+acceptance, after a compaction; fix or report a finding
 before anything else starts. Who runs a step, or that it is blocked -> a free-text line in
 the map. P cannot run -> say so, keep the states in the todo entry. Attempt counters stay
 there.
 Integration branch: a NEW short-lived branch off the session's working branch, in a
 worktree of its own - the main checkout never switches branch. accepted = proven on the
-step's branch and merged into it - never into the working branch: after the last row ask
+step's branch and merged into it by `P accept`, never by hand - and never into the
+working branch: after the last row ask
 the owner once, merge it or keep the branch (non-interactive: keep it and name it in the
 report; T3: orchestration.md Integration, approval first). Merged -> remove its worktree
 and delete it; kept -> remove the worktree only. Every step, the controller's own too,
@@ -80,7 +81,7 @@ acceptance and states, no commits unless asked.
 - Session with an area: takes only rows inside it, in its own worktree and branch, and
   reports the branch. A row outside -> message its owner, or the user; never edit across.
   No controller: ONE shared map and integration branch, made by whoever comes first; a
-  row's owner hands in and merges its proven step into the integration branch - the
+  row's owner hands in and accepts (`P handin`, `P accept`) its proven step itself - the
   working branch stays the user's. `P start <id>` is the claim: of two sessions exactly
   one succeeds, refused -> taken; a boundary step belongs to whoever starts it first; a
   started step whose session ended -> ask the user before taking it over.
@@ -99,15 +100,16 @@ of the sha that the controller creates and removes after deciding, in parallel w
 executors and other skeptics. Its files slot carries the HEAVY LANES rule and the claims
 path.
 A verdict never replaces the controller's own look: it reads the load-bearing part of the
-diff and the proof output itself (core claim table), then decides. Accepted -> merge that
-SHA, not the branch name, into the integration branch (never a squash: accepted = the sha
-itself was merged), remove the step's worktree (clean; leftovers -> inspect first)
-and branch. Returned -> `P return <id>` (it counts the round), then the same executor
-where the harness can resume it, else a fresh dispatch in the same worktree carrying the
-finding. After the owner's answer (non-interactive: after the report), and after the report
-lists every `decided:` line -> `P finish` (it prints them, drops the plan's records and
-deletes the map), then delete the claims directory (no controller: whoever accepts the last
-row reports the branch, removes its worktree, then does both).
+diff and the proof output itself (core claim table), then decides. Accepted -> `P accept
+<id>`: it merges that sha into the integration branch and records it; refused for a
+conflict -> merge the integration branch INTO the step's branch, prove again, a new
+hand-in. Then remove the step's worktree (clean; leftovers -> inspect first) and branch.
+Returned -> `P return <id>` (it counts the round), then the same executor where the
+harness can resume it, else a fresh dispatch in the same worktree carrying the finding.
+After the owner's answer (non-interactive: after the report), and after the report lists
+every `decided:` line of the map -> `P finish` (it drops the plan's records and deletes
+the map), then delete the claims directory (no controller: whoever accepts the last row
+reports the branch, removes its worktree, then does both).
 
 ## SPECULATIVE START (TEAM: a step that needs a handed-in, not yet accepted step)
 Independent steps need no permission. A dependent step may start early only when ALL hold:

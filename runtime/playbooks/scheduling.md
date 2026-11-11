@@ -62,8 +62,8 @@ the owner once, merge it or keep the branch (non-interactive: keep it and name i
 report; T3: orchestration.md Integration, approval first). Merged -> remove its worktree
 and delete it; kept -> remove the worktree only. Every step, the controller's own too, runs
 in a worktree on a branch off the integration branch. The user forbade branches -> one
-writer at a time in the main checkout (you or one executor), SOLO acceptance, no commit
-constraint.
+writer at a time in the main checkout (you or one executor), SOLO acceptance, no commits
+unless asked.
 - Controller ("architect"): owns the map, the integration branch, dispatch, acceptance and
   the conversation with the owner. Takes no foreground edit orchestration.md would
   dispatch: it stays free for hand-ins and for the owner.
@@ -94,9 +94,10 @@ A verdict never replaces the controller's own look: it reads the load-bearing pa
 diff and the proof output itself (core claim table), then decides. Accepted -> merge into
 the integration branch, remove the step's worktree (clean; leftovers -> inspect first) and
 branch. Returned -> the same executor where the harness can resume it, else a fresh dispatch
-in the same worktree carrying the finding. After the owner's answer, and after the report
-lists every `decided:` line -> delete the map and the claims directory (no controller:
-whoever accepts the last row reports the branch, then deletes both).
+in the same worktree carrying the finding. After the owner's answer (non-interactive: after
+the report), and after the report lists every `decided:` line -> delete the map and the
+claims directory (no controller: whoever accepts the last row reports the branch, removes
+its worktree, then deletes both).
 
 ## SPECULATIVE START (TEAM: a step that needs a handed-in, not yet accepted step)
 Independent steps need no permission. A dependent step may start early only when ALL hold:

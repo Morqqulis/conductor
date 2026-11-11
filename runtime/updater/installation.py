@@ -68,6 +68,8 @@ class UpdatePlan(dict):
     def __init__(self, expected):
         super().__init__()
         self.expected = expected
+        self.replaced = []  # changed managed files the user asked to replace
+        self.released = []  # changed personal files left alone and no longer recorded
 
 
 def register(paths, source, scopes):
@@ -95,17 +97,50 @@ def register(paths, source, scopes):
     Transaction(paths, delivery).apply(lambda: None)
 
 
-def prepare(paths, source, revision):
+def prepare(paths, source, revision, *, restore_missing=False, replace_modified=False, keep_values=False):
+    """An update calls this with no options: any managed file that is missing or differs from
+    the record stops it, and nothing is written. An explicit install may pass:
+
+    restore_missing   put back what the record lists but the disk lacks (a Conductor folder
+                      copied to another computer brings the record without the files outside
+                      that folder). Nothing is overwritten by it.
+    replace_modified  the user asked to replace managed files they changed; the plan lists
+                      them in .replaced so the caller can save readable copies.
+    keep_values       the user keeps their changed personal CLAUDE.md. It is never replaced,
+                      not even by replace_modified: it is released from the record (.released)
+                      and later updates neither touch it nor stop because of it.
+    """
     state = load_state(paths)
     reply = language(paths)
     desired = payload(source, paths, state['scopes'], reply)
     observed = {key: read(paths.target(key)) for key in ('state', 'language', 'settings')}
+    replaced, released = [], []
     for key, entry in state['files'].items():
         current = read(paths.target(key))
         observed[key] = current
+        if current[0] is None:
+            if restore_missing:
+                continue
+            raise ValueError(f'missing managed file: {key} ({paths.target(key)}); no files updated. '
+                             'Run the installer again to restore it')
         if digest(current[0]) != entry['sha256'] or (os.name != 'nt' and current[1] != entry['mode']):
-            raise ValueError(f'locally modified or missing managed file: {key}; no files updated')
-    if 'claude' in state['scopes']:
+            if key == 'claude-values':
+                if keep_values or replace_modified:
+                    released.append(key)
+                    continue
+                raise ValueError(f'locally modified managed file: {key} ({paths.target(key)}); no files '
+                                 'updated. It is your personal CLAUDE.md and is never replaced: run the '
+                                 'installer again with --skip-global-md (PowerShell: -SkipGlobalMd) to keep it')
+            if replace_modified:
+                replaced.append(key)
+                continue
+            raise ValueError(f'locally modified managed file: {key} ({paths.target(key)}); no files '
+                             'updated. To save your version as a copy and install the current file, run '
+                             'the installer again with --replace-modified (PowerShell: -ReplaceModified)')
+    for key in released:
+        desired.pop(key, None)
+    if 'claude' in state['scopes'] and not (restore_missing and observed['settings'][0] is None):
+        # A missing settings file has no registration to protect; the installer writes one.
         settings_audit(paths)
     changes = UpdatePlan(observed)
     if 'claude' in state['scopes']:
@@ -135,9 +170,12 @@ def prepare(paths, source, revision):
         if current[0] != value[0] or (os.name != 'nt' and current[1] != value[1]):
             changes[key] = value
     for key in state['files'].keys() - desired.keys():
-        if not key.startswith('launch/'):
+        if not key.startswith('launch/') and key not in released:
             changes[key] = (None, 0o644)
     new_state = dict(state, files=record(desired), revision=revision)
+    if released:
+        new_state['scopes'] = [scope for scope in state['scopes'] if scope != 'values']
+    changes.replaced, changes.released = replaced, released
     if new_state != state:
         changes['state'] = (encode(new_state), 0o600)
     from legacy import plan_legacy

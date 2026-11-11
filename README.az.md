@@ -257,6 +257,21 @@ saxlayın; qorumanı keçmək üçün yaddaşı və qeydiyyatı silməyin. Zəd�
 quraşdırma hesab edilmir. Keçiddən sonra adi `conductor update` və `conductor uninstall`
 işlədin; geri qaytarma göstərilən nüsxə yolu ilə əvvəlki faylları bərpa edir.
 
+### Başqa kompüterə köçürmə və dəyişdirilmiş fayllar
+
+`~/.claude` qovluğu başqa kompüterə kopyalanıbsa, adi quraşdırıcını işə salın: o, Conductor-un
+bu qovluqdan kənarda saxladığı faylları (Codex və Antigravity üçün qaydalar, `conductor`
+əmri) yenidən qoyur və mövcud olan heç nəyin üzərinə yazmır.
+
+Dəyişdirdiyiniz Conductor faylı quraşdırmanı dayandırır: mesaj onun tam yolunu göstərir. Onu
+cari versiya ilə əvəz etmək üçün quraşdırıcını `--replace-modified` (PowerShell:
+`-ReplaceModified`) ilə işə salın — sizin versiyanız surət kimi saxlanılır və yolu çap
+olunur. Dəyişdirdiyiniz şəxsi `CLAUDE.md` heç vaxt əvəz edilmir: `--skip-global-md` və ya
+`--replace-modified` ilə o, olduğu kimi qalır, Conductor onu idarə etməyi dayandırır və
+sonrakı quraşdırmalar və yeniləmələr ona toxunmur (Conductor versiyasını qaytarmaq üçün
+faylı silin və quraşdırıcını işə salın). `conductor update` özü dəyişdirilmiş faylları əvəz
+etmir və çatışmayanları bərpa etmir — dayanır və faylın adını göstərir.
+
 ### Birlikdə quraşdırılan alətlər
 
 Conductor quraşdırılması yoxlandıqdan sonra üç alət qoşulur:

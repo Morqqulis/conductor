@@ -7,7 +7,8 @@ param(
     [string]$Ref = 'main',
     [switch]$SkipCompanions,
     [switch]$NoSuperpowers,
-    [switch]$SkipGlobalMd
+    [switch]$SkipGlobalMd,
+    [switch]$ReplaceModified
 )
 $ErrorActionPreference = 'Stop'
 # A caller's session may turn every non-zero native exit code into an exception; the exit
@@ -130,6 +131,7 @@ try {
     if ($SkipCompanions) { $bootstrapArguments += '--skip-companions' }
     if ($NoSuperpowers) { $bootstrapArguments += '--no-superpowers' }
     if ($SkipGlobalMd) { $bootstrapArguments += '--skip-global-md' }
+    if ($ReplaceModified) { $bootstrapArguments += '--replace-modified' }
     & $pythonExecutable @bootstrapArguments
     if ($LASTEXITCODE -ne 0) { throw "Conductor bootstrap failed (exit $LASTEXITCODE)." }
 } finally {

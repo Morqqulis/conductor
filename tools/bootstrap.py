@@ -223,7 +223,7 @@ def main(argv=None):
     parser.add_argument('--ref', default='main')
     parser.add_argument('--language')
     parser.add_argument('--scope', choices=['all', 'claude', 'global'], default='all')
-    for option in ('skip-companions', 'no-superpowers', 'skip-global-md'):
+    for option in ('skip-companions', 'no-superpowers', 'skip-global-md', 'replace-modified'):
         parser.add_argument('--' + option, action='store_true')
     args = parser.parse_args(argv)
     try:
@@ -233,7 +233,7 @@ def main(argv=None):
         options = ['--scope', args.scope]
         if args.language is not None:
             options += ['--language', args.language]
-        for option in ('skip-companions', 'no-superpowers', 'skip-global-md'):
+        for option in ('skip-companions', 'no-superpowers', 'skip-global-md', 'replace-modified'):
             if getattr(args, option.replace('-', '_')):
                 options.append('--' + option)
         with tempfile.TemporaryDirectory(prefix='conductor-download-') as temporary:

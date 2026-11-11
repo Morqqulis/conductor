@@ -3,6 +3,8 @@
 # One verified transaction preserves personal memory, settings and the chosen language.
 #   ./install.sh --language Russian   explicit language (otherwise prompt/saved choice)
 #   ./install.sh --skip-global-md     preserve personal CLAUDE.md
+#   ./install.sh --replace-modified   replace managed files you changed; your versions are
+#                                     saved as copies (personal CLAUDE.md is kept, not replaced)
 #   ./install.sh --skip-companions    Conductor only
 #   ./install.sh --no-superpowers     skip the Superpowers plugin
 #   ./install.sh --scope all|claude|global   default: all
@@ -19,7 +21,7 @@ while [ $# -gt 0 ]; do
         --language) [ $# -ge 2 ] || exit 2; LANGUAGE="$2"; LANGUAGE_SET=1; shift 2 ;;
         --language=*) LANGUAGE="${1#--language=}"; LANGUAGE_SET=1; shift ;;
         --scope) [ $# -ge 2 ] || exit 2; ARGS+=(--scope "$2"); shift 2 ;;
-        --skip-global-md|--skip-companions|--no-superpowers) ARGS+=("$1"); shift ;;
+        --skip-global-md|--skip-companions|--no-superpowers|--replace-modified) ARGS+=("$1"); shift ;;
         --keep-superpowers) echo 'NOTE: --keep-superpowers is deprecated; Superpowers is enabled by default' >&2; shift ;;
         -h|--help) sed -n '2,/^set /p' "$0" | sed '$d'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;

@@ -61,6 +61,113 @@ class UnifiedTests(unittest.TestCase):
         self.run_install('--language', 'English', code=1)
         self.assertEqual(self.installed_bytes(), before, 'failed install left partial files')
 
+    def state(self):
+        return json.loads((self.config / 'conductor/install-state.json').read_bytes())
+
+    def cli(self, *args, code=0):
+        result = subprocess.run([sys.executable, '-B', str(ROOT / 'runtime/updater/cli.py'), '--config',
+                                 str(self.config), '--profile', str(self.home), *args], env=self.env,
+                                cwd=self.home, stdin=subprocess.DEVNULL, capture_output=True,
+                                encoding='utf-8', errors='replace', timeout=90)
+        self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+        return result.stdout + result.stderr
+
+    def test_install_restores_files_missing_after_the_folder_was_copied_to_another_computer(self):
+        # Copying ~/.claude carries install-state.json but not the files it lists elsewhere.
+        self.run_install('--language', 'Russian')
+        installed = self.installed_bytes()
+        outside = [self.home / '.gemini', self.home / '.codex', self.home / '.local/bin']
+        for folder in outside:
+            self.assertTrue(folder.is_dir(), folder)
+            shutil.rmtree(folder)
+        self.run_install()
+        self.assertEqual(self.installed_bytes(), installed)
+
+    def test_install_restores_a_missing_settings_file(self):
+        # Only the conductor folder was copied: the hook registration is gone too.
+        self.run_install('--language', 'Russian')
+        (self.config / 'settings.json').unlink()
+        self.run_install()
+        self.assertIn('session-start.sh', (self.config / 'settings.json').read_text(encoding='utf-8'))
+
+    def test_changed_managed_file_stops_the_install_and_names_the_file_and_the_way_out(self):
+        self.run_install('--language', 'Russian')
+        rules = self.home / '.gemini/AGENTS.md'
+        rules.write_bytes(rules.read_bytes() + b'\nmy own rule\n')
+        before = self.installed_bytes()
+        output = self.run_install(code=1)
+        self.assertIn('locally modified managed file: antigravity', output)
+        self.assertIn('AGENTS.md', output)
+        self.assertIn('--replace-modified', output)
+        self.assertEqual(self.installed_bytes(), before, 'a refused install changed files')
+
+    def test_replace_modified_saves_the_users_version_and_installs_the_current_file(self):
+        self.run_install('--language', 'Russian')
+        rules = self.home / '.gemini/AGENTS.md'
+        original = rules.read_bytes()
+        mine = original + b'\nmy own rule\n'
+        rules.write_bytes(mine)
+        output = self.run_install('--replace-modified')
+        self.assertEqual(rules.read_bytes(), original)
+        copies = [p for p in (self.home / '.local/state/conductor/updates').glob('*/replaced/*')]
+        self.assertEqual([p.read_bytes() for p in copies], [mine], output)
+        self.assertIn(str(copies[0]), output)
+        self.run_install()  # nothing is left "modified": the next plain install passes
+
+    def test_replace_modified_without_a_changed_file_saves_no_copy(self):
+        self.run_install('--language', 'Russian')
+        output = self.run_install('--replace-modified')
+        self.assertNotIn('Replaced your changed file', output)
+        self.assertEqual(list((self.home / '.local/state/conductor/updates').glob('*/replaced/*')), [])
+
+    def test_changed_personal_claude_md_is_never_replaced_and_stops_blocking(self):
+        self.run_install('--language', 'Russian')
+        values = self.config / 'CLAUDE.md'
+        mine = values.read_bytes() + b'\nmy personal addition\n'
+        values.write_bytes(mine)
+        output = self.run_install(code=1)
+        self.assertIn('--skip-global-md', output)
+        self.assertEqual(values.read_bytes(), mine)
+        for flag in ('--skip-global-md', '--replace-modified'):
+            with self.subTest(flag=flag):
+                output = self.run_install(flag)
+                self.assertEqual(values.read_bytes(), mine)
+                self.assertIn('no longer manages it', output)
+                state = self.state()
+                self.assertNotIn('values', state['scopes'])
+                self.assertNotIn('claude-values', state['files'])
+                # The choice holds: a later plain install must not overwrite the file either.
+                self.run_install()
+                self.assertEqual(values.read_bytes(), mine)
+                # ... and an update no longer stops because of it.
+                from installation import prepare
+                from transaction import Paths
+                plan = prepare(Paths(self.config, self.home), ROOT, 'a' * 40)
+                self.assertNotIn('claude-values', plan)
+                # Put the record back for the second flag: reinstall from scratch.
+                values.unlink()
+                self.run_install()
+                self.assertIn('values', self.state()['scopes'])
+                self.assertNotEqual(values.read_bytes(), mine)
+                values.write_bytes(mine)
+
+    def test_uninstall_does_not_stop_on_a_file_that_is_already_gone(self):
+        self.run_install('--language', 'Russian')
+        (self.home / '.gemini/AGENTS.md').unlink()
+        self.cli('uninstall')
+        self.assertFalse((self.home / '.codex/AGENTS.md').exists())
+        self.assertFalse((self.config / 'conductor/core.md').exists())
+
+    def test_uninstall_still_protects_a_changed_file_and_says_where_it_is(self):
+        self.run_install('--language', 'Russian')
+        rules = self.home / '.gemini/AGENTS.md'
+        rules.write_bytes(rules.read_bytes() + b'\nmy own rule\n')
+        before = self.installed_bytes()
+        output = self.cli('uninstall', code=1)
+        self.assertIn('locally modified managed file: antigravity', output)
+        self.assertIn('AGENTS.md', output)
+        self.assertEqual(self.installed_bytes(), before)
+
     def test_foreign_settings_survive_and_duplicate_keys_refuse(self):
         settings = self.config / 'settings.json'
         settings.write_bytes(b'{"model":"personal","hooks":{"OtherEvent":[]}}')

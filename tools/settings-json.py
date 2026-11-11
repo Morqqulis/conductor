@@ -94,19 +94,20 @@ def unquote(word: str) -> str:
     return word
 
 
-def owns_command(value) -> bool:
-    """Recognize shipped Bash/PowerShell invocations without executing shell text."""
+def owned_script(value):
+    """The shipped script a Bash/PowerShell invocation runs, with forward slashes, or None.
+    Recognizes the command without executing shell text."""
     if not isinstance(value, str):
-        return False
+        return None
     try:
         # Non-POSIX mode retains Windows backslashes inside quoted paths. Strip the
         # surrounding quotes only; do not interpret variables, escapes or operators.
         words = shlex.split(value, posix=False)
     except ValueError:
-        return False
+        return None
     words = [unquote(word) for word in words]
     if not words:
-        return False
+        return None
     executable = words[0].replace("\\", "/").rsplit("/", 1)[-1].lower()
     options = tuple(word.lower() for word in words[1:-1])
     if len(words) == 1:
@@ -121,8 +122,49 @@ def owns_command(value) -> bool:
     ):
         script = words[-1]
     else:
-        return False
-    return bool(OWNED_SCRIPT.search(script.replace("\\", "/")))
+        return None
+    script = script.replace("\\", "/")
+    return script if OWNED_SCRIPT.search(script) else None
+
+
+def owns_command(value) -> bool:
+    return owned_script(value) is not None
+
+
+def conductor_dirs(data: dict) -> set:
+    """Every Conductor folder the registered hooks point to; None stands for an owned
+    command that is not a `<folder>/hooks/<script>` path. One folder that is not the current
+    one means the settings file came from another computer or profile (see relocated())."""
+    found = set()
+
+    def walk(entry) -> None:
+        if isinstance(entry, dict):
+            for value in entry.values():
+                walk(value)
+        elif isinstance(entry, list):
+            for value in entry:
+                walk(value)
+        else:
+            script = owned_script(entry)
+            if script is not None:
+                folder, separator, name = script.rpartition("/hooks/")
+                found.add(folder if separator and folder and "/" not in name else None)
+
+    walk(data.get("hooks"))
+    return found
+
+
+def relocated(data: dict, conductor_dir: str, shell: str):
+    """The folder a complete, untouched registration points to when it is not conductor_dir
+    (a copied settings file), else None. Anything else that differs - a changed timeout, a
+    missing entry, two folders - is not a move and stays for manual review."""
+    folders = conductor_dirs(data)
+    if len(folders) != 1:
+        return None
+    folder = next(iter(folders))
+    if folder is None or folder == conductor_dir or audit(data, folder, shell):
+        return None
+    return folder
 
 
 def owns_hook(hook) -> bool:

@@ -151,6 +151,9 @@ def main(argv=None):
                     from deployment import save_replaced
                     for installed, copy in save_replaced(paths, changes, backup):
                         print(f'Replaced your changed file {installed}; your version is saved at {copy}')
+                    if changes.moved_from:
+                        print(f'Settings came from another location ({changes.moved_from}); '
+                              f'hooks re-registered for {paths.runtime.as_posix()}')
                     for key in changes.released:
                         print(f'Kept your changed {paths.target(key)} as it is; Conductor no longer manages it.')
                     print('Restart agent sessions. Cursor: paste the prepared rule if used.')

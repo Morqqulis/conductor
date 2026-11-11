@@ -260,6 +260,10 @@ a legacy installation. After migration, use normal `conductor update` and
 If the `~/.claude` folder was copied to another computer, run the ordinary installer: it
 puts back the files Conductor keeps outside that folder (the rules for Codex and
 Antigravity, the `conductor` command) and overwrites nothing that exists.
+If the user name on the new computer differs, the Conductor hooks in the copied
+`settings.json` point to the old folder: the installer recognizes such a move (the hooks are
+intact and all point to one previous folder) and registers them again. Hooks that were
+edited by hand are left alone, and the installer stops.
 
 A Conductor file that you changed stops the install: the message gives its full path. To
 replace it with the current version, run the installer with `--replace-modified`

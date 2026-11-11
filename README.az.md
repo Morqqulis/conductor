@@ -262,6 +262,10 @@ işlədin; geri qaytarma göstərilən nüsxə yolu ilə əvvəlki faylları bə
 `~/.claude` qovluğu başqa kompüterə kopyalanıbsa, adi quraşdırıcını işə salın: o, Conductor-un
 bu qovluqdan kənarda saxladığı faylları (Codex və Antigravity üçün qaydalar, `conductor`
 əmri) yenidən qoyur və mövcud olan heç nəyin üzərinə yazmır.
+Yeni kompüterdə istifadəçi adı fərqlidirsə, kopyalanmış `settings.json` faylındakı Conductor
+hook-ları köhnə qovluğa işarə edir: quraşdırıcı belə köçürməni tanıyır (hook-lar bütövdür və
+hamısı eyni əvvəlki qovluğa aparır) və onları yenidən qeydiyyatdan keçirir. Əl ilə
+dəyişdirilmiş hook-lara toxunmur və dayanır.
 
 Dəyişdirdiyiniz Conductor faylı quraşdırmanı dayandırır: mesaj onun tam yolunu göstərir. Onu
 cari versiya ilə əvəz etmək üçün quraşdırıcını `--replace-modified` (PowerShell:

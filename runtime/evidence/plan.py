@@ -6,18 +6,25 @@ usage: plan.py status [--brief]        the table, what may start, what to accept
                                        (--on: early, from NEED's hand-in)
        plan.py handin ID SHA           record the executor's commit after checking its area
        plan.py return ID               send the hand-in back; counts the round
-       plan.py rebased ID SHA          a rebased step: record the commit it now starts from
-       plan.py finish [--abandon]      print the decided: lines, drop the plan's records
-       options: [--repo DIR] [--map FILE]   (default map: <main checkout>/.conductor/work-map.md)
+       plan.py rebased ID SHA          the step's branch was rebased or updated: record the
+                                       commit it now starts from; a hand-in is withdrawn
+                                       without counting a round
+       plan.py release ID              give a started step up (to redo it): drop its records
+       plan.py finish [--abandon]      print the decided: lines, drop the plan's records and
+                                       delete the map file
+       options, before or after the command: [--repo DIR] [--map FILE]
+       (default map: <main checkout>/.conductor/work-map.md)
 
 The map holds the plan only (plan_map.py); state is computed (plan_state.py). `start` is
-atomic: of two sessions claiming one step, exactly one succeeds.
+atomic: of two sessions claiming one step, exactly one succeeds. Only commits count: an
+uncommitted edit is invisible here.
 
 Exit: 0 done / no findings; 1 refused / findings; 2 broken input (no map, not a repository).
 """
 import argparse
 from pathlib import Path
 import sys
+import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plan_map  # noqa: E402
@@ -32,11 +39,11 @@ class Refused(Exception):
 def load(args):
     git(args.repo, 'rev-parse', '--git-dir')
     main, _ = plan_state.worktrees(args.repo)
-    path = Path(args.map) if args.map else Path(main) / '.conductor' / 'work-map.md'
+    args.map = Path(args.map) if args.map else Path(main) / '.conductor' / 'work-map.md'
     try:
-        text = path.read_text(encoding='utf-8')
+        text = args.map.read_text(encoding='utf-8-sig')
     except (OSError, UnicodeDecodeError) as error:
-        raise ValueError(f'cannot read the work map {path}: {error}')
+        raise ValueError(f'cannot read the work map {args.map}: {error}')
     plan = plan_map.parse(text)
     return plan, plan_state.read(args.repo, plan)
 
@@ -54,6 +61,10 @@ def commit(repo, text):
     return out.strip()
 
 
+def exists(repo, ref):
+    return git(repo, 'rev-parse', '--verify', '--quiet', ref, ok=(0, 1, 128))[0] == 0
+
+
 def describe(row):
     parts = [row.state]
     if row.state == 'waiting':
@@ -63,9 +74,9 @@ def describe(row):
     if row.state == 'running':
         parts.append(f'{row.commits} commit(s)')
         if row.worktree:
-            parts.append('in ' + row.worktree)
+            parts.append('in ' + plan_state.safe(row.worktree))
     if row.returned:
-        parts.append(f'returned x{row.returned}')
+        parts.append(f'returned x{len(row.returned)}')
     if row.speculative and row.state != 'accepted':
         parts.append('speculative on ' + ', '.join(row.speculative))
     return ' '.join(parts)
@@ -74,13 +85,15 @@ def describe(row):
 def status(args, plan, state):
     done = sum(1 for row in state.rows.values() if row.state == 'accepted')
     if args.brief:
+        # One line for the per-message reminder. No finding text: it can quote a file name
+        # an executor chose, and this line is read as an instruction channel.
         parts = [f'PLAN {plan.branch}: {done}/{len(state.rows)} accepted']
         if state.ready:
             parts.append('ready: ' + ', '.join(state.ready))
         if state.accept:
             parts.append('to accept: ' + ', '.join(state.accept))
         if state.findings:
-            parts.append(f'{len(state.findings)} finding(s), first: {state.findings[0]}')
+            parts.append(f'{len(state.findings)} finding(s): the plan and the facts disagree')
         print(' | '.join(parts))
         return 1 if state.findings else 0
     tip = state.integration[:9] if state.integration else 'missing'
@@ -118,13 +131,28 @@ def start(args, plan, state):
         hint = [need for identifier, need in state.early if identifier == args.id]
         raise Refused(f'{args.id} waits for {", ".join(row.waiting)}'
                       + (f'; early start is possible: --on {hint[0]} (SPECULATIVE START decides)' if hint else ''))
-    code, _ = git(args.repo, 'update-ref', name('base', plan, args.id), base, '', ok=(0, 1, 128))
-    if code:
-        raise Refused(f'{args.id} was started by another session a moment ago')
+    for other, live in state.rows.items():
+        if other == args.id or not live.base or live.state == 'accepted':
+            continue
+        if plan_state.related(plan, other, args.id):
+            continue
+        shared = plan_map.overlap(row.step, live.step, state.files)
+        if shared:
+            raise Refused(f'{args.id} may write {shared}, and so may {other}, which is {live.state}: '
+                          f'wait for it, or order the two through needs')
+    record = name('base', plan, args.id)
+    try:
+        git(args.repo, 'update-ref', record, base, '')
+    except ValueError as error:
+        for _ in range(10):  # the winner of a race may still be writing its record
+            if exists(args.repo, record):
+                raise Refused(f'{args.id} was started by another session a moment ago')
+            time.sleep(0.1)
+        raise ValueError(f'cannot record the start of {args.id}: {error}')
     try:
         git(args.repo, 'branch', '--no-track', branch, base)
     except ValueError:
-        git(args.repo, 'update-ref', '-d', name('base', plan, args.id), ok=(0, 1, 128))
+        git(args.repo, 'update-ref', '-d', record, ok=(0, 1, 128))
         raise
     print(f'started {args.id}: branch {branch} at {base[:9]}' + (f' (early, on {args.on})' if args.on else ''))
     print(f'next: git worktree add <new directory> {branch}')
@@ -144,13 +172,15 @@ def handin(args, plan, state):
                       + (f' ({row.tip[:9]})' if row.tip else ' (the branch is gone)'))
     if sha == row.base:
         raise Refused(f'{branch} has no commit of its own: nothing to hand in')
+    if sha in row.returned:
+        raise Refused(f'{sha[:9]} was already returned: {branch} needs a new commit')
     if not plan_state.is_ancestor(args.repo, row.base, sha):
         raise Refused(f'{branch} does not contain the commit it started from ({row.base[:9]}); '
                       f'after a rebase run plan.py rebased {args.id} <new base> first')
-    stray = plan_state.outside(args.repo, row.step, row.base, sha)
+    stray = plan_state.outside(args.repo, row.step, row.base, sha, state.integration)
     if stray:
         raise Refused(f'{args.id} changed files outside its area ({", ".join(row.step.area)}):\n  '
-                      + '\n  '.join(stray))
+                      + '\n  '.join(plan_state.safe(path) for path in stray))
     git(args.repo, 'update-ref', name('handin', plan, args.id), sha, '')
     print(f'handed in {args.id} at {sha[:9]}: area clean, {row.commits} commit(s)')
     return 0
@@ -160,7 +190,7 @@ def send_back(args, plan, state):
     row = row_of(state, args.id)
     if not row.handin or row.state == 'accepted':
         raise Refused(f'{args.id} is {row.state}: only a hand-in that is not accepted can be returned')
-    count = row.returned + 1
+    count = len(row.returned) + 1
     git(args.repo, 'update-ref', f'{name("returned", plan, args.id)}/{count}', row.handin, '')
     git(args.repo, 'update-ref', '-d', name('handin', plan, args.id), row.handin)
     print(f'returned {args.id} ({row.handin[:9]}): round {count}'
@@ -170,16 +200,31 @@ def send_back(args, plan, state):
 
 def rebased(args, plan, state):
     row = row_of(state, args.id)
-    if not row.base or not row.tip or row.handin:
-        raise Refused(f'{args.id} is {row.state}: only a started step with a branch and no hand-in can be rebased')
+    if not row.base or not row.tip or row.state == 'accepted':
+        raise Refused(f'{args.id} is {row.state}: only a started, not accepted step with a branch can be rebased')
     sha = commit(args.repo, args.sha)
-    if sha == row.tip or not plan_state.is_ancestor(args.repo, sha, row.tip):
-        raise Refused(f'{sha[:9]} is not below the tip of {plan_state.key(plan, args.id)}')
+    if not plan_state.is_ancestor(args.repo, sha, row.tip):
+        raise Refused(f'{sha[:9]} is not in {plan_state.key(plan, args.id)}')
     on_plan = state.integration and plan_state.is_ancestor(args.repo, sha, state.integration)
     if not on_plan and sha not in [state.rows[need].handin for need in row.step.needs]:
         raise Refused(f'{sha[:9]} is neither on {plan.branch} nor the hand-in of a step {args.id} needs')
     git(args.repo, 'update-ref', name('base', plan, args.id), sha, row.base)
-    print(f'{args.id} now starts from {sha[:9]}')
+    if row.handin:
+        git(args.repo, 'update-ref', '-d', name('handin', plan, args.id), row.handin)
+    print(f'{args.id} now starts from {sha[:9]}'
+          + (f'; its hand-in {row.handin[:9]} is withdrawn (no round counted)' if row.handin else ''))
+    return 0
+
+
+def release(args, plan, state):
+    row = row_of(state, args.id)
+    if not row.base or row.state == 'accepted':
+        raise Refused(f'{args.id} is {row.state}: only a started, not accepted step can be released')
+    if row.handin:
+        git(args.repo, 'update-ref', '-d', name('handin', plan, args.id), row.handin)
+    git(args.repo, 'update-ref', '-d', name('base', plan, args.id), row.base)
+    print(f'released {args.id}: it can be started again'
+          + (f' once you remove the branch {plan_state.key(plan, args.id)} and its worktree' if row.tip else ''))
     return 0
 
 
@@ -189,38 +234,47 @@ def finish(args, plan, state):
         raise Refused(f'not accepted yet: {", ".join(left)} (--abandon drops the records anyway)')
     for line in plan.decided:
         print('decided: ' + line)
-    lead = plan.branch + '--'
     out = git(args.repo, 'for-each-ref', '--format=%(refname)', plan_state.SPACE)[1]
+    leads = tuple(f'{plan_state.SPACE}{kind}/{plan.branch}/' for kind in plan_state.KINDS)
     count = 0
     for ref in out.splitlines():
-        kind, _, rest = ref[len(plan_state.SPACE):].partition('/')
-        if kind in ('base', 'handin', 'returned') and rest.startswith(lead):
+        if ref.startswith(leads):
             git(args.repo, 'update-ref', '-d', ref)
             count += 1
-    print(f'plan {plan.branch}: {count} record(s) dropped; branches and the map file are left to you')
+    try:
+        args.map.unlink()
+        gone = 'the map file is deleted'
+    except OSError as error:
+        gone = f'DELETE THE MAP FILE YOURSELF ({args.map}: {error})'
+    print(f'plan {plan.branch}: {count} record(s) dropped; {gone}; branches are left to you')
     return 0
 
 
 def main(argv=None):
+    shared = argparse.ArgumentParser(add_help=False)
+    shared.add_argument('--repo', default=argparse.SUPPRESS)
+    shared.add_argument('--map', default=argparse.SUPPRESS)
     parser = argparse.ArgumentParser(prog='plan.py', description='State of a Conductor work map, read from git.')
     parser.add_argument('--repo', default='.')
     parser.add_argument('--map')
     commands = parser.add_subparsers(dest='command', required=True)
-    commands.add_parser('status').add_argument('--brief', action='store_true')
-    one = commands.add_parser('start')
-    one.add_argument('id')
-    one.add_argument('--on')
-    one = commands.add_parser('handin')
-    one.add_argument('id')
-    one.add_argument('sha')
-    commands.add_parser('return').add_argument('id')
-    one = commands.add_parser('rebased')
-    one.add_argument('id')
-    one.add_argument('sha')
-    commands.add_parser('finish').add_argument('--abandon', action='store_true')
+
+    def command(title, *positional):
+        one = commands.add_parser(title, parents=[shared])
+        for argument in positional:
+            one.add_argument(argument)
+        return one
+
+    command('status').add_argument('--brief', action='store_true')
+    command('start', 'id').add_argument('--on')
+    command('handin', 'id', 'sha')
+    command('return', 'id')
+    command('rebased', 'id', 'sha')
+    command('release', 'id')
+    command('finish').add_argument('--abandon', action='store_true')
     args = parser.parse_args(argv)
     run = {'status': status, 'start': start, 'handin': handin, 'return': send_back,
-           'rebased': rebased, 'finish': finish}[args.command]
+           'rebased': rebased, 'release': release, 'finish': finish}[args.command]
     try:
         plan, state = load(args)
         return run(args, plan, state)

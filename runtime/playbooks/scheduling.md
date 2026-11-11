@@ -61,8 +61,9 @@ accepted or returned (rounds counted), lists `ready now` and `to accept`, and na
 disagreement between plan and facts (a file outside an area, a branch moved after its
 hand-in, a step on unaccepted ground, unordered overlapping areas). Run it after writing
 the map, before each dispatch and acceptance, after a compaction; fix or report a finding
-before anything else starts. P cannot run -> say so, keep the states in the todo entry.
-Attempt counters stay there.
+before anything else starts. Who runs a step, or that it is blocked -> a free-text line in
+the map. P cannot run -> say so, keep the states in the todo entry. Attempt counters stay
+there.
 Integration branch: a NEW short-lived branch off the session's working branch, in a
 worktree of its own - the main checkout never switches branch. accepted = proven on the
 step's branch and merged into it - never into the working branch: after the last row ask
@@ -98,23 +99,24 @@ of the sha that the controller creates and removes after deciding, in parallel w
 executors and other skeptics. Its files slot carries the HEAVY LANES rule and the claims
 path.
 A verdict never replaces the controller's own look: it reads the load-bearing part of the
-diff and the proof output itself (core claim table), then decides. Accepted -> merge the
-sha into the integration branch (never a squash: accepted = the sha is IN the branch),
-remove the step's worktree (clean; leftovers -> inspect first)
+diff and the proof output itself (core claim table), then decides. Accepted -> merge that
+SHA, not the branch name, into the integration branch (never a squash: accepted = the sha
+itself was merged), remove the step's worktree (clean; leftovers -> inspect first)
 and branch. Returned -> `P return <id>` (it counts the round), then the same executor
 where the harness can resume it, else a fresh dispatch in the same worktree carrying the
 finding. After the owner's answer (non-interactive: after the report), and after the report
-lists every `decided:` line (`P finish` prints them and drops the plan's records) -> delete
-the map and the claims directory (no controller: whoever accepts the last row reports the
-branch, removes its worktree, then does both).
+lists every `decided:` line -> `P finish` (it prints them, drops the plan's records and
+deletes the map), then delete the claims directory (no controller: whoever accepts the last
+row reports the branch, removes its worktree, then does both).
 
 ## SPECULATIVE START (TEAM: a step that needs a handed-in, not yet accepted step)
 Independent steps need no permission. A dependent step may start early only when ALL hold:
 its branch starts from the base's handed-in sha (`P start <id> --on <base id>`); it calls
 the base only through a contract step's signatures and shares no live resource with it; the
 base is not itself speculative (depth 1 - P refuses deeper). It is accepted only after its
-base. Base returned: contract unchanged -> rebase onto the new sha, `P rebased <id> <sha>`,
-rerun the proof; contract changed -> redo the step, record the loss.
+base. Base returned: contract unchanged -> rebase onto the new sha, `P rebased <id> <sha>`
+(a hand-in is withdrawn, no round counted), rerun the proof; contract changed -> `P release
+<id>`, redo the step, record the loss.
 
 ## HEAVY LANES (TEAM: heavy checks are the scarce resource, not agents)
 light = reading, planning, editing, review: run wide. heavy = a full build, a whole suite,

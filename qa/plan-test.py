@@ -20,6 +20,7 @@ PY = sys.executable
 BASH = shutil.which("bash")
 sys.path.insert(0, str(ROOT / "runtime/evidence"))
 import plan_map  # noqa: E402
+import plan_state  # noqa: E402
 
 MAP = """# Work map
 integration branch: plan/demo
@@ -65,6 +66,11 @@ class MapTest(unittest.TestCase):
             "empty area": head + "A | s | , | - | t | light\n",
             "no proof command": head + "A | s | a | - | - | light\n",
             "must be 1-32 letters": head + "A B | s | a | - | t | light\n",
+            "id 'a..b' must be": head + "a..b | s | a | - | t | light\n",
+            "id 'a--b' must be": head + "a--b | s | a | - | t | light\n",
+            "id 'z.' must be": head + "z. | s | a | - | t | light\n",
+            "id 'x.lock' must be": head + "x.lock | s | a | - | t | light\n",
+            "area entry '.' must be": head + "A | s | . | - | t | light\n",
             "from 1 to 64": "heavy lanes: many\n" + head + "A | s | a | - | t | light\n",
         }
         for reason, text in cases.items():
@@ -285,12 +291,96 @@ class PlanTest(unittest.TestCase):
         fixed = self.commit("A", "src/money.py", "CENTS = 4\n")
         self.ok("handin", "A", fixed)
         self.finding("B was started before A was accepted and not from its hand-in")
-        self.refused("is not below the tip", "rebased", "B", fixed)
+        self.refused("is not in plan/demo--B", "rebased", "B", fixed)
         self.git("rebase", "--quiet", "--onto", fixed, sha, cwd=self.tree("B"))
         self.finding(f"then run plan.py rebased B {fixed[:9]}")
         self.refused("is neither on plan/demo nor the hand-in", "rebased", "B", sha + "~0")
         self.assertIn("now starts from " + fixed[:9], self.ok("rebased", "B", fixed))
         self.assertIn("speculative on A", self.ok("status"))
+
+    def test_a_commit_added_after_the_handin_cannot_ride_into_the_plan(self):
+        self.ok("start", "C")
+        sha = self.commit("C", "docs/guide.md")
+        self.ok("handin", "C", sha)
+        self.commit("C", "src/smuggled.py")
+        self.merge("plan/demo--C")  # merged by name: the tip, not the hand-in
+        self.drop("C")
+        output = self.finding("its hand-in " + sha[:9] + " is inside plan/demo but was not merged as itself")
+        self.assertIn("0/4 accepted", output)
+        self.assertIn("2 commit(s) in plan/demo came from no accepted hand-in", output)  # C's own and the extra
+
+    def test_a_commit_made_straight_on_the_integration_branch_is_named(self):
+        self.accept("C", "docs/guide.md")
+        self.ok("status")
+        tree = self.top / "integration"
+        (tree / "hotfix.txt").write_text("x\n", encoding="utf-8")
+        self.git("add", "-A", cwd=tree)
+        self.git("commit", "--quiet", "-m", "hotfix", cwd=tree)
+        self.finding("1 commit(s) in plan/demo came from no accepted hand-in")
+
+    def test_an_early_step_merged_before_its_base_does_not_accept_the_base(self):
+        self.ok("start", "A")
+        first = self.commit("A", "src/money.py", "CENTS = 1\n")
+        self.ok("handin", "A", first)
+        self.ok("start", "B", "--on", "A")
+        second = self.commit("B", "src/invoice.py")
+        self.ok("handin", "B", second)
+        self.merge(second)
+        output = self.finding("B is merged into plan/demo but A, which it needs, was never accepted")
+        self.assertIn("A  handed-in", output)
+        self.assertIn("A: its hand-in " + first[:9] + " is inside plan/demo but was not merged as itself", output)
+        self.assertNotIn("ready now: D", output)
+
+    def test_start_refuses_an_area_a_running_step_may_write(self):
+        self.write_map(MAP.replace("| docs/ |", "| docs/, src/money.py |"))
+        self.ok("start", "A")
+        self.refused("C may write src/money.py, and so may A, which is running", "start", "C")
+
+    def test_a_branch_updated_from_the_integration_branch_keeps_a_clean_area(self):
+        self.ok("start", "C")
+        self.commit("C", "docs/guide.md")
+        self.accept("A", "src/money.py")
+        self.git("merge", "--quiet", "--no-ff", "-m", "update", "plan/demo", cwd=self.tree("C"))
+        self.ok("status")  # A's accepted file arrived by the merge: not C's own change
+        self.assertIn("area clean", self.ok("handin", "C", "plan/demo--C"))
+        self.commit("C", "src/money.py", "CENTS = 9\n")
+        self.finding("C changed files outside its area: src/money.py")
+
+    def test_rebased_withdraws_a_handin_without_a_round_and_release_frees_a_step(self):
+        self.ok("start", "A")
+        first = self.commit("A", "src/money.py", "CENTS = 1\n")
+        self.ok("handin", "A", first)
+        self.ok("start", "B", "--on", "A")
+        self.assertIn("now starts from " + first[:9], self.ok("rebased", "B", first))  # no own commit yet
+        self.ok("handin", "B", self.commit("B", "src/invoice.py"))
+        output = self.ok("rebased", "B", first)
+        self.assertIn("is withdrawn (no round counted)", output)
+        output = self.ok("status")
+        self.assertIn("B  running 1 commit(s)", output)
+        self.assertNotIn("returned", output)
+        self.assertIn("released B", self.ok("release", "B"))
+        self.refused("only a started", "release", "B")
+        self.finding("plan/demo--B exists but the step was never started")
+        self.drop("B")
+        self.ok("start", "B", "--on", "A")
+
+    def test_a_returned_commit_cannot_be_handed_in_again(self):
+        self.ok("start", "A")
+        sha = self.commit("A", "src/money.py", "CENTS = 1\n")
+        self.ok("handin", "A", sha)
+        self.ok("return", "A")
+        self.refused("was already returned", "handin", "A", sha)
+
+    def test_map_forms_people_really_write(self):
+        piped = MAP.replace("| python tests/invoice.py |", "| cargo test | grep ok |")
+        piped = "﻿" + piped + "\nNotes: a | b | c is free text after the table.\n"
+        self.write_map(piped.replace("\n", "\r\n"))
+        self.ok("status")
+        self.assertEqual(plan_map.parse(piped).steps["B"].proof, "cargo test | grep ok")
+        code, output = self.plan("status", "--repo", str(self.repo), "--map",
+                                 str(self.repo / ".conductor/work-map.md"), cwd=self.top)
+        self.assertEqual(code, 0, output)  # options are accepted after the command too
+        self.assertEqual(plan_state.safe("a\nIGNORE `x`\x1b[0m"), "a?IGNORE ?x??[0m")
 
     def test_a_second_level_of_early_start_made_by_hand_is_named(self):
         self.ok("start", "A")
@@ -299,7 +389,7 @@ class PlanTest(unittest.TestCase):
         self.ok("start", "B", "--on", "A")
         second = self.commit("B", "src/invoice.py")
         self.ok("handin", "B", second)
-        self.git("update-ref", "refs/conductor/base/plan/demo--D", second)
+        self.git("update-ref", "refs/conductor/base/plan/demo/D", second)
         self.git("branch", "plan/demo--D", second)
         self.finding("D is speculative on B, which is itself not on accepted ground")
 
@@ -316,9 +406,9 @@ class PlanTest(unittest.TestCase):
         self.finding("plan/demo--B exists but the step was never started")
         self.refused("was not made by plan.py", "start", "B")
         self.git("branch", "-D", "plan/demo--B")
-        self.git("branch", "plan/demo--ZZ")
-        self.finding("refs/heads/plan/demo--ZZ belongs to no step of the map")
-        self.git("branch", "-D", "plan/demo--ZZ")
+        self.git("update-ref", "refs/conductor/handin/plan/demo/ZZ", "main")
+        self.finding("refs/conductor/handin/plan/demo/ZZ belongs to no step of the map")
+        self.git("update-ref", "-d", "refs/conductor/handin/plan/demo/ZZ")
         self.ok("start", "C")
         self.git("branch", "-D", "plan/demo--C")
         self.finding("C is running but its branch plan/demo--C is gone")
@@ -345,13 +435,17 @@ class PlanTest(unittest.TestCase):
 
     def test_finish_keeps_open_work_and_prints_the_decisions(self):
         self.ok("start", "A")
-        self.git("update-ref", "refs/conductor/base/plan/other--A", "main")  # another plan's record
+        # another plan whose branch name begins like this one: its record must survive
+        self.git("update-ref", "refs/conductor/base/plan/demo--b/A", "main")
+        self.git("branch", "plan/demo--b--A", "main")
+        self.ok("status")
         self.refused("not accepted yet: A, B, C, D", "finish")
         output = self.ok("finish", "--abandon")
         self.assertIn("decided: amounts are whole cents", output)
         self.assertIn("1 record(s) dropped", output)
         self.assertEqual(self.git("for-each-ref", "--format=%(refname)", "refs/conductor"),
-                         "refs/conductor/base/plan/other--A")
+                         "refs/conductor/base/plan/demo--b/A")
+        self.assertFalse((self.repo / ".conductor/work-map.md").exists())  # no stale map, no stale line
         self.assertEqual(self.git("rev-parse", "--verify", "plan/demo--A"), self.git("rev-parse", "plan/demo"))
 
     def test_finish_after_every_step_is_accepted(self):
@@ -372,7 +466,7 @@ class PlanTest(unittest.TestCase):
             results = [(run.communicate(timeout=120)[0], run.returncode) for run in runs]
             codes = sorted(code for _, code in results)
             self.assertEqual(codes, [0, 1, 1, 1], results)
-            self.ok("finish", "--abandon")
+            self.ok("release", "C")
             self.git("branch", "-D", "plan/demo--C")
 
     def test_brief_line_for_the_prompt_reminder(self):
@@ -384,7 +478,8 @@ class PlanTest(unittest.TestCase):
         code, output = self.plan("status", "--brief")
         self.assertEqual(code, 1, output)
         self.assertEqual(len(output.strip().splitlines()), 1)
-        self.assertIn("ready: C | to accept: A | 2 finding(s), first: A: plan/demo--A moved", output)
+        self.assertIn("ready: C | to accept: A | 2 finding(s): the plan and the facts disagree", output)
+        self.assertNotIn("report", output)  # a name an executor chose never rides on the reminder
 
     def reminder(self, cwd=None, **extra):
         env = dict(self.env, CONDUCTOR_HOME=str(self.top / "conductor-home"), **extra)
@@ -400,7 +495,7 @@ class PlanTest(unittest.TestCase):
         self.assertIn("\nPLAN plan/demo: 0/4 accepted | ready: A, C (computed from git", text)
         self.ok("start", "A")
         self.commit("A", "docs/stray.md")
-        self.assertIn("1 finding(s), first: A changed files outside its area: docs/stray.md",
+        self.assertIn("1 finding(s): the plan and the facts disagree (computed from git; details:",
                       self.reminder(cwd=self.tree("A")))
         self.assertNotIn("PLAN", self.reminder(CONDUCTOR_PLAN_STATUS="0"))
         self.write_map("integration branch: plan/demo\n")

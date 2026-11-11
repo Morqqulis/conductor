@@ -90,11 +90,12 @@ if [ "${CONDUCTOR_PLAN_STATUS:-1}" != 0 ] && [ -f "$planner" ] &&
         code=$?
         case "$code" in
             0|1) [ -n "$state" ] && line="$line
-$state (computed from git by evidence/plan.py status - never keep plan state by hand)." ;;
+$state (computed from git; details: evidence/plan.py status - never keep plan state by hand)." ;;
             2) [ -f .conductor/work-map.md ] && line="$line
 PLAN: the work map here cannot be read - run evidence/plan.py status and fix what it names." ;;
         esac
-        [ "$code" -le 2 ] && break
+        # 124 = the time limit: a second interpreter would only wait as long again.
+        { [ "$code" -le 2 ] || [ "$code" -eq 124 ]; } && break
     done
 fi
 emit_payload UserPromptSubmit "$line" || exit 0

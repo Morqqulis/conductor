@@ -12,6 +12,9 @@ Line-oriented; every other line of the file is free text:
     decided: <what> because <why>                any number
     id | step | area | needs | proof | weight    the header row, then one row per step
     A  | money type | src/money.rs, tests/money/ | - | cargo test money | light
+                                                 a blank line ends the table
+
+Only the proof cell may contain "|" (a shell pipe).
 
 area   comma-separated paths the step may write. A trailing "/" or a directory name covers
        everything under it; "*" and "?" globs are allowed; any other token (db:orders) is a
@@ -23,7 +26,9 @@ from dataclasses import dataclass
 from fnmatch import fnmatchcase
 import re
 
-ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,31}')
+# An id becomes part of a branch and a ref name: no "..", no "--" (the separator between
+# the integration branch and the id), no trailing "." or "-", no ".lock" ending.
+ID = re.compile(r'(?!.*\.lock$)[A-Za-z0-9_](?:[A-Za-z0-9_]|[.-](?=[A-Za-z0-9_])){0,31}')
 BRANCH = re.compile(r'(?!-)[A-Za-z0-9._/-]{1,120}')
 COLUMNS = ('id', 'step', 'area', 'needs', 'proof', 'weight')
 
@@ -60,14 +65,16 @@ def _pattern(raw, number):
     value = raw.strip().strip('`').replace('\\', '/')
     while value.startswith('./'):
         value = value[2:]
-    if not value or value.startswith('/') or '..' in value.split('/'):
+    if not value or value == '.' or value.startswith('/') or '..' in value.split('/'):
         raise ValueError(f'work map line {number}: area entry {raw.strip()!r} must be a path inside the project')
     return value
 
 
 def parse(text):
-    branch, lanes, decided, steps, header = None, 1, [], {}, False
-    for number, line in enumerate(text.splitlines(), 1):
+    branch, lanes, decided, steps, header, closed = None, 1, [], {}, False, False
+    for number, line in enumerate(text.lstrip('﻿').splitlines(), 1):
+        if steps and not line.strip():
+            closed = True  # a blank line ends the table: later "|" is free text
         lowered = line.strip().lstrip('#*- ').lower()
         if lowered.startswith('integration branch:'):
             if branch is not None:
@@ -85,9 +92,11 @@ def parse(text):
         if lowered.startswith('decided:'):
             decided.append(line.split(':', 1)[1].strip())
             continue
-        if '|' not in line:
+        if '|' not in line or closed:
             continue
         cells = _cells(line)
+        if header and len(cells) > len(COLUMNS):  # a "|" inside the proof command (a shell pipe)
+            cells = cells[:4] + [' | '.join(cells[4:-1]), cells[-1]]
         if not header:
             if tuple(cell.lower() for cell in cells) == COLUMNS:
                 header = True
@@ -99,7 +108,8 @@ def parse(text):
                              f'{len(COLUMNS)} ({" | ".join(COLUMNS)})')
         identifier, title, area, needs, proof, weight = cells
         if not ID.fullmatch(identifier):
-            raise ValueError(f'work map line {number}: id {identifier!r} must be 1-32 letters, digits, ".", "_" or "-"')
+            raise ValueError(f'work map line {number}: id {identifier!r} must be 1-32 letters, digits, "_", '
+                             f'or single "." and "-" between them')
         if identifier in steps:
             raise ValueError(f'work map line {number}: id {identifier!r} is already used on line {steps[identifier].line}')
         patterns = tuple(_pattern(item, number) for item in area.split(',') if item.strip())

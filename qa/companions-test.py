@@ -173,6 +173,24 @@ class CompanionsTest(unittest.TestCase):
                 self.assertEqual(line, "OK installed (claude-plugins-official)", output)
                 self.assertEqual(calls, [LIST, INSTALL], output)
 
+    def test_record_marker_and_status_glyphs_vary_with_the_terminal(self):
+        # Under Git Bash on Windows the list arrives with a multi-byte arrow instead of ">"
+        # and with other check and cross glyphs; a plain console prints ">" and "√"/"×".
+        for marker, yes, no in ((">", "√", "×"), ("❯", "✔", "✘"), ("›", "✓", "✗"), ("*", "+", "-")):
+            listing = (HEADER + record("codex@openai-codex") + record(state="disabled") + record(COMMUNITY)
+                       ).replace("  > ", f"  {marker} ").replace("√", yes).replace("×", no)
+            with self.subTest(marker=marker):
+                self.assertIn(f"  {marker} {COMMUNITY}", listing)
+                line, calls, output = self.run_installer([listing])
+                self.assertEqual(line, f"OK already enabled ({COMMUNITY})", output)
+                self.assertEqual(calls, [LIST], output)
+
+    def test_a_word_in_place_of_the_marker_is_not_a_record(self):
+        for listing in (HEADER + record().replace("  > ", "  plugin "),
+                        HEADER + record().replace("  > ", "  >> x ")):
+            with self.subTest(listing=listing):
+                self.assert_failure([listing])
+
     def test_refusal_names_the_first_line_it_could_not_read(self):
         cases = (("garbage\n", "unknown text at line 1: garbage"),
                  (HEADER + record(state="loaded"), "unknown Status value at line"),

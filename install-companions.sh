@@ -64,7 +64,9 @@ find_python() {
 # Parse one successful list, binding each exact id to its own explicit Status field.
 # An unknown/truncated format is not evidence that a plugin is absent or enabled.
 superpowers_state() {
-    awk '
+    # LC_ALL=C: glyphs are multi-byte, and in a single-byte locale (a Windows code page) some
+    # of their bytes are letters, which would make a marker or a Status glyph look like text.
+    LC_ALL=C awk '
         # The first thing that made the list unreadable goes to stderr, so a refusal names
         # the line instead of leaving the user and the maintainer to guess.
         function bad(why) {
@@ -90,7 +92,10 @@ superpowers_state() {
         /^Synced from claude\.ai[ :]/ { finish(); synced = 1 }
         synced { next }
         /^[[:space:]]*$/ { finish(); next }
-        /^  > [a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+$/ {
+        # The record marker depends on where Claude Code runs: ">" in a Windows console, a
+        # multi-byte arrow under Git Bash. Like the Status glyph, any non-alphanumeric
+        # marker is accepted; the id after it is still matched exactly.
+        /^  [^[:alnum:][:space:]]+ [a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+$/ {
             finish(); id = $2; next
         }
         /^    Status: / {

@@ -86,10 +86,13 @@ class UnifiedTests(unittest.TestCase):
     def move_to_another_profile(self):
         """Copy ~/.claude into a differently named home, as when a folder moves between
         computers whose user names differ. Returns the old Conductor folder."""
-        old = (self.config / 'conductor').as_posix()
+        # Resolved: Windows temp paths come in a short 8.3 form (RUNNER~1) while the installer
+        # writes the long one, and comparing the short form would match nothing.
+        old = (self.config / 'conductor').resolve().as_posix()
         self.home = Path(self.temp.name) / 'other profile Я'
         shutil.copytree(self.config, self.home / '.claude')
         self.config = self.home / '.claude'
+        self.pristine_settings = (self.config / 'settings.json').read_text(encoding='utf-8')
         self.env.update(HOME=str(self.home), USERPROFILE=str(self.home), CLAUDE_CONFIG_DIR=str(self.config))
         return old
 
@@ -104,8 +107,9 @@ class UnifiedTests(unittest.TestCase):
         output = self.run_install()
         self.assertIn('hooks re-registered', output)
         text = (self.config / 'settings.json').read_text(encoding='utf-8')
+        self.assertIn(old, self.pristine_settings, 'the copied settings did not point to the old folder')
         self.assertNotIn(old, text)
-        self.assertIn((self.config / 'conductor').as_posix() + '/hooks/session-start.sh', text)
+        self.assertIn((self.config / 'conductor').resolve().as_posix() + '/hooks/session-start.sh', text)
         self.assertEqual(json.loads(text)['model'], 'personal')
         self.assertNotIn(old.encode(), (self.config / 'conductor/core.md').read_bytes())
         self.assertTrue((self.home / '.gemini/AGENTS.md').is_file())
@@ -162,7 +166,7 @@ class UnifiedTests(unittest.TestCase):
         self.assertEqual(rules.read_bytes(), original)
         copies = [p for p in (self.home / '.local/state/conductor/updates').glob('*/replaced/*')]
         self.assertEqual([p.read_bytes() for p in copies], [mine], output)
-        self.assertIn(str(copies[0]), output)
+        self.assertIn(str(copies[0].resolve()), output)
         self.run_install()  # nothing is left "modified": the next plain install passes
 
     def test_replace_modified_without_a_changed_file_saves_no_copy(self):

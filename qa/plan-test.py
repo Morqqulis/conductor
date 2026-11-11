@@ -377,6 +377,10 @@ class PlanTest(unittest.TestCase):
         self.write_map(piped.replace("\n", "\r\n"))
         self.ok("status")
         self.assertEqual(plan_map.parse(piped).steps["B"].proof, "cargo test | grep ok")
+        marked = "﻿integration branch: p\nid | step | area | needs | proof | weight\nA | s | a | - | t | light\n"
+        self.assertEqual(plan_map.parse(marked).branch, "p")  # the mark sits on the line that matters
+        self.write_map(marked.replace("branch: p", "branch: plan/demo"))
+        self.ok("status")
         code, output = self.plan("status", "--repo", str(self.repo), "--map",
                                  str(self.repo / ".conductor/work-map.md"), cwd=self.top)
         self.assertEqual(code, 0, output)  # options are accepted after the command too

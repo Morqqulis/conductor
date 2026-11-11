@@ -32,8 +32,8 @@ as asked; do not silently change scope. Restraint never lowers production qualit
 ## Step 1 — Decomposition triage (before any detail work)
 Does the request contain more than one independently deliverable outcome? Yes -> split into
 units; each unit gets its own Step 0 record and its own counters. No -> continue.
-A plan or spec with 2+ separately provable steps (not as a dispatched executor) -> load
-scheduling.md before the first edit.
+Plan work (core MODULES) -> scheduling.md before the first edit, unless you are a dispatched
+executor.
 
 ## Step 2 — Branch on an observable predicate
 At T2+, name "essence: <e> -> method: <m>" per playbooks/methods.md; uncertainty picks method.

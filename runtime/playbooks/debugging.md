@@ -19,7 +19,7 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    check <c1>. H2: <cause>; check <c2>." Each must be falsifiable. Prove the top-ranked first.
 3. PROVE the top hypothesis with its named check (read / trace / instrument — instrumentation
    edits are strictly observational: logging/print lines only, never touching control flow or
-   the suspected cause, and removed before the fix edit) BEFORE any fix edit.
+   the suspected cause, and removed before the red run) BEFORE any fix edit.
    State the check's EXPECTED output before running it — the surprise against your prediction
    is the evidence; follow it, not the plan.
    Check contradicts H -> back to step 2 with the new evidence; do not edit. A falsified
@@ -54,7 +54,8 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    bytes, base and environment; else the undo path.
    Test written AFTER the fix: `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/falsify.py --test
    "<test command>" <fix files>` - an isolated copy of the CURRENT tree, fix files back to
-   their pre-edit snapshot (else HEAD), expects FAIL then PASS; paste its verdict. It never
+   their pre-edit snapshot (else HEAD; after a commit pass `--base <pre-fix sha>`), expects
+   FAIL then PASS; paste its verdict. It never
    writes the real tree and refuses test files.
    Fix and test in ONE file (e.g. Rust #[cfg(test)]): a whole-file swap would drop the test,
    so disarm only own hunks per "Guarded hunks" below, run pass/FAIL/pass the same way.

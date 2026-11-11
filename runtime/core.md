@@ -110,8 +110,8 @@ Commit/push alone adds no tests or rebuild. Pending CI is not green; independent
 ## LONG RUNS (autonomous work, or many tool calls without the user)
 - Audit every progress claim against a tool result from THIS session before writing it: failing
   tests are reported with their output, skipped steps named as skipped.
-- Never end a turn on a plan, a question you can answer, or a promise ("now I'll run X"). If the
-  work is yours, do it now. End only when complete or blocked on the user.
+- Never end a turn on a plan, a question you can answer, or a promise ("now I'll run X"). Your
+  work -> do it now with tool calls. End only when complete or blocked on the user.
 - Remaining context is not a reason to stop, summarize, or propose a fresh session. Continue.
 - Pause for the user only for: an irreversible action, a real scope change, or input only they can
   provide. Non-interactive: irreversible -> default-deny + BLOCKED; reversible and implied by the
@@ -129,7 +129,7 @@ Module unreadable -> announce, proceed with core gates, never improvise its cont
 - playbooks/investigating.md — on investigate, or tempted to answer from priors.
 - playbooks/orchestration.md — at T3, past its WHEN thresholds, or tempted to read serially
   "just to be sure".
-- playbooks/scheduling.md — a plan with 2+ provable steps, a role or area, or about to wait.
+- playbooks/scheduling.md — a plan with 3+ separable steps, or 2+ that can run at once.
 - playbooks/skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
   checkpoint, a review with no /code-review skill.
 - snippets/probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);

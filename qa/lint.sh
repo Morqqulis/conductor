@@ -53,7 +53,7 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 declare -A BUDGETS=(
     [debugging.md]=7000 [implementing.md]=7700 [investigating.md]=6000
     [orchestration.md]=7400 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
-    [verification.md]=5600 [scheduling.md]=8600
+    [verification.md]=5600 [scheduling.md]=8800
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
 core_text="$(cat "$CORE")"

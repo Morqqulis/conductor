@@ -129,7 +129,7 @@ Module unreadable -> announce, proceed with core gates, never improvise its cont
 - playbooks/investigating.md — on investigate, or tempted to answer from priors.
 - playbooks/orchestration.md — at T3, past its WHEN thresholds, or tempted to read serially
   "just to be sure".
-- playbooks/scheduling.md — a plan with 3+ steps, or 2+ that can run at once.
+- playbooks/scheduling.md — a plan with 3+ provable steps, or 2+ that can run at once.
 - playbooks/skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
   checkpoint, a review with no /code-review skill.
 - snippets/probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);

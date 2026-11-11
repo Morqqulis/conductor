@@ -1,9 +1,9 @@
 # Scheduling Playbook
 
-Load trigger: a plan or spec with 3+ steps, or 2+ that can run at once. For a solo agent, a
-controller, or a session with an area; a dispatched executor follows its dispatch, not this
-file. Dispatching at all -> orchestration.md first: its WHEN and SIZE FLOOR decide whether,
-its HOW writes the prompt.
+Load trigger: a plan or spec with 3+ provable steps, or 2+ that can run at once. For a solo
+agent, a controller, or a session with an area; a dispatched executor follows its dispatch,
+not this file. Dispatching at all -> orchestration.md first: its WHEN and SIZE FLOOR decide
+whether, its HOW writes the prompt.
 
 ## Absolute
 No turn ends on "waiting" while the WAIT LADDER has a rung left.
@@ -13,7 +13,8 @@ No turn ends on "waiting" while the WAIT LADDER has a rung left.
   file, no claims, no branches, no commits unless the user asked. The step list (below,
   without `owner`) lives in the todo entry; accepted = the step's proof passed on the
   working tree.
-- TEAM: executors or other sessions WRITE on the same plan (read-only agents do not count).
+- TEAM: executors or other sessions WRITE on the same plan or checkout (read-only agents do
+  not count).
   Everything below. Chosen before the first edit: entering TEAM over uncommitted work needs
   the user's commit first.
 
@@ -57,10 +58,12 @@ in the todo entry.
 Integration branch: a NEW short-lived branch off the session's working branch, in a
 worktree of its own - the main checkout never switches branch. accepted = proven on the
 step's branch and merged into it - never into the working branch: after the last row ask
-the owner once, merge it or keep the branch (T3: orchestration.md Integration, approval
-first); merged -> delete it. Every step, the controller's own too, runs in a worktree on a
-branch off the integration branch. The user forbade branches -> one writer at a time in the
-main checkout (you or one executor), SOLO acceptance.
+the owner once, merge it or keep the branch (non-interactive: keep it and name it in the
+report; T3: orchestration.md Integration, approval first). Merged -> remove its worktree
+and delete it; kept -> remove the worktree only. Every step, the controller's own too, runs
+in a worktree on a branch off the integration branch. The user forbade branches -> one
+writer at a time in the main checkout (you or one executor), SOLO acceptance, no commit
+constraint.
 - Controller ("architect"): owns the map, the integration branch, dispatch, acceptance and
   the conversation with the owner. Takes no foreground edit orchestration.md would
   dispatch: it stays free for hand-ins and for the owner.
@@ -69,7 +72,8 @@ main checkout (you or one executor), SOLO acceptance.
   No controller: ONE shared map and integration branch, made by whoever comes first; a
   row's owner merges its proven step into the integration branch - the working branch stays
   the user's. Claim a row with a plain `mkdir <main checkout>/.conductor/claims/<id>`
-  (never -p or -Force; PowerShell: `cmd /c mkdir`) - "exists" -> taken, any other error ->
+  (never -p or -Force; PowerShell: `cmd /c mkdir` with a backslash path) - "exists" ->
+  taken, any other error ->
   BLOCKED naming it; a boundary step belongs to whoever claims it first; a claim whose
   session ended -> ask the user to remove it.
 - Adviser: a stronger model where the harness offers one, else a fresh-context agent given
@@ -90,8 +94,9 @@ A verdict never replaces the controller's own look: it reads the load-bearing pa
 diff and the proof output itself (core claim table), then decides. Accepted -> merge into
 the integration branch, remove the step's worktree (clean; leftovers -> inspect first) and
 branch. Returned -> the same executor where the harness can resume it, else a fresh dispatch
-in the same worktree carrying the finding. After Integration, and after the report lists
-every `decided:` line -> delete the map and the claims directory.
+in the same worktree carrying the finding. After the owner's answer, and after the report
+lists every `decided:` line -> delete the map and the claims directory (no controller:
+whoever accepts the last row reports the branch, then deletes both).
 
 ## SPECULATIVE START (TEAM: a step that needs a handed-in, not yet accepted step)
 Independent steps need no permission. A dependent step may start early only when ALL hold:

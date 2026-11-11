@@ -83,6 +83,57 @@ class UnifiedTests(unittest.TestCase):
         self.run_install()
         self.assertEqual(self.installed_bytes(), installed)
 
+    def move_to_another_profile(self):
+        """Copy ~/.claude into a differently named home, as when a folder moves between
+        computers whose user names differ. Returns the old Conductor folder."""
+        old = (self.config / 'conductor').as_posix()
+        self.home = Path(self.temp.name) / 'other profile Я'
+        shutil.copytree(self.config, self.home / '.claude')
+        self.config = self.home / '.claude'
+        self.env.update(HOME=str(self.home), USERPROFILE=str(self.home), CLAUDE_CONFIG_DIR=str(self.config))
+        return old
+
+    def test_install_after_the_folder_was_copied_to_a_differently_named_profile(self):
+        self.run_install('--language', 'Russian')
+        settings = self.config / 'settings.json'
+        data = json.loads(settings.read_bytes())
+        data['model'] = 'personal'
+        settings.write_text(json.dumps(data), encoding='utf-8')
+        self.run_install()  # a foreign key is not a difference in the registrations
+        old = self.move_to_another_profile()
+        output = self.run_install()
+        self.assertIn('hooks re-registered', output)
+        text = (self.config / 'settings.json').read_text(encoding='utf-8')
+        self.assertNotIn(old, text)
+        self.assertIn((self.config / 'conductor').as_posix() + '/hooks/session-start.sh', text)
+        self.assertEqual(json.loads(text)['model'], 'personal')
+        self.assertNotIn(old.encode(), (self.config / 'conductor/core.md').read_bytes())
+        self.assertTrue((self.home / '.gemini/AGENTS.md').is_file())
+        self.assertNotIn('hooks re-registered', self.run_install())  # settled: nothing left to move
+
+    def test_copied_settings_with_a_hand_edited_hook_still_stop_for_review(self):
+        self.run_install('--language', 'Russian')
+        self.move_to_another_profile()
+        settings = self.config / 'settings.json'
+        cases = {
+            'timeout': lambda text: text.replace('"timeout": 10', '"timeout": 99', 1),
+            'second folder': lambda text: text.replace('/conductor/hooks/user-prompt.sh',
+                                                       '/elsewhere/conductor/hooks/user-prompt.sh', 1),
+            'missing entry': lambda text: json.dumps(
+                {k: ({e: v for e, v in val.items() if e != 'SubagentStart'} if k == 'hooks' else val)
+                 for k, val in json.loads(text).items()}),
+        }
+        pristine = settings.read_text(encoding='utf-8')
+        for name, change in cases.items():
+            with self.subTest(change=name):
+                changed = change(pristine)
+                self.assertNotEqual(changed, pristine)
+                settings.write_text(changed, encoding='utf-8')
+                before = self.installed_bytes()
+                output = self.run_install(code=1)
+                self.assertIn('manual review', output)
+                self.assertEqual(self.installed_bytes(), before)
+
     def test_install_restores_a_missing_settings_file(self):
         # Only the conductor folder was copied: the hook registration is gone too.
         self.run_install('--language', 'Russian')

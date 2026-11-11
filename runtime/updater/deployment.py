@@ -53,7 +53,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision, replace
     if not scopes or any(s not in ('claude', 'global') for s in scopes):
         raise ValueError('invalid installation scope')
     previous = load_state(paths, optional=True)
-    replaced, released = [], []
+    replaced, released, moved_from = [], [], None
     if previous.get('keep_values'):
         # An earlier install left the user's changed CLAUDE.md alone. That choice holds for
         # every later install while the file exists; deleting the file hands it back.
@@ -65,6 +65,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision, replace
         checked = prepare(paths, source, previous['revision'], restore_missing=True,
                           replace_modified=replace_modified, keep_values=skip_values)
         observed, replaced, released = checked.expected, checked.replaced, checked.released
+        moved_from = checked.moved_from
         if released:
             # The changed personal CLAUDE.md stays exactly as it is and leaves the record, so
             # no later update or removal stops because of it.
@@ -91,7 +92,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision, replace
         owned['claude-values'] = previous['files']['claude-values']
     changes = UpdatePlan(observed)
     changes.scopes = sorted(selected)
-    changes.replaced, changes.released = replaced, released
+    changes.replaced, changes.released, changes.moved_from = replaced, released, moved_from
 
     def stage(key, value):
         current = observed.setdefault(key, read(paths.target(key)))

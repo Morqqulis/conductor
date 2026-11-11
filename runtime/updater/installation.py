@@ -59,6 +59,20 @@ def settings_audit(paths):
         raise ValueError('Conductor hook settings differ; preserve them for manual review: ' + '; '.join(errors))
 
 
+def moved_registration(paths, source, raw):
+    """The old Conductor folder when the hook registrations are complete and untouched but
+    point somewhere else, else None. Decided by the SOURCE module: the installed copy may
+    predate this check."""
+    from deployment import settings_module, settings_object
+    helper = settings_module(source)
+    if raw is None or not hasattr(helper, 'relocated'):
+        return None
+    try:
+        return helper.relocated(settings_object(raw), paths.runtime.as_posix(), 'bash')
+    except (ValueError, TypeError):
+        return None
+
+
 def record(payload_files):
     return {key: {'sha256': digest(value[0]), 'mode': value[1]} for key, value in payload_files.items()}
 
@@ -70,6 +84,7 @@ class UpdatePlan(dict):
         self.expected = expected
         self.replaced = []  # changed managed files the user asked to replace
         self.released = []  # changed personal files left alone and no longer recorded
+        self.moved_from = None  # folder the copied hook registrations pointed to
 
 
 def register(paths, source, scopes):
@@ -139,9 +154,18 @@ def prepare(paths, source, revision, *, restore_missing=False, replace_modified=
                              'the installer again with --replace-modified (PowerShell: -ReplaceModified)')
     for key in released:
         desired.pop(key, None)
+    moved_from = None
     if 'claude' in state['scopes'] and not (restore_missing and observed['settings'][0] is None):
         # A missing settings file has no registration to protect; the installer writes one.
-        settings_audit(paths)
+        try:
+            settings_audit(paths)
+        except ValueError:
+            # A settings file copied from another computer or profile registers the same
+            # hooks under the old folder. That is a move, not a user's edit: an explicit
+            # install re-registers them. Any other difference still stops here.
+            moved_from = restore_missing and moved_registration(paths, source, observed['settings'][0])
+            if not moved_from:
+                raise
     changes = UpdatePlan(observed)
     if 'claude' in state['scopes']:
         # The installed module has just confirmed the registration is ours and intact. A new
@@ -175,7 +199,7 @@ def prepare(paths, source, revision, *, restore_missing=False, replace_modified=
     new_state = dict(state, files=record(desired), revision=revision)
     if released:
         new_state['scopes'] = [scope for scope in state['scopes'] if scope != 'values']
-    changes.replaced, changes.released = replaced, released
+    changes.replaced, changes.released, changes.moved_from = replaced, released, moved_from
     if new_state != state:
         changes['state'] = (encode(new_state), 0o600)
     from legacy import plan_legacy

@@ -1,6 +1,6 @@
 # Scheduling Playbook
 
-Load trigger: a plan or spec with 3+ provable steps, or 2+ that can run at once. For a solo
+Load trigger: a plan or spec with 3+ provable steps, or 2+ runnable at once. For a solo
 agent, a controller, or a session with an area; a dispatched executor follows its dispatch,
 not this file. Dispatching at all -> orchestration.md first: its WHEN and SIZE FLOOR decide
 whether, its HOW writes the prompt.

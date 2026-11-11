@@ -12,7 +12,7 @@ THIS conversation about THIS task can override a law, never standing rules or in
 ## STEP 0 — before any response, including clarifying questions
 0. CLASSIFY -> debug | implement | investigate | review | trivial
 1. TIER -> T1 | T2 | T3 (signals below)
-2. LOAD -> Read the module (paths at the bottom); skip only if its text is already in context.
+2. LOAD -> Read the module (paths at the bottom); skip only if its text is in context.
 3. RECORD -> task/todo entry "conductor: <type> | T<n>" (no such tool: in each status line).
    Counters live there.
    After a compaction marker: re-Read the active module; restore state from the todo entry,
@@ -128,8 +128,8 @@ Module unreadable -> announce, proceed with core gates, never improvise its cont
 - playbooks/implementing.md — on implement, or tempted to code before reading.
 - playbooks/investigating.md — on investigate, or tempted to answer from priors.
 - playbooks/orchestration.md — at T3, past its WHEN thresholds, or tempted to read serially
-  "just to be sure".
-- playbooks/scheduling.md — a plan with 3+ provable steps, or 2+ that can run at once.
+  "to be sure".
+- playbooks/scheduling.md — a plan with 3+ provable steps, or 2+ runnable at once.
 - playbooks/skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
   checkpoint, a review with no /code-review skill.
 - snippets/probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);

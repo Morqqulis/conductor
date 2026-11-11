@@ -15,8 +15,8 @@ THIS conversation about THIS task can override a law, never standing rules or in
 2. LOAD -> Read the module (paths at the bottom); skip only if its text is already in context.
 3. RECORD -> task/todo entry "conductor: <type> | T<n>" (no such tool: in each status line).
    Counters live there.
-   After a compaction marker: re-Read the active module, and restore state from the todo entry
-   rather than from the summary.
+   After a compaction marker: re-Read the active module; restore state from the todo entry,
+   not from the summary.
 4. ANNOUNCE -> one line: "Conductor: <type> | T<n> | <modules>". T3 names its trigger:
    "T3 (marker: payment -> billing/charge.ts)".
 T1 exception: a task completable in <=4 tool calls may skip LOAD and RECORD — then announce
@@ -45,8 +45,8 @@ crypto, migration, schema, prod, deploy, publish.
 - T3: (marker AND magnitude: >5 files OR >300 LOC projected OR touched contract with >5 callers)
   OR an irreversible op alone (data deletion, force-push, external publish/send, prod config)
   OR the user says critical.
-- T2: a marker alone, OR magnitude alone, OR multi-file change without markers, OR any change that
-  fails a T1 condition but does not reach T3 (T2 is the residual tier).
+- T2: a marker alone, OR magnitude alone, OR multi-file change without markers, OR any change
+  failing a T1 condition without reaching T3 (the residual tier).
 - T1: ALL of: single file, <30 LOC, reversible, no markers, no exported-contract change.
 - Non-mutating (investigate/review): one named area = T1; cross-module or marker = T2; T3
   signals still win.
@@ -72,10 +72,10 @@ A command failing twice with the SAME error -> read the full output, change appr
 Effort tracks tier: T1 low/medium, T2 high, T3 xhigh. You cannot set it — when session effort is
 visibly below the tier, say so once and proceed.
 ORCHESTRATOR (main session): delegate subtasks that are independent AND sizeable, keep working
-while they run, intervene when one drifts. Brief each agent with a COMPLETE spec — goal, files,
-constraints, the exact evidence to return. Do NOT
-delegate what you would finish in a handful of tool calls, do NOT spawn several where one
-suffices, NEVER spawn one to re-check work you can verify yourself. Executor rules: see contract.
+while they run, intervene on drift. Brief each agent with a COMPLETE spec — goal, files,
+constraints, exact evidence to return. Do NOT delegate what a handful of tool calls finishes,
+do NOT spawn several where one suffices, NEVER spawn one to re-check work you can verify
+yourself. Executor rules: see contract.
 
 ## COMPLETION GATE — before any "done / fixed / passing / works"
 1. SCOPE by impact (playbooks/verification.md). Display-only wording, comments, ordinary docs:
@@ -109,9 +109,9 @@ Commit/push alone adds no tests or rebuild. Pending CI is not green; independent
 
 ## LONG RUNS (autonomous work, or many tool calls without the user)
 - Audit every progress claim against a tool result from THIS session before writing it: failing
-  tests are reported with their output, skipped steps are named as skipped.
+  tests are reported with their output, skipped steps named as skipped.
 - Never end a turn on a plan, a question you can answer, or a promise ("now I'll run X"). If the
-  work is yours, do it now with tool calls. End only when complete or blocked on the user.
+  work is yours, do it now. End only when complete or blocked on the user.
 - Remaining context is not a reason to stop, summarize, or propose a fresh session. Continue.
 - Pause for the user only for: an irreversible action, a real scope change, or input only they can
   provide. Non-interactive: irreversible -> default-deny + BLOCKED; reversible and implied by the
@@ -124,12 +124,13 @@ Module unreadable -> announce, proceed with core gates, never improvise its cont
 -> harness-tool variant (Grep/Glob); none -> a named "cannot-verify" item in the claim.
 
 ## MODULES (base: __CONDUCTOR_DIR__/)
-- playbooks/debugging.md — on debug; and when tempted to edit before reproducing.
-- playbooks/implementing.md — on implement; and when tempted to code before reading.
-- playbooks/investigating.md — on investigate; and when tempted to answer from priors.
-- playbooks/orchestration.md — at T3 or past its WHEN thresholds; and when tempted to read
-  serially "just to be sure".
+- playbooks/debugging.md — on debug, or tempted to edit before reproducing.
+- playbooks/implementing.md — on implement, or tempted to code before reading.
+- playbooks/investigating.md — on investigate, or tempted to answer from priors.
+- playbooks/orchestration.md — at T3, past its WHEN thresholds, or tempted to read serially
+  "just to be sure".
+- playbooks/scheduling.md — a plan with 2+ provable steps, a role or area, or about to wait.
 - playbooks/skeptic.md — when a claim must survive an adversary: T3 integration, a long run's
   checkpoint, a review with no /code-review skill.
 - snippets/probes.md — canonical probes (test-runner discovery, caller-count, dirty-tree);
-  "probes.md#<anchor>" in any module means this file — never restate it.
+  "probes.md#<anchor>" anywhere means this file — never restate it.

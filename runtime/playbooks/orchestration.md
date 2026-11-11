@@ -77,8 +77,8 @@ products in rules or prompts — generations rotate)
   area — the difference must be empty. Any file outside it is a finding, including edits
   beside a boundary refusal. Then the impact-selected checks, then the skeptic when required
   by its invocation rules; no automatic full suite for independent, proven leaf edits.
-- Dispatch the longest task first. Acceptance follows scheduling.md ACCEPTANCE PIPELINE:
-  skeptics run in parallel on frozen hand-ins; only the controller's decisions stay serial.
+- Dispatch the longest task first. Acceptance follows scheduling.md HAND-IN AND ACCEPTANCE:
+  skeptics run in parallel on handed-in shas; only the controller's decisions stay serial.
 
 ## Routing (controller-side, per returned status)
 - DONE -> verify by artifact: inspect the diff / run the check yourself. The report is never

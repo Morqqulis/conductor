@@ -11,8 +11,8 @@ the user.
 No subagent capability available -> inline mode (below).
 A verdict binds only a tree that did not change during the round: with parallel mutators
 still active IN THAT TREE, serialize first (orchestration.md) — a verdict over a moving tree
-is void. A hand-in frozen in its own worktree is a still tree: its skeptic runs while other
-executors work elsewhere (scheduling.md).
+is void. A handed-in sha in a worktree of its own is a still tree: its skeptic runs while
+other executors work elsewhere (scheduling.md).
 
 NOT a skeptic's job: re-checking your own edit with applicable proof. That verifier only
 re-derives evidence you already hold, and pays a full context to

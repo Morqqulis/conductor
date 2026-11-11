@@ -159,6 +159,26 @@ class CompanionsTest(unittest.TestCase):
         self.assertEqual(line, f"OK already enabled ({COMMUNITY})", output)
         self.assertEqual(calls, [LIST], output)
 
+    def test_list_with_only_the_synced_section_means_no_local_plugin(self):
+        # A new computer: nothing installed locally, the account syncs plugins from claude.ai.
+        # The list then has no "Installed plugins:" header and no "No plugins installed" line.
+        body = ("\n  > pdf-viewer@synced\n    Version: 0.2.0\n"
+                "    Path: /fixture/synced/pdf-viewer\n    Status: √ loaded\n\n"
+                "  > superpowers@synced\n    Version: 1.0.0\n"
+                "    Path: /fixture/synced/superpowers\n    Status: √ loaded\n")
+        for heading in ("Synced from claude.ai:\n",
+                        "Synced from claude.ai — sync is off in this shell; these load only in a synced session:\n"):
+            with self.subTest(heading=heading):
+                line, calls, output = self.run_installer([heading + body], {INSTALL: (0, "installed")})
+                self.assertEqual(line, "OK installed (claude-plugins-official)", output)
+                self.assertEqual(calls, [LIST, INSTALL], output)
+
+    def test_unknown_text_before_the_synced_section_is_still_not_evidence(self):
+        synced = "Synced from claude.ai:\n\n  > pdf-viewer@synced\n    Status: √ loaded\n"
+        for listing in ("garbage\n" + synced, record() + synced):
+            with self.subTest(listing=listing):
+                self.assert_failure([listing])
+
     def test_status_is_bound_to_exact_record_not_nearby_lines(self):
         listings = [
             HEADER + record(state="disabled", extra="    Path: /fixture/plugin\n    Note: local\n"),

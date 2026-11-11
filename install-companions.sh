@@ -80,7 +80,9 @@ superpowers_state() {
         /^No plugins installed\. Use `claude plugin install` to install a plugin\.$/ {
             empty++; next
         }
-        /^Synced from claude\.ai / { finish(); synced = 1 }
+        # Two observed headings: "Synced from claude.ai:" and "Synced from claude.ai - sync
+        # is off in this shell; ...:". Both open the section that ends the local list.
+        /^Synced from claude\.ai[ :]/ { finish(); synced = 1 }
         synced { next }
         /^[[:space:]]*$/ { finish(); next }
         /^  > [a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+$/ {
@@ -99,8 +101,12 @@ superpowers_state() {
         { invalid = 1 }
         END {
             finish()
+            # Three complete shapes: installed plugins, the explicit "none installed" line,
+            # or - on a computer with no local plugins whose account syncs some from
+            # claude.ai - the synced section alone. Synced plugins are not local installs.
             if (invalid || !((header == 1 && records > 0 && !empty) ||
-                             (empty == 1 && !header && !records))) exit 1
+                             (empty == 1 && !header && !records) ||
+                             (synced && !header && !records && !empty))) exit 1
             if (enabled != "") print "enabled " enabled
             else if (disabled != "") print "disabled " disabled
             else print "absent"

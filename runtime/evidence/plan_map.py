@@ -96,7 +96,7 @@ def parse(text):
             continue
         cells = _cells(line)
         if closed:
-            if len(cells) >= len(COLUMNS) and cells[-1].lower() in ('light', 'heavy'):
+            if len(cells) >= len(COLUMNS):
                 raise ValueError(f'work map line {number}: a step row after a blank line - the table '
                                  f'must be one block, or this step would be silently left out')
             continue

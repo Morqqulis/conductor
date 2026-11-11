@@ -67,7 +67,7 @@ class MapTest(unittest.TestCase):
             "no proof command": head + "A | s | a | - | - | light\n",
             "must be 1-32 letters": head + "A B | s | a | - | t | light\n",
             "id 'a' is already used": head + "A | s | a | - | t | light\na | s | b | - | t | light\n",
-            "a step row after a blank line": head + "A | s | a | - | t | light\n\nB | s | b | - | t | heavy\n",
+            "a step row after a blank line": head + "A | s | a | - | t | light\n\nB | s | b | - | t | Heavy.\n",
             "id 'a..b' must be": head + "a..b | s | a | - | t | light\n",
             "id 'a--b' must be": head + "a--b | s | a | - | t | light\n",
             "id 'z.' must be": head + "z. | s | a | - | t | light\n",
@@ -327,6 +327,46 @@ class PlanTest(unittest.TestCase):
                      "handin", "C", sha)
         self.finding("plan/demo--C is merged into plan/demo without a hand-in")
 
+    def test_a_later_clean_commit_does_not_launder_an_earlier_one_merged_by_hand(self):
+        self.ok("start", "C")
+        bad = self.commit("C", "src/smuggled.py")
+        self.merge(bad)  # by hand, around the check
+        self.commit("C", "docs/guide.md")
+        self.refused("outside its area", "handin", "C", "plan/demo--C")
+        self.finding("C changed files outside its area: src/smuggled.py")
+
+    def test_work_built_on_a_returned_handin_is_named_until_it_is_rebased(self):
+        self.ok("start", "A")
+        first = self.commit("A", "src/money.py", "CENTS = 1\n")
+        self.ok("handin", "A", first)
+        self.ok("start", "B", "--on", "A")
+        self.ok("handin", "B", self.commit("B", "src/invoice.py"))
+        self.ok("return", "A")
+        fixed = self.commit("A", "src/money.py", "CENTS = 4\n")
+        self.ok("handin", "A", fixed)
+        self.ok("accept", "A")
+        self.drop("A")
+        self.finding("B starts from a hand-in of A that was returned")
+        self.refused("still starts from a hand-in of A that was returned", "accept", "B")
+        self.refused("is not newer than the commit B starts from", "rebased", "B", first + "~1")
+        self.git("rebase", "--quiet", "--onto", fixed, first, cwd=self.tree("B"))
+        self.ok("rebased", "B", fixed)
+        self.ok("handin", "B", "plan/demo--B")
+        self.ok("accept", "B")
+
+    def test_two_sessions_start_steps_that_share_an_area_never_both(self):
+        self.write_map(MAP.replace("| docs/ |", "| docs/, src/money.py |"))
+        for attempt in range(8):
+            runs = [subprocess.Popen([PY, "-B", str(PLAN), "start", identifier], cwd=str(self.repo),
+                                     env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    for identifier in ("A", "C")]
+            results = [(run.communicate(timeout=120)[0], run.returncode) for run in runs]
+            self.assertLessEqual([code for _, code in results].count(0), 1, results)
+            for identifier in ("A", "C"):
+                self.plan("release", identifier)
+                subprocess.run(["git", "-C", str(self.repo), "branch", "-D", f"plan/demo--{identifier}"],
+                               capture_output=True)
+
     def test_an_accepted_step_stays_accepted_whatever_the_history_does_next(self):
         self.accept("A", "src/money.py")
         self.ok("start", "C")
@@ -354,10 +394,53 @@ class PlanTest(unittest.TestCase):
         self.git("add", "-A", cwd=tree)
         self.git("commit", "--quiet", "-m", "meanwhile", cwd=tree)
         before = self.git("rev-parse", "plan/demo")
-        self.refused("does not merge into plan/demo cleanly", "accept", "C")
+        self.refused("conflicts with plan/demo. Merge plan/demo INTO plan/demo--C, plan.py rebased C",
+                     "accept", "C")
         self.assertEqual(self.git("rev-parse", "plan/demo"), before)
         self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
         self.assertIn("to accept: C", self.ok("status"))
+        # the way out the refusal names: update the branch, withdraw the hand-in at no round, hand in again
+        subprocess.run(["git", "-C", str(self.tree("C")), "merge", "plan/demo"], capture_output=True, env=self.env)
+        (self.tree("C") / "docs/guide.md").write_text("both\n", encoding="utf-8")
+        self.git("add", "-A", cwd=self.tree("C"))
+        self.git("commit", "--quiet", "-m", "resolve", cwd=self.tree("C"))
+        self.assertIn("withdrawn (no round counted)", self.ok("rebased", "C", "plan/demo"))
+        self.ok("handin", "C", "plan/demo--C")
+        self.ok("accept", "C")
+        # a failure that is not a conflict says what git said, not "merge and redo"
+        self.ok("start", "A")
+        self.ok("handin", "A", self.commit("A", "src/money.py", "CENTS = 1\n"))
+        nobody = dict(self.env, GIT_COMMITTER_NAME="", GIT_COMMITTER_EMAIL="", GIT_AUTHOR_NAME="",
+                      GIT_AUTHOR_EMAIL="", GIT_CONFIG_GLOBAL=str(self.top / "none"), GIT_CONFIG_NOSYSTEM="1",
+                      EMAIL="")
+        done = subprocess.run([PY, "-B", str(PLAN), "accept", "A"], cwd=str(self.repo), env=nobody,
+                              capture_output=True, text=True)
+        if done.returncode:  # some systems still invent an identity; then the merge simply works
+            self.assertIn("git could not merge", done.stderr)
+            self.assertIn("nothing was changed", done.stderr)
+            self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
+            self.ok("accept", "A")
+
+    def test_accept_never_touches_work_left_in_the_integration_worktree(self):
+        self.ok("start", "C")
+        self.ok("handin", "C", self.commit("C", "docs/guide.md"))
+        tree = self.top / "integration"
+        (tree / "src/money.py").write_text("CENTS = 77\n", encoding="utf-8")  # somebody's unsaved edit
+        self.refused("has uncommitted changes: finish or clear that first; nothing was touched", "accept", "C")
+        self.assertEqual((tree / "src/money.py").read_text(encoding="utf-8"), "CENTS = 77\n")
+        self.git("checkout", "--", "src/money.py", cwd=tree)
+        self.git("branch", "side", "main")
+        self.git("worktree", "add", "--quiet", str(self.top / "side"), "side")
+        (self.top / "side/src/money.py").write_text("CENTS = 5\n", encoding="utf-8")
+        self.git("commit", "--quiet", "-am", "side", cwd=self.top / "side")
+        (tree / "src/money.py").write_text("CENTS = 6\n", encoding="utf-8")
+        self.git("commit", "--quiet", "-am", "ours", cwd=tree)
+        subprocess.run(["git", "-C", str(tree), "merge", "side"], capture_output=True, env=self.env)
+        (tree / "src/money.py").write_text("RESOLVED\n", encoding="utf-8")  # a merge somebody is resolving
+        self.git("add", "src/money.py", cwd=tree)
+        self.refused("has an unfinished merge", "accept", "C")
+        self.assertEqual((tree / "src/money.py").read_text(encoding="utf-8"), "RESOLVED\n")
+        self.git("rev-parse", "--verify", "MERGE_HEAD", cwd=tree)  # still there
         self.git("worktree", "remove", "--force", str(tree))
         self.refused("is checked out nowhere", "accept", "C")
 

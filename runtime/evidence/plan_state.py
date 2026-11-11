@@ -18,7 +18,8 @@ ready      not started, every need accepted, no live step may write the same pat
 waiting    not started: a need is not accepted, or a live step holds part of its area
 
 Work that reached B around plan.py - a branch or hand-in merged by hand - is never read as
-accepted; it is named. refs/conductor/ is not a branch or tag namespace: `git push` and
+accepted; it is named. Known limit: a commit made directly on B is not detected (it cannot
+be told from the owner's commits that reach B when their branch is merged in). refs/conductor/ is not a branch or tag namespace: `git push` and
 `git tag` never see it.
 """
 from dataclasses import dataclass, field
@@ -80,18 +81,19 @@ def changed(repo, older, newer):
     return [path for path in out.split('\0') if path]
 
 
-def outside(repo, step, base, tip, integration):
-    """Files the step itself changed outside its area. A file counts only when it differs
-    both from the step's start and from the point where the branch last met the integration
-    branch: accepted work merged INTO the step's branch is not the step's own change. (A tip
-    that is already inside the integration branch is refused before this is asked.)"""
+def outside(repo, step, base, tip):
+    """Files the step itself changed outside its area: files that differ between its start
+    and its tip AND were touched by a commit on the branch's own line (first parents; for a
+    merge commit only what the merge itself changed). Work merged INTO the step's branch
+    from the integration branch is on the other line and is not the step's change - and
+    this does not depend on what was merged where afterwards."""
     files = changed(repo, base, tip)
-    if integration and files:
-        code, met = git(repo, 'merge-base', tip, integration, ok=(0, 1))
-        if code == 0 and met.strip() != base:
-            own = set(changed(repo, met.strip(), tip))
-            files = [path for path in files if path in own]
-    return [path for path in files if not plan_map.in_area(step, path)]
+    if not files:
+        return []
+    out = git(repo, 'log', '--first-parent', '-c', '--name-only', '--no-renames', '--format=', '-z',
+              f'{base}..{tip}')[1]
+    own = {path.strip('\n') for path in out.split('\0')}
+    return [path for path in files if path in own and not plan_map.in_area(step, path)]
 
 
 @dataclass
@@ -106,6 +108,7 @@ class Row:
     speculative: tuple = ()
     waiting: tuple = ()
     held: str = None        # a live step that may write part of this step's area
+    stale: str = None       # a need whose returned hand-in this step still starts from
     worktree: str = None
 
 
@@ -167,6 +170,11 @@ def read(repo, plan):
     elif len(accepted) < len(plan.steps):
         findings.append(f'integration branch {plan.branch} does not exist: nothing can be started or accepted')
     _, trees = worktrees(repo)
+    old = {}  # id -> every commit of that step that was handed in and returned
+    for ref, sha in refs.items():
+        lead = f'{SPACE}returned/{plan.branch}/'
+        if ref.startswith(lead):
+            old.setdefault(ref[len(lead):].split('/')[0], set()).add(sha)
     rows = {}
     for identifier, step in plan.steps.items():
         branch = key(plan, identifier)
@@ -209,6 +217,12 @@ def read(repo, plan):
                 findings.append(f'{identifier} is speculative on {need}, which is itself not on accepted '
                                 f'ground: speculative depth is 1')
         row.speculative = open_needs
+        for need in step.needs:
+            if row.base in old.get(need, ()):
+                row.stale = need
+                findings.append(f'{identifier} starts from a hand-in of {need} that was returned: rebase it '
+                                f'onto what {need} became, run plan.py rebased {identifier} <that commit>, '
+                                f'prove again')
         if not row.tip:
             findings.append(f'{identifier} is {row.state} but its branch {branch} is gone')
             continue
@@ -225,7 +239,7 @@ def read(repo, plan):
         if not row.handin and row.commits and HEADS + branch in merged:
             findings.append(f'{identifier}: {branch} is merged into {plan.branch} without a hand-in: '
                             f'its area was never checked')
-        stray = outside(repo, step, row.base, row.tip, integration)
+        stray = outside(repo, step, row.base, row.tip)
         if stray:
             shown = ', '.join(safe(path) for path in stray[:5])
             findings.append(f'{identifier} changed files outside its area: {shown}'

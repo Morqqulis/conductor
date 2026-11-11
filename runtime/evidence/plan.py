@@ -148,11 +148,13 @@ def start(args, plan, state):
             time.sleep(0.1)
         raise ValueError(f'cannot record the start of {args.id}: {error}')
     # Two sessions may have claimed two steps with a shared area in the same moment, each
-    # before the other's record existed: look again, and the later id gives way.
+    # before the other's record existed: look again. Whoever sees the other gives way - at
+    # worst both do, and one of them simply starts again.
     found = plan_state.clash(plan, plan_state.read(args.repo, plan).rows, state.files, args.id)
-    if found and found[0] < args.id:
+    if found:
         git(args.repo, 'update-ref', '-d', record, ok=(0, 1, 128))
-        raise Refused(f'{args.id} may write {found[1]}, and {found[0]} was started in the same moment')
+        raise Refused(f'{args.id} may write {found[1]}, and {found[0]} was started in the same moment: '
+                      f'run plan.py status and try again if {args.id} is still ready')
     try:
         git(args.repo, 'branch', '--no-track', branch, base)
     except ValueError:
@@ -184,10 +186,12 @@ def handin(args, plan, state):
     if not plan_state.is_ancestor(args.repo, row.base, sha):
         raise Refused(f'{branch} does not contain the commit it started from ({row.base[:9]}); '
                       f'after a rebase run plan.py rebased {args.id} <new base> first')
-    stray = plan_state.outside(args.repo, row.step, row.base, sha, state.integration)
+    stray = plan_state.outside(args.repo, row.step, row.base, sha)
     if stray:
         raise Refused(f'{args.id} changed files outside its area ({", ".join(row.step.area)}):\n  '
-                      + '\n  '.join(plan_state.safe(path) for path in stray))
+                      + '\n  '.join(plan_state.safe(path) for path in stray)
+                      + f'\n(a branch fast-forwarded onto newer work shows that work as its own: '
+                        f'plan.py rebased {args.id} <the commit it now builds on>)')
     git(args.repo, 'update-ref', name('handin', plan, args.id), sha, '')
     print(f'handed in {args.id} at {sha[:9]}: area clean, {row.commits} commit(s)')
     return 0
@@ -209,15 +213,30 @@ def accept(args, plan, state):
     if row.tip != row.handin:
         raise Refused(f'{branch} moved after the hand-in {row.handin[:9]}: that hand-in is void - '
                       f'plan.py return {args.id}, then a new hand-in')
+    if row.stale:
+        raise Refused(f'{args.id} still starts from a hand-in of {row.stale} that was returned: rebase it, '
+                      f'plan.py rebased {args.id} <new base>, prove again, hand in the new commit')
     tree = state.trees.get(plan.branch)
     if not tree:
         raise Refused(f'{plan.branch} is checked out nowhere: it needs a worktree of its own to merge in')
+    # Never touch work somebody left in that worktree: an unfinished merge or an edit of a
+    # tracked file is refused BEFORE anything runs, so the abort below only ever undoes ours.
+    busy = git(tree, 'rev-parse', '--verify', '--quiet', 'MERGE_HEAD', ok=(0, 1, 128))[0] == 0
+    if busy or git(tree, 'status', '--porcelain', '--untracked-files=no')[1].strip():
+        raise Refused(f'the worktree of {plan.branch} ({tree}) has '
+                      + ('an unfinished merge' if busy else 'uncommitted changes')
+                      + ': finish or clear that first; nothing was touched')
     message = f'Accept {args.id}: {row.step.title}'
-    code, out = git(tree, 'merge', '--no-ff', '--no-edit', '-m', message, row.handin, ok=(0, 1, 2, 128))
-    if code:
+    try:
+        git(tree, 'merge', '--no-ff', '--no-edit', '-m', message, row.handin)
+    except ValueError as error:
+        conflict = git(tree, 'diff', '--name-only', '--diff-filter=U', ok=(0, 1, 128))[1].strip()
         git(tree, 'merge', '--abort', ok=(0, 1, 128))
-        raise Refused(f'{row.handin[:9]} does not merge into {plan.branch} cleanly (or its worktree {tree} '
-                      f'is not clean). Merge {plan.branch} INTO {branch}, prove again, hand in the new commit')
+        if conflict:
+            raise Refused(f'{row.handin[:9]} conflicts with {plan.branch}. Merge {plan.branch} INTO {branch}, '
+                          f'plan.py rebased {args.id} <tip of {plan.branch}>, prove again, hand in the new commit')
+        raise Refused(f'git could not merge {row.handin[:9]} into {plan.branch}; nothing was changed, '
+                      f'try again once this is fixed: {error}')
     git(args.repo, 'update-ref', name('accepted', plan, args.id), row.handin, '')
     print(f'accepted {args.id}: {row.handin[:9]} merged into {plan.branch}')
     print(f'next: remove the worktree of {branch}, then git branch -D {branch}')
@@ -241,8 +260,9 @@ def rebased(args, plan, state):
     if not row.base or not row.tip or row.state == 'accepted':
         raise Refused(f'{args.id} is {row.state}: only a started, not accepted step with a branch can be rebased')
     sha = commit(args.repo, args.sha)
-    if row.handin and sha == row.base:
-        raise Refused(f'{args.id} already starts from {sha[:9]}: to send a hand-in back use plan.py return')
+    if row.handin and plan_state.is_ancestor(args.repo, sha, row.base):
+        raise Refused(f'{sha[:9]} is not newer than the commit {args.id} starts from: '
+                      f'to send a hand-in back use plan.py return')
     if not plan_state.is_ancestor(args.repo, sha, row.tip):
         raise Refused(f'{sha[:9]} is not in {plan_state.key(plan, args.id)}')
     on_plan = state.integration and plan_state.is_ancestor(args.repo, sha, state.integration)

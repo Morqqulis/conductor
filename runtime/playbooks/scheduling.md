@@ -101,9 +101,9 @@ executors and other skeptics. Its files slot carries the HEAVY LANES rule and th
 path.
 A verdict never replaces the controller's own look: it reads the load-bearing part of the
 diff and the proof output itself (core claim table), then decides. Accepted -> `P accept
-<id>`: it merges that sha into the integration branch and records it; refused for a
-conflict -> merge the integration branch INTO the step's branch, prove again, a new
-hand-in. Then remove the step's worktree (clean; leftovers -> inspect first) and branch.
+<id>`: it merges that sha into the integration branch and records it; refused -> do what
+the refusal names (a conflict: update the step's branch, `P rebased`, prove, hand in
+anew). Then remove the step's worktree (clean; leftovers -> inspect first) and branch.
 Returned -> `P return <id>` (it counts the round), then the same executor where the
 harness can resume it, else a fresh dispatch in the same worktree carrying the finding.
 After the owner's answer (non-interactive: after the report), and after the report lists

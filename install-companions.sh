@@ -65,10 +65,15 @@ find_python() {
 # An unknown/truncated format is not evidence that a plugin is absent or enabled.
 superpowers_state() {
     awk '
+        # The first thing that made the list unreadable goes to stderr, so a refusal names
+        # the line instead of leaving the user and the maintainer to guess.
+        function bad(why) {
+            if (!invalid) { invalid = 1; reason = why; where = NR; what = $0 }
+        }
         function finish() {
             if (id == "") return
             records++
-            if (statuses != 1 || state == "") invalid = 1
+            if (statuses != 1 || state == "") bad("plugin " id " has no single known Status before")
             if (id ~ /^superpowers@[a-zA-Z0-9._-]+$/) {
                 if (state == "enabled" && enabled == "") enabled = id
                 if (state == "disabled" && disabled == "") disabled = id
@@ -93,20 +98,28 @@ superpowers_state() {
             value = $0; sub(/^    Status: /, "", value)
             if (value ~ /^([^[:alnum:][:space:]]+[[:space:]]+)?enabled$/) state = "enabled"
             else if (value ~ /^([^[:alnum:][:space:]]+[[:space:]]+)?disabled$/) state = "disabled"
-            else invalid = 1
-            if (id == "") invalid = 1
+            else bad("unknown Status value at")
+            if (id == "") bad("Status outside a plugin record at")
             next
         }
-        /^    [a-zA-Z][a-zA-Z ]*: / { if (id == "") invalid = 1; next }
-        { invalid = 1 }
+        /^    [a-zA-Z][a-zA-Z ]*: / { if (id == "") bad("field outside a plugin record at"); next }
+        { bad("unknown text at") }
         END {
             finish()
+            if (invalid) {
+                gsub(/[^ -~]/, "?", what)
+                printf "%s line %d: %s\n", reason, where, substr(what, 1, 100) > "/dev/stderr"
+                exit 1
+            }
             # Three complete shapes: installed plugins, the explicit "none installed" line,
             # or - on a computer with no local plugins whose account syncs some from
             # claude.ai - the synced section alone. Synced plugins are not local installs.
-            if (invalid || !((header == 1 && records > 0 && !empty) ||
-                             (empty == 1 && !header && !records) ||
-                             (synced && !header && !records && !empty))) exit 1
+            if (!((header == 1 && records > 0 && !empty) ||
+                  (empty == 1 && !header && !records) ||
+                  (synced && !header && !records && !empty))) {
+                printf "incomplete list: %d header(s), %d plugin record(s), %d lines\n", header, records, NR > "/dev/stderr"
+                exit 1
+            }
             if (enabled != "") print "enabled " enabled
             else if (disabled != "") print "disabled " disabled
             else print "absent"
@@ -130,8 +143,11 @@ install_superpowers() {
     # justify success or a fresh install that might enable a duplicate copy.
     local plugin_id='' state=''
     if out="$(claude plugin list)"; then
-        if ! state="$(printf '%s\n' "$out" | superpowers_state)"; then
-            outcome superpowers 'FAIL unrecognized plugin list; superpowers state unknown'
+        if ! state="$(printf '%s\n' "$out" | superpowers_state 2>/dev/null)"; then
+            # Second pass only for the reason: the parser names the first line it rejected.
+            local why=''
+            why="$(printf '%s\n' "$out" | superpowers_state 2>&1 >/dev/null)" || true
+            outcome superpowers "FAIL unrecognized plugin list ($(hint "$why")); superpowers state unknown"
             return 0
         fi
     else

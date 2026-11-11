@@ -6,13 +6,24 @@
 # only one of the two environments could catch.
 name: ci
 
+# Every pushed branch is checked, not only main: the Windows half of this suite cannot run on
+# a developer's Linux or cloud session, and without this the only way to see it before main
+# was to open a pull request or to ask a person to test by hand.
 on:
   push:
-    branches: [main]
   pull_request:
+
+# A newer push to the same working branch makes the older run pointless (the Windows job
+# takes about a quarter of an hour). Runs on main are never cancelled.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   checks:
+    # A pull request from a branch of this repository was already checked by its push; only
+    # a pull request from a fork needs a run of its own.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       fail-fast: false
       matrix:

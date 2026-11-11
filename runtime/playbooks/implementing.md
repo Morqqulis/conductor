@@ -73,6 +73,9 @@ a test that pins a date leaves no real clock anywhere, database column defaults 
 Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,
 email or a third-party default is "not verified in the real environment" unless run in one;
 "no warnings / no errors / nothing left" needs the FULL output scanned, with the count shown.
+An automated run on the target platform exists (CI on that OS) -> use it BEFORE asking a
+person to test by hand: push a short-lived branch, read its result. A person's manual run is
+for what automation cannot reach.
 A NEW guard needs remove-only proof at T2+: `conductor/evidence/falsify.py` (debugging.md
 step 6) or, for hunks sharing a file with the test, an isolated copy; fail, then pass.
 Paste both outputs; narrative is not proof. Reuse only while relevant inputs stay unchanged.

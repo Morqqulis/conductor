@@ -37,6 +37,9 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    Claims in the report: behavior that depends on cloud settings, external sign-in, a browser,
    email or a third-party default is "not verified in the real environment" unless run in one;
    "no warnings / no errors / nothing left" needs the FULL output scanned, with the count shown.
+   An automated run on the target platform exists (CI on that OS) -> use it BEFORE asking a
+   person to test by hand: push a short-lived branch, read its result. A person's manual run
+   is for what automation cannot reach.
    - Fail -> attempt N is FAILED, permanently. Renaming it "a refinement of attempt N" is the
      named violation. Increment N and return to step 2.
    Counter rules: the counter resets ONLY if the repro command itself changed AND the user

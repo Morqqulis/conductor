@@ -17,9 +17,10 @@
 # update of every existing installation.
 #
 # Safety: the update is the ordinary transactional `conductor update` (verified source,
-# backup, atomic file replacement). It is bounded by GNU timeout, which sends SIGINT first:
-# the updater turns that into a rollback of the files it had written. Without GNU timeout
-# nothing is attempted, because an unbounded download would hold the session start.
+# backup, atomic file replacement). It is bounded here, in bash: after the limit it gets
+# SIGINT, which the updater turns into a rollback of the files it had written, and 2 s later
+# SIGKILL. No `timeout` program is used: the uutils one that newer Ubuntu ships killed the
+# update at once where GNU timeout sends the requested signal and waits.
 # Companions are skipped here: their updates can take minutes; `conductor update` runs them.
 #
 # Contract: stdin is the hook JSON; stdout and stderr stay empty; the exit status is always
@@ -65,29 +66,44 @@ if [ -z "${HOME:-}" ] || [ ! -x "$launcher" ]; then
     exit 0
 fi
 
-timeout_cmd=''
-if [ -x /usr/bin/timeout ]; then
-    timeout_cmd=/usr/bin/timeout
-else
-    for candidate in gtimeout timeout; do
-        candidate="$(command -v "$candidate" 2>/dev/null)" || continue
-        case "$("$candidate" --version 2>/dev/null)" in *GNU*) timeout_cmd="$candidate"; break ;; esac
+# Job control gives the update its own process group and, unlike a plain background job of
+# a script, leaves SIGINT deliverable to it: without it bash starts the job with SIGINT
+# ignored and the updater could never be asked to roll back.
+set -m 2>/dev/null || { log_event no-job-control 0 0; exit 0; }
+
+pause() { sleep 0.2 2>/dev/null || sleep 1; }
+# wait_gone <pid> <ticks>: true once the process is gone, false after <ticks> pauses.
+wait_gone() {
+    local left="$2"
+    while kill -0 "$1" 2>/dev/null; do
+        [ "$left" -gt 0 ] || return 1
+        left=$((left - 1))
+        pause
     done
-fi
-if [ -z "$timeout_cmd" ]; then
-    log_event no-timeout 0 0
-    exit 0
-fi
+}
 
 started="$SECONDS"
-"$timeout_cmd" -s INT -k 2 "$LIMIT" "$launcher" update --skip-companions </dev/null >/dev/null 2>&1
+"$launcher" update --skip-companions </dev/null >/dev/null 2>&1 &
+pid=$!
+outcome=finished
+if ! wait_gone "$pid" $((LIMIT * 5)); then
+    outcome=interrupted
+    kill -INT "$pid" 2>/dev/null
+    if ! wait_gone "$pid" 10; then
+        # Still running 2 s after SIGINT: stop the whole group. Files already written stay
+        # as they are and the next `conductor update` (this step in the next new session)
+        # rolls them back first.
+        outcome=killed
+        kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null
+    fi
+fi
+wait "$pid" 2>/dev/null
 code=$?
 elapsed=$((SECONDS - started))
-case "$code" in
-    0) log_event updated-or-current 0 "$elapsed" ;;
-    # 137: SIGKILL after the grace period. Files already written stay as they are and the
-    # next `conductor update` (this step in the next new session) rolls them back first.
-    124|137) log_event timed-out "$code" "$elapsed" ;;
-    *) log_event failed "$code" "$elapsed" ;;
+case "$outcome:$code" in
+    finished:0) log_event updated-or-current 0 "$elapsed" ;;
+    finished:*) log_event failed "$code" "$elapsed" ;;
+    interrupted:*) log_event timed-out "$code" "$elapsed" ;;
+    *) log_event killed "$code" "$elapsed" ;;
 esac
 exit 0

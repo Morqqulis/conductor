@@ -32,6 +32,22 @@ case "${STUB_MODE:-}" in
         child=$!
         trap 'kill "$child" 2>/dev/null; printf "interrupted\n" >> "$STUB_LOG"; exit 130' INT
         wait "$child" ;;
+    stubborn)
+        trap '' INT
+        sleep 30 &
+        wait $! ;;
+    python)
+        # The real updater is Python: SIGINT must reach it as KeyboardInterrupt, which is
+        # what its transaction turns into a rollback. A job started with SIGINT ignored
+        # would never see it.
+        exec "$STUB_PYTHON" -c '
+import os, sys, time
+try:
+    time.sleep(30)
+except KeyboardInterrupt:
+    open(os.environ["STUB_LOG"], "a").write("python saw KeyboardInterrupt\n")
+    sys.exit(130)
+' ;;
 esac
 exit 0
 '''
@@ -163,9 +179,24 @@ class CloudUpdateTests(unittest.TestCase):
         # SIGINT first: the real updater turns it into a rollback of the files it wrote.
         events = self.events()
         self.assertEqual(self.calls(), ['called: update --skip-companions', 'interrupted'], self.evidence(events))
-        self.assertEqual(len(events), 1)
-        self.assertIn(events[0]['event'], ('timed-out', 'failed'))
-        self.assertNotEqual(events[0]['exit'], 0)
+        self.assertEqual([(event['event'], event['exit']) for event in events], [('timed-out', 130)])
+
+    @unittest.skipIf(os.name == 'nt', 'signal delivery to a shell child is POSIX-only here')
+    def test_python_updater_receives_the_interrupt_as_keyboardinterrupt(self):
+        core, _ = self.start(mode='python', CONDUCTOR_AUTO_UPDATE_SECONDS='1', STUB_PYTHON=sys.executable)
+        self.assertEqual(core, 'OLD CORE')
+        events = self.events()
+        self.assertEqual(self.calls(), ['called: update --skip-companions', 'python saw KeyboardInterrupt'],
+                         self.evidence(events))
+        self.assertEqual([(event['event'], event['exit']) for event in events], [('timed-out', 130)])
+
+    @unittest.skipIf(os.name == 'nt', 'signal delivery to a shell child is POSIX-only here')
+    def test_update_that_ignores_the_interrupt_is_killed_and_the_session_still_starts(self):
+        core, _ = self.start(mode='stubborn', CONDUCTOR_AUTO_UPDATE_SECONDS='1')
+        self.assertEqual(core, 'OLD CORE')
+        self.assertLess(self.elapsed, 8, self.evidence(self.events()))
+        self.assertGreater(self.elapsed, 2.5, 'the 2 s grace after SIGINT was not given')
+        self.assertEqual([event['event'] for event in self.events()], ['killed'])
 
     def test_out_of_range_limit_falls_back_to_the_default_and_still_updates(self):
         for value in ('0', '7', '600', 'abc', ''):

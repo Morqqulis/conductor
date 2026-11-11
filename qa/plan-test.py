@@ -314,7 +314,7 @@ class PlanTest(unittest.TestCase):
         self.merge("plan/demo--C")  # merged by hand and by name: the tip, not the hand-in
         self.refused("is already inside plan/demo: it was merged by hand", "accept", "C")
         self.drop("C")
-        output = self.finding("its hand-in " + sha[:9] + " is inside plan/demo but plan.py accept never put it there")
+        output = self.finding("its hand-in " + sha[:9] + " is inside plan/demo but plan.py accept never recorded it")
         self.assertIn("0/4 accepted", output)
         self.refused("not accepted yet: A, B, C, D", "finish")
 
@@ -445,8 +445,23 @@ class PlanTest(unittest.TestCase):
         before = self.git("rev-parse", "plan/demo")
         self.refused("git update-ref -d refs/conductor/lock/plan/demo", "accept", "C")
         self.assertEqual(self.git("rev-parse", "plan/demo"), before)
+        output = self.finding("an acceptance lock is held on plan/demo")  # named before anyone trips on it
+        self.assertIn("git merge --abort there", output)
         self.git("update-ref", "-d", "refs/conductor/lock/plan/demo")
         self.ok("accept", "C")
+        self.git("update-ref", "refs/conductor/lock/plan/demo", "main")
+        self.ok("finish", "--abandon")
+        self.assertEqual(self.git("for-each-ref", "refs/conductor"), "")  # the next plan starts clean
+
+    def test_an_early_step_cannot_quietly_undo_the_step_it_was_started_on(self):
+        self.ok("start", "A")
+        self.ok("handin", "A", self.commit("A", "src/money.py", "CENTS = 1\n"))
+        self.ok("start", "B", "--on", "A")
+        self.commit("B", "src/invoice.py")
+        self.ok("status")
+        self.commit("B", "src/money.py", "CENTS = 100\n")  # back to what the integration branch holds
+        self.finding("B changed files outside its area: src/money.py")
+        self.refused("merging B would change files outside its area", "handin", "B", "plan/demo--B")
 
     def test_an_early_step_updated_from_the_integration_branch_is_not_blamed_for_others_work(self):
         self.ok("start", "A")

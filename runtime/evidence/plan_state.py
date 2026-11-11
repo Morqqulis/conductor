@@ -105,7 +105,11 @@ def outside(repo, step, tip, target, integration):
     files = changed(repo, met.strip(), tip)
     if integration and files:
         differs = set(changed(repo, integration, tip))
-        files = [path for path in files if path in differs]
+        # ...but a file the start itself changed stays: putting it back to what the
+        # integration branch holds undoes the step this one was started on.
+        code, root = git(repo, 'merge-base', target, integration, ok=(0, 1))
+        base_own = set(changed(repo, root.strip(), target)) if code == 0 else set()
+        files = [path for path in files if path in differs or path in base_own]
     return [path for path in files if not plan_map.in_area(step, path)]
 
 
@@ -216,7 +220,8 @@ def read(repo, plan):
         row.state = 'handed-in' if row.handin else 'running'
         if name('handin', plan, identifier) in merged:
             findings.append(f'{identifier}: its hand-in {row.handin[:9]} is inside {plan.branch} but '
-                            f'plan.py accept never put it there (merged by hand): {identifier} is not accepted')
+                            f'plan.py accept never recorded it (merged by hand, or an accept was killed '
+                            f'midway): {identifier} is not accepted. Undo that merge, then plan.py accept')
         for need in open_needs:
             need_handin = refs.get(name('handin', plan, need))
             if not need_handin:
@@ -263,6 +268,11 @@ def read(repo, plan):
             lead = f'{SPACE}{kind}/{plan.branch}/'
             if ref.startswith(lead) and ref[len(lead):].split('/')[0] not in plan.steps:
                 findings.append(f'{safe(ref)} belongs to no step of the map')
+    if SPACE + 'lock/' + plan.branch in refs:
+        tree = trees.get(plan.branch, '<its worktree>')
+        findings.append(f'an acceptance lock is held on {plan.branch}: plan.py accept is running, or was '
+                        f'killed midway. If none is running: an unfinished merge in {safe(tree)} is that '
+                        f"run's (git merge --abort there), then git update-ref -d {SPACE}lock/{plan.branch}")
     seen = refs.get(SPACE + 'seen/' + plan.branch)
     if integration and not seen and any(row.base for row in rows.values()):
         findings.append(f'no record of where plan.py last saw {plan.branch}: commits that reach it by hand '

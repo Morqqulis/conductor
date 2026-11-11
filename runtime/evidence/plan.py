@@ -238,8 +238,8 @@ def accept(args, plan, state):
     except ValueError as error:
         if exists(args.repo, lock):
             raise Refused(f'another plan.py accept is merging into {plan.branch} right now: run this again '
-                          f'in a moment. (If none is running, one was killed midway: check the worktree '
-                          f'{tree}, then git update-ref -d {lock})')
+                          f'in a moment. (If none is running, one was killed midway: an unfinished merge in '
+                          f"{tree} is that run's - git merge --abort there - then git update-ref -d {lock})")
         raise ValueError(f'cannot take the acceptance lock: {error}')
     try:
         return merge_in(args, plan, state, row, branch, tree)
@@ -357,6 +357,7 @@ def finish(args, plan, state):
     leads = tuple(f'{plan_state.SPACE}{kind}/{plan.branch}/' for kind in plan_state.KINDS)
     count = 0
     git(args.repo, 'update-ref', '-d', SEEN + plan.branch, ok=(0, 1, 128))
+    git(args.repo, 'update-ref', '-d', LOCK + plan.branch, ok=(0, 1, 128))
     for ref in out.splitlines():
         if ref.startswith(leads):
             git(args.repo, 'update-ref', '-d', ref)

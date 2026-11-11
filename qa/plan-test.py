@@ -757,7 +757,10 @@ class PlanTest(unittest.TestCase):
         self.assertNotIn("report", output)  # a name an executor chose never rides on the reminder
 
     def reminder(self, cwd=None, **extra):
-        env = dict(self.env, CONDUCTOR_HOME=str(self.top / "conductor-home"), **extra)
+        # The widest limit the hook accepts: a busy Windows runner starts Python and git
+        # slowly, and past the limit the line is left out by design.
+        env = dict(self.env, CONDUCTOR_HOME=str(self.top / "conductor-home"))
+        env.update({"CONDUCTOR_PLAN_STATUS_SECONDS": "10", **extra})
         done = subprocess.run([BASH, str(ROOT / "runtime/hooks/user-prompt.sh")], cwd=str(cwd or self.repo),
                               env=env, capture_output=True, text=True, encoding="utf-8", timeout=60,
                               input=json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": "next"}))
@@ -781,6 +784,21 @@ class PlanTest(unittest.TestCase):
         self.assertNotIn("PLAN", text)
         self.assertNotIn("PLAN", self.reminder(cwd=self.tree("A")))
         self.assertNotIn("PLAN", self.reminder(cwd=self.top))
+
+    @unittest.skipIf(os.name == "nt", "a stand-in interpreter must be an executable script")
+    def test_a_slow_machine_loses_the_line_not_the_prompt_and_can_raise_the_limit(self):
+        tools = self.top / "tools"
+        tools.mkdir()
+        for name in ("python3", "python"):
+            slow = tools / name
+            slow.write_text(f'#!/usr/bin/env bash\nsleep 2\nexec "{PY}" "$@"\n', encoding="utf-8")
+            slow.chmod(0o755)
+        path = str(tools) + os.pathsep + os.environ["PATH"]
+        for value, shown in (("1", False), ("10", True)):
+            with self.subTest(limit=value):
+                text = self.reminder(PATH=path, CONDUCTOR_PLAN_STATUS_SECONDS=value)
+                self.assertIn("[Conductor active]", text)
+                self.assertEqual("PLAN plan/demo" in text, shown, text[-200:])
 
     def test_the_map_is_found_from_a_worktree_and_broken_input_is_not_a_verdict(self):
         self.ok("start", "A")

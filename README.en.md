@@ -201,6 +201,18 @@ which names the disagreements between the plan and the facts that git shows. Whi
 one line with that state is added to each of your messages (up to 3 seconds; on any error
 the line is simply not added). To turn the line off, set `CONDUCTOR_PLAN_STATUS=0`.
 
+Three automatic checks run under a time limit and are silently skipped past it, so that
+they never hold the work up. On a slow computer or in a very large project the limit can be
+raised with an environment variable (a whole number of seconds):
+
+| What is limited | Variable | Default | Allowed |
+|---|---|---|---|
+| The plan state line | `CONDUCTOR_PLAN_STATUS_SECONDS` | 3 | 1–10 |
+| Finding lessons for a message | `CONDUCTOR_RECALL_SECONDS` | 3 | 1–10 |
+| Syntax check of shell and JavaScript files after an edit | `CONDUCTOR_SYNTAX_CHECK_SECONDS` | 5 | 1–60 |
+
+An unusable value means the default limit.
+
 ### Install, update and remove from any directory
 
 The global command lives in `~/.local/bin` (`conductor.cmd` on Windows).

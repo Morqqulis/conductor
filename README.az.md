@@ -204,6 +204,18 @@ adlandırır. Xəritə faylı mövcud olduqca hər mesajınıza bu vəziyyəti g
 qədər; istənilən xətada sətir sadəcə əlavə olunmur). Sətri söndürmək üçün
 `CONDUCTOR_PLAN_STATUS=0` dəyişənini təyin edin.
 
+Üç avtomatik yoxlama vaxt həddi ilə işləyir və hədd keçildikdə işi ləngitməmək üçün səssizcə
+buraxılır. Yavaş kompüterdə və ya çox böyük layihədə həddi mühit dəyişəni ilə artırmaq olar
+(saniyələrin tam sayı):
+
+| Nə məhdudlaşdırılır | Dəyişən | Standart | İcazə verilən |
+|---|---|---|---|
+| Plan vəziyyəti sətri | `CONDUCTOR_PLAN_STATUS_SECONDS` | 3 | 1–10 |
+| Mesaj üçün dərslərin seçilməsi | `CONDUCTOR_RECALL_SECONDS` | 3 | 1–10 |
+| Düzəlişdən sonra shell və JavaScript fayllarının sintaksis yoxlaması | `CONDUCTOR_SYNTAX_CHECK_SECONDS` | 5 | 1–60 |
+
+Yararsız dəyər standart hədd deməkdir.
+
 ### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 
 Qlobal əmr `~/.local/bin` daxilindədir (Windows: `conductor.cmd`).

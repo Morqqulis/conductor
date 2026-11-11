@@ -8,7 +8,8 @@
 #
 # It also attaches up to three lessons that share words with a task-like message
 # (memory/prompt_recall.py), so recorded lessons are found without the agent having to
-# remember to search. Short replies never start Python; the search has a 3 s limit.
+# remember to search. Short replies never start Python; the search has a 3 s limit
+# (CONDUCTOR_RECALL_SECONDS, 1-10, changes it).
 #
 # Fails OPEN: a reminder is never worth blocking a prompt over.
 set -uo pipefail
@@ -60,14 +61,39 @@ if [ -f "$LEDGER" ]; then
 fi
 # Automatic lessons: only for messages long enough to describe a task. The cheap length
 # check keeps "continue" / "yes" replies from starting Python at all.
+#
+# Both helpers below run under a time limit: 3 s, or the whole number of seconds from 1 to
+# 10 that the named variable holds (a slow machine, a very large repository). The limiter
+# must be a GNU timeout: Git for Windows and Linux ship /usr/bin/timeout; one found on PATH
+# must say it is GNU, because a bare PATH lookup on Windows can find the unrelated
+# timeout.exe, which would fail every run. With no GNU timeout the helpers run unlimited.
+timeout_cmd=''
+find_timeout() {
+    [ "$timeout_cmd" = none ] && return 1
+    [ -n "$timeout_cmd" ] && return 0
+    local candidate
+    if [ -x /usr/bin/timeout ]; then timeout_cmd=/usr/bin/timeout; return 0; fi
+    for candidate in gtimeout timeout; do
+        candidate="$(command -v "$candidate" 2>/dev/null)" || continue
+        case "$("$candidate" --version 2>/dev/null)" in *GNU*) timeout_cmd="$candidate"; return 0 ;; esac
+    done
+    timeout_cmd=none
+    return 1
+}
+set_limit() {  # set_limit <value of the variable>: fills the array `limit`
+    local seconds="${1:-3}"
+    case "$seconds" in [1-9]|10) ;; *) seconds=3 ;; esac
+    limit=()
+    find_timeout && limit=("$timeout_cmd" "$seconds")
+    return 0
+}
 recall="$HOOK_DIR/../memory/prompt_recall.py"
 message="${payload#*\"prompt\":}"
 if [ "$message" != "$payload" ] && [ "${#message}" -ge 80 ] && [ -f "$recall" ]; then
-    limit=''
-    command -v timeout >/dev/null 2>&1 && limit='timeout 3'
+    set_limit "${CONDUCTOR_RECALL_SECONDS:-}"
     for c in python3 python; do
         command -v "$c" >/dev/null 2>&1 || continue
-        if found="$(printf '%s' "$payload" | CONDUCTOR_HOME="$CONDUCTOR_HOME" $limit "$c" -B "$recall" 2>/dev/null)"; then
+        if found="$(printf '%s' "$payload" | CONDUCTOR_HOME="$CONDUCTOR_HOME" ${limit[@]+"${limit[@]}"} "$c" -B "$recall" 2>/dev/null)"; then
             [ -n "$found" ] && line="$line
 $found"
             break
@@ -77,16 +103,17 @@ fi
 # A work map in this checkout (playbooks/scheduling.md, TEAM): attach its state as git holds
 # it - which steps may start, which wait for acceptance, the first disagreement between the
 # plan and the facts - so nobody acts on a remembered state. Runs only where the map file
-# exists (or in a linked worktree, whose map lives in the main checkout); 3 s limit; any
-# failure adds nothing. Turn it off with CONDUCTOR_PLAN_STATUS=0.
+# exists (or in a linked worktree, whose map lives in the main checkout); 3 s limit, or
+# the whole number of seconds from 1 to 10 in CONDUCTOR_PLAN_STATUS_SECONDS (a slow machine
+# or a very large repository); any failure adds nothing. Turn it off with
+# CONDUCTOR_PLAN_STATUS=0.
 planner="$HOOK_DIR/../evidence/plan.py"
 if [ "${CONDUCTOR_PLAN_STATUS:-1}" != 0 ] && [ -f "$planner" ] &&
    { [ -f .conductor/work-map.md ] || [ -f .git ]; }; then
-    limit=''
-    command -v timeout >/dev/null 2>&1 && limit='timeout 3'
+    set_limit "${CONDUCTOR_PLAN_STATUS_SECONDS:-}"
     for c in python3 python; do
         command -v "$c" >/dev/null 2>&1 || continue
-        state="$($limit "$c" -B "$planner" status --brief 2>/dev/null)"
+        state="$(${limit[@]+"${limit[@]}"} "$c" -B "$planner" status --brief 2>/dev/null)"
         code=$?
         case "$code" in
             0|1) [ -n "$state" ] && line="$line

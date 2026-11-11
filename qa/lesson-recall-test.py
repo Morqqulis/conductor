@@ -23,7 +23,10 @@ class RecallTests(unittest.TestCase):
         self.store.mkdir(parents=True)
         self.ledger = self.home / "lessons.md"
         self.ledger.write_text("# inbox\n", encoding="utf-8")
-        self.env = dict(os.environ, CONDUCTOR_HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
+        # The widest limit the hook accepts: a busy Windows runner starts Python slowly, and
+        # past the limit the lessons are left out by design.
+        self.env = dict(os.environ, CONDUCTOR_HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1",
+                        CONDUCTOR_RECALL_SECONDS="10")
         self.env.pop("CONDUCTOR_LESSONS", None)
 
     def lesson(self, name, text):

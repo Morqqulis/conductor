@@ -30,7 +30,10 @@ class EditRitualTest(unittest.TestCase):
         self.home = self.base / "conductor"
         self.work = self.base / "project"
         self.work.mkdir()
-        self.env = dict(os.environ, CONDUCTOR_HOME=str(self.home))
+        # A generous limit for the outside syntax checkers: the first start of node on a busy
+        # Windows runner took longer than the default 5 s once, and the check then stays
+        # silent by design - which this suite would read as "broken file not reported".
+        self.env = dict(os.environ, CONDUCTOR_HOME=str(self.home), CONDUCTOR_SYNTAX_CHECK_SECONDS="60")
         self.env.pop("CLAUDE_CONFIG_DIR", None)
 
     def hook(self, script, path, session="s-1", tool="Edit", raw=None):
@@ -146,6 +149,23 @@ class EditRitualTest(unittest.TestCase):
     def test_broken_javascript_is_reported(self):
         self.assert_reported("bad.js", "function f( {\n")
         self.assert_silent("good.mjs", "export const x = 1;\n")
+
+    @unittest.skipIf(os.name == "nt", "a stand-in checker must be an executable script")
+    def test_a_slow_checker_stays_silent_and_the_limit_can_be_raised(self):
+        tools = self.base / "tools"
+        tools.mkdir()
+        slow = tools / "node"
+        slow.write_text('#!/usr/bin/env bash\nsleep 2\necho "SyntaxError: stand-in" >&2\nexit 1\n',
+                        encoding="utf-8")
+        slow.chmod(0o755)
+        path = self.work / "bad.js"
+        path.write_text("function f( {\n", encoding="utf-8")
+        base = dict(self.env, PATH=str(tools) + os.pathsep + self.env["PATH"])
+        for value, reported in (("1", False), ("10", True), ("0", True), ("soon", True), ("999", True)):
+            with self.subTest(limit=value):  # an unusable value falls back to 5 s, never to no limit
+                self.env = dict(base, CONDUCTOR_SYNTAX_CHECK_SECONDS=value)
+                reply = self.hook(POST, path)
+                self.assertEqual(bool(reply), reported, reply)
 
     def test_unknown_types_and_missing_files_are_not_judged(self):
         self.assert_silent("notes.md", "# {[(")

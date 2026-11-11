@@ -11,7 +11,8 @@ newest, are removed when a new session starts recording.
 
 check (PostToolUse, same tools): a syntax check of the edited file by its extension
 (Python, JSON, shell, JavaScript, TOML). A broken file is reported to the agent at once,
-instead of surfacing later as a confusing test failure.
+instead of surfacing later as a confusing test failure. Shell and JavaScript are checked by
+an outside program with a time limit: 5 s, or CONDUCTOR_SYNTAX_CHECK_SECONDS (1-60).
 
 Both fail open: any problem in this helper prints nothing and exits 0, so an edit is never
 blocked by Conductor's own machinery.
@@ -107,6 +108,15 @@ def snapshot(payload):
         handle.write(f"{state}\t{digest}\t{text}\n")
 
 
+def check_seconds():
+    """How long an outside checker (bash -n, node --check) may run: 5 s, or the whole number
+    of seconds from 1 to 60 in CONDUCTOR_SYNTAX_CHECK_SECONDS. Past it the check stays silent
+    (fail open). A first start of node on a busy Windows machine was seen to take longer
+    than 5 s - a slow machine raises the limit instead of losing the check."""
+    raw = os.environ.get("CONDUCTOR_SYNTAX_CHECK_SECONDS", "")
+    return int(raw) if raw.isascii() and raw.isdigit() and 1 <= int(raw) <= 60 else 5
+
+
 def syntax_error(path):
     """A one-line description of a syntax error in `path`, or None when it parses or is unchecked."""
     if not path.is_file() or path.is_symlink() or path.stat().st_size > MAX_BYTES:
@@ -147,7 +157,7 @@ def syntax_error(path):
     if argv is None:
         return None
     try:
-        result = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, timeout=5)
+        result = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, timeout=check_seconds())
     except (OSError, subprocess.TimeoutExpired):
         return None
     if result.returncode == 0:

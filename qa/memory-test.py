@@ -31,7 +31,9 @@ class MemoryTest(unittest.TestCase):
         self.env = dict(os.environ, HOME=self.profile.as_posix(), USERPROFILE=str(self.profile),
                         GIT_CONFIG_GLOBAL=str(self.profile / "gitconfig"), GIT_CONFIG_NOSYSTEM="1",
                         CLAUDE_CONFIG_DIR=self.config.as_posix(),
-                        CONDUCTOR_HOME=self.home.as_posix(), CONDUCTOR_LESSONS=self.ledger.as_posix())
+                        CONDUCTOR_HOME=self.home.as_posix(), CONDUCTOR_LESSONS=self.ledger.as_posix(),
+                        # the widest limit for the lesson search: a busy Windows runner is slow
+                        CONDUCTOR_RECALL_SECONDS="10")
         # Hermetic: a project directory inherited from the calling session would add that
         # project's own decisions file to every hook payload under test.
         self.env.pop("CLAUDE_PROJECT_DIR", None)

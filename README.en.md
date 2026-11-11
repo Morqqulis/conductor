@@ -195,15 +195,20 @@ environment's variables. Turn it off if your setup script pins a version with `-
 otherwise the auto-update moves the session to `main`.
 
 When several agents work on one plan, the project holds a work map,
-`.conductor/work-map.md` (the agent creates it; it never enters git). The map records the
-plan only; who started, handed in and got accepted is read from git by `evidence/plan.py`,
-which names the disagreements between the plan and the facts that git shows. While the map file exists,
-one line with that state is added to each of your messages (up to 3 seconds; on any error
-the line is simply not added). To turn the line off, set `CONDUCTOR_PLAN_STATUS=0`.
+`.conductor/work-map.md` (the agent creates it and, by its rules, keeps it out of git). The
+map records the plan only; who started, handed in and got accepted is read from git by
+`evidence/plan.py`, which names the disagreements between the plan and the facts that git
+shows. When a session is open in the root folder of a project with such a map (or in a
+linked working copy of it), one line with that state is added to each of your messages. If
+the program did not start or ran past its time limit, there is no line; if the map cannot
+be read, a warning line takes its place. To turn the line off, set
+`CONDUCTOR_PLAN_STATUS=0`.
 
-Three automatic checks run under a time limit and are silently skipped past it, so that
+Three automatic checks are limited in time and are silently skipped past the limit, so that
 they never hold the work up. On a slow computer or in a very large project the limit can be
-raised with an environment variable (a whole number of seconds):
+raised with an environment variable (a whole number of seconds). For the first two the
+limit applies where a GNU `timeout` program exists (Linux and Git for Windows ship it);
+without one, as on a stock macOS, they run with no limit:
 
 | What is limited | Variable | Default | Allowed |
 |---|---|---|---|

@@ -17,8 +17,8 @@ Line-oriented; every other line of the file is free text:
 Only the proof cell may contain "|" (a shell pipe).
 
 area   comma-separated paths the step may write. A trailing "/" or a directory name covers
-       everything under it; "*" and "?" globs are allowed; any other token (db:orders) is a
-       live resource and is compared by name.
+       everything under it; "*", "?" and "[...]" globs are allowed; any other token
+       (db:orders) is a live resource and is compared by name.
 needs  comma-separated ids, or "-".
 weight light | heavy - the weight of the proof command.
 """

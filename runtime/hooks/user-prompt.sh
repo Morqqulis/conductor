@@ -8,7 +8,7 @@
 #
 # It also attaches up to three lessons that share words with a task-like message
 # (memory/prompt_recall.py), so recorded lessons are found without the agent having to
-# remember to search. Short replies never start Python; the search has a 3 s limit
+# remember to search. Short replies never start that search; it has a 3 s limit
 # (CONDUCTOR_RECALL_SECONDS, 1-10, changes it).
 #
 # Fails OPEN: a reminder is never worth blocking a prompt over.
@@ -60,7 +60,7 @@ if [ -f "$LEDGER" ]; then
     fi
 fi
 # Automatic lessons: only for messages long enough to describe a task. The cheap length
-# check keeps "continue" / "yes" replies from starting Python at all.
+# check keeps "continue" / "yes" replies from starting the search at all.
 #
 # Both helpers below run under a time limit: 3 s, or the whole number of seconds from 1 to
 # 10 that the named variable holds (a slow machine, a very large repository). The limiter
@@ -101,12 +101,13 @@ $found"
     done
 fi
 # A work map in this checkout (playbooks/scheduling.md, TEAM): attach its state as git holds
-# it - which steps may start, which wait for acceptance, the first disagreement between the
-# plan and the facts - so nobody acts on a remembered state. Runs only where the map file
-# exists (or in a linked worktree, whose map lives in the main checkout); 3 s limit, or
-# the whole number of seconds from 1 to 10 in CONDUCTOR_PLAN_STATUS_SECONDS (a slow machine
-# or a very large repository); any failure adds nothing. Turn it off with
-# CONDUCTOR_PLAN_STATUS=0.
+# it - which steps may start, which wait for acceptance, how many disagreements there are
+# between the plan and the facts - so nobody acts on a remembered state. Runs on every
+# message, short ones too, but only where the current directory holds the map file (or is
+# a linked worktree, whose map lives in the main checkout); 3 s limit, or the whole number
+# of seconds from 1 to 10 in CONDUCTOR_PLAN_STATUS_SECONDS (a slow machine or a very large
+# repository). A program that did not start or ran out of time adds nothing; a map that
+# cannot be read adds a warning line. Turn it off with CONDUCTOR_PLAN_STATUS=0.
 planner="$HOOK_DIR/../evidence/plan.py"
 if [ "${CONDUCTOR_PLAN_STATUS:-1}" != 0 ] && [ -f "$planner" ] &&
    { [ -f .conductor/work-map.md ] || [ -f .git ]; }; then

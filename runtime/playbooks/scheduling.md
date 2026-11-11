@@ -93,7 +93,7 @@ acceptance and states, no commits unless asked.
 ## TEAM: HAND-IN AND ACCEPTANCE (executors do not queue at the controller)
 Every dispatch's constraints add: prove with the row's proof, make ONE commit on the step's
 branch, report its sha, then stop. `P handin <id> <sha>` records it, checking the area
-first: a file changed since the step's start outside the area -> refused, back to the
+first: its merge would change a file outside the area -> refused, back to the
 executor. Hand-in = that sha; verdict and acceptance name it, and new commits by the
 executor after it void both. Then, for an executor's step that changes behavior, ONE
 skeptic on that sha AT ONCE (a speculative step: once its base is accepted) - in a worktree

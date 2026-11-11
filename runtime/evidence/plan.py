@@ -14,7 +14,8 @@ usage: plan.py status [--brief]        the table, what may start, what to accept
        plan.py rebased ID SHA          the step's branch was rebased or updated: record the
                                        commit it now starts from; a hand-in is withdrawn
                                        without counting a round
-       plan.py release ID              give a started step up (to redo it): drop its records
+       plan.py release ID              give a started step up (to redo it): drop its start and
+                                       hand-in records (returned rounds stay counted)
        plan.py finish [--abandon]      print the decided: lines, drop the plan's records and
                                        delete the map file
        options, before or after the command: [--repo DIR] [--map FILE]

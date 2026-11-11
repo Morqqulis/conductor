@@ -197,16 +197,19 @@ skriptiniz `--ref` ilə versiyanı sabitləyirsə, onu söndürün: əks halda a
 sessiyanı `main` versiyasına keçirir.
 
 Bir neçə agent eyni plan üzrə işləyəndə layihədə iş xəritəsi olur:
-`.conductor/work-map.md` (onu agent özü yaradır, git-ə düşmür). Xəritədə yalnız plan yazılır;
-kimin nəyi başladığını, təhvil verdiyini və nəyin qəbul edildiyini `evidence/plan.py`
-proqramı git-dən oxuyur və planla faktlar arasında git-də görünən uyğunsuzluqları
-adlandırır. Xəritə faylı mövcud olduqca hər mesajınıza bu vəziyyəti göstərən bir sətir əlavə olunur (3 saniyəyə
-qədər; istənilən xətada sətir sadəcə əlavə olunmur). Sətri söndürmək üçün
-`CONDUCTOR_PLAN_STATUS=0` dəyişənini təyin edin.
+`.conductor/work-map.md` (onu agent özü yaradır və qaydalarına görə git-dən kənarda saxlayır).
+Xəritədə yalnız plan yazılır; kimin nəyi başladığını, təhvil verdiyini və nəyin qəbul
+edildiyini `evidence/plan.py` proqramı git-dən oxuyur və planla faktlar arasında git-də
+görünən uyğunsuzluqları adlandırır. Sessiya belə xəritəsi olan layihənin kök qovluğunda (və
+ya onun bağlı iş nüsxəsində) açıldıqda hər mesajınıza bu vəziyyəti göstərən bir sətir əlavə
+olunur. Proqram işə düşməsə və ya vaxt həddini keçsə, sətir olmur; xəritə oxunmursa, onun
+yerinə xəbərdarlıq sətri gəlir. Sətri söndürmək üçün `CONDUCTOR_PLAN_STATUS=0` dəyişənini
+təyin edin.
 
-Üç avtomatik yoxlama vaxt həddi ilə işləyir və hədd keçildikdə işi ləngitməmək üçün səssizcə
+Üç avtomatik yoxlamanın vaxt həddi var və hədd keçildikdə işi ləngitməmək üçün səssizcə
 buraxılır. Yavaş kompüterdə və ya çox böyük layihədə həddi mühit dəyişəni ilə artırmaq olar
-(saniyələrin tam sayı):
+(saniyələrin tam sayı). İlk ikisi üçün hədd GNU `timeout` proqramı olan yerdə işləyir (Linux
+və Windows üçün Git onu gətirir); o olmadıqda, məsələn adi macOS-da, onlar hədsiz işləyir:
 
 | Nə məhdudlaşdırılır | Dəyişən | Standart | İcazə verilən |
 |---|---|---|---|

@@ -14,15 +14,17 @@ accepted   plan.py accept merged the hand-in into B. How B's history looks after
            (fast-forwards, B merged elsewhere and back) does not matter.
 handed-in  a hand-in exists and is not accepted
 running    started, nothing handed in (`returned` counts earlier rounds)
-ready      not started, every need accepted, no live step may write the same paths
-waiting    not started: a need is not accepted, or a live step holds part of its area
+ready      not started, every need accepted, and no started, not yet accepted step outside
+           its own chain of needs may write the same paths
+waiting    not started: a need is not accepted, or such a step holds part of its area
 
     refs/conductor/seen/B             B's tip as plan.py last left or acknowledged it
 
 Work that reached B around plan.py - a merge by hand, a direct commit, the owner's branch
 merged in - is never read as accepted: every commit in B beyond `seen` is named until
-somebody inspects it and runs plan.py acknowledge. refs/conductor/ is not a branch or tag namespace: `git push` and
-`git tag` never see it.
+somebody inspects it and runs plan.py acknowledge. refs/conductor/ is not a branch or tag
+namespace: a plain `git push` does not send it and `git tag` does not list it (a mirror
+push, or one that names refs/conductor/ explicitly, does send it).
 """
 from dataclasses import dataclass, field
 import subprocess

@@ -517,16 +517,17 @@ class PlanTest(unittest.TestCase):
         # a failure that is not a conflict says what git said, not "merge and redo"
         self.ok("start", "A")
         self.ok("handin", "A", self.commit("A", "src/money.py", "CENTS = 1\n"))
+        # Only the identity is taken away. Git's own configuration stays: without it Windows
+        # would stop converting line endings and every checked-out file would look modified.
         nobody = dict(self.env, GIT_COMMITTER_NAME="", GIT_COMMITTER_EMAIL="", GIT_AUTHOR_NAME="",
-                      GIT_AUTHOR_EMAIL="", GIT_CONFIG_GLOBAL=str(self.top / "none"), GIT_CONFIG_NOSYSTEM="1",
-                      EMAIL="")
+                      GIT_AUTHOR_EMAIL="")
         done = subprocess.run([PY, "-B", str(PLAN), "accept", "A"], cwd=str(self.repo), env=nobody,
                               capture_output=True, text=True)
-        if done.returncode:  # some systems still invent an identity; then the merge simply works
-            self.assertIn("git could not merge", done.stderr)
-            self.assertIn("nothing was changed", done.stderr)
-            self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
-            self.ok("accept", "A")
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn("git could not merge", done.stderr)
+        self.assertIn("nothing was changed", done.stderr)
+        self.assertEqual(self.git("status", "--porcelain", cwd=tree), "")
+        self.ok("accept", "A")
 
     def test_accept_never_touches_work_left_in_the_integration_worktree(self):
         self.ok("start", "C")
@@ -621,7 +622,8 @@ class PlanTest(unittest.TestCase):
     def test_map_forms_people_really_write(self):
         piped = MAP.replace("| python tests/invoice.py |", "| cargo test | grep ok |")
         piped = chr(0xFEFF) + piped + "\nNotes: a | b | c is free text after the table.\n"
-        self.write_map(piped.replace("\n", "\r\n"))
+        # bytes, not text: in text mode Windows would turn each \r\n into \r\r\n, a different file
+        (self.repo / ".conductor/work-map.md").write_bytes(piped.replace("\n", "\r\n").encode("utf-8"))
         self.ok("status")
         self.assertEqual(plan_map.parse(piped).steps["B"].proof, "cargo test | grep ok")
         either = plan_map.parse(MAP.replace("| python tests/invoice.py |", "| `make test || echo no` |"))

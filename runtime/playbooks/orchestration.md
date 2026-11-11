@@ -18,7 +18,7 @@ Delegate large independent scopes to reduce main-session context, not to multipl
   worktrees (run probes.md#dirty-tree first) and names each agent's worktree path in slot 2.
 
 ## ASYNC (the controller does not idle)
-After dispatch, continue independent work: scheduling.md (work map, WAIT LADDER) names which.
+After dispatch, continue independent work: load scheduling.md (work map, WAIT LADDER).
 Reuse a long-lived agent for related subtasks when
 supported, preserving its context. Intervene on drift or missing context without waiting for
 the other agents.

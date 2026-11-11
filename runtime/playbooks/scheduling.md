@@ -1,78 +1,97 @@
 # Scheduling Playbook
 
-Load trigger: a plan or spec with 2+ steps to deliver; a session given a role or an area
-("architect", "you own the backend"); or about to end a turn on "waiting" while steps remain.
+Loaded from implementing.md Step 1 (a plan or spec with 2+ separately provable steps) and
+from orchestration.md ASYNC. For a controller, a session with an area, or a solo agent; a
+dispatched executor follows its dispatch, not this file. Dispatching at all ->
+orchestration.md first: its WHEN and SIZE FLOOR decide whether, its HOW writes the prompt.
 
 ## Absolute
 No turn ends on "waiting" while the WAIT LADDER has a rung left.
 
 ## WORK MAP (before the first dispatch or edit)
-One file in the MAIN checkout, never in an agent's worktree: `.conductor/work-map.md`. It is
-the state: update it at every transition, re-read it after a compaction and before claiming.
-Header: `heavy slots: N (measured: <seconds>, <peak memory>)`, then one line per decision
-taken without the owner: `decided: <what> because <why>`.
-One row per step:
-`id | step | area | needs | proof | weight | owner | state since <time>`
-- area: the paths the step may WRITE. Measured, not guessed: from graphify-out/ when the
-  project has it, else from imports and callers (probes.md#hidden-coupling).
+`.conductor/work-map.md` in the MAIN checkout, never in a worktree and never committed
+(nor `.conductor/claims/`). It is the state: update it at every transition, re-read it after
+a compaction and before claiming. Counters (attempts, skeptic rounds) are per row.
+Header: `integration branch: <name>`, `heavy lanes: N (<how measured>)`, then
+`decided: <what> because <why>` for each decision taken without the owner.
+One row per step: `id | step | area | needs | proof | weight | owner | state <sha> since <time>`
+- area: the paths the step may WRITE, plus any live service, database or config it changes.
+  From graphify-out/ when the project has it, else from imports and callers; a path that
+  was not traced is marked `assumed`.
 - needs: ids whose result this step uses, or a named contract.
-- proof: the narrow command that proves this step alone. weight: light | heavy (below).
+- proof: the narrow command proving this step alone. weight: of that proof, light | heavy.
 - state: ready | running | handed-in | accepted | returned | blocked.
-Two steps whose areas overlap are NOT independent: order them through `needs`, or move the
-shared file into a contract step both need. A boundary between two areas or two sessions is
-a contract step (types, interface, schema) and goes FIRST - then neither side waits.
-ready = every need is accepted AND the area is disjoint from every running step.
+Overlapping areas are NOT independent: order the steps through `needs`, or move the shared
+file into a contract step both need. A boundary between two areas or sessions is a contract
+step (types, interface, schema) and goes FIRST - then neither side waits.
+ready = every need accepted AND the area (paths and live resources) disjoint from every
+running step.
+accepted = proven on its own branch and merged into the INTEGRATION branch - never main.
+A step's branch starts from the integration branch; reaching main is orchestration.md
+Integration (T3: owner approval first).
+Claim before starting: `mkdir .conductor/claims/<id>` (atomic: it exists -> taken), then the
+row. An owner that is gone (agent returned, session ended) -> the controller removes the
+claim and records it.
 The plan lacks what a row needs -> derive it and mark it `assumed`; ask the owner only what
 changes the result, as ONE block.
 
 ## WAIT LADDER (whenever you would wait - for an agent, a check, a reviewer, the owner)
-1. A ready step with a free slot -> start or dispatch it; the longest first.
+1. A ready step -> start or dispatch it; the longest first.
 2. A handed-in step -> accept it (below).
-3. Prepare the next step without writing shared files: read its code, write its contract and
-   its failing test (RED FIRST, debugging.md step 6), draft its dispatch prompt.
-4. Nothing left -> wait, naming what you wait for and which rows it unblocks.
+3. Prepare the next step on ITS branch: read its code, write its contract and its failing
+   test (red first, implementing.md Step 4), draft its dispatch prompt.
+4. Nothing left -> a blocking wait; end the turn only where the harness re-invokes you. Name
+   what you wait for and which rows it unblocks.
 A question for the owner never empties the ladder. Reversible decision -> take it (ask the
-adviser when there is one) and record it in the map header. Irreversible -> collect such
-questions into ONE block; everything that does not depend on the answer continues.
+adviser where the harness offers a stronger model) and record it in the header.
+Irreversible -> collect into ONE block; whatever does not depend on the answer continues.
 
 ## ROLES
-- Controller (leads 2+ executors, "architect"): owns the map, dispatch, acceptance decisions
-  and the conversation with the owner. Takes no long foreground edit while a ready step can
-  be dispatched: it stays free for hand-ins and for the owner.
-- Session with an area: takes only rows inside it; re-reads the map, writes itself as owner,
-  then starts. A row outside the area -> message its owner; never edit across the boundary.
-- Solo agent: same map and ladder. While its own check runs in the background, rungs 1-3
-  apply to it too.
-- Adviser: a stronger model when the harness offers one, else a fresh-context agent given the
-  question and the evidence. For the map (splitting, contracts), a returned step and
-  integration - not for routine edits.
+- Controller ("architect", leads 2+ executors): owns the map, the integration branch,
+  dispatch, acceptance and the conversation with the owner. Takes no foreground edit that a
+  ready step's executor could take: it stays free for hand-ins and for the owner.
+- Session with an area: takes only rows inside it. A row outside -> message its owner, or
+  the user when there is no channel; never edit across the boundary. Sessions sharing ONE
+  checkout commit only their own area's paths.
+- Solo agent: same map and ladder; rungs 1-3 apply while its own check runs in the background.
+- Adviser: a stronger model where the harness offers one, else a fresh-context agent given
+  the question and the evidence. For the map, a returned step, integration - not routine
+  edits.
 
-## ACCEPTANCE PIPELINE (executors do not queue at the controller)
-Hand-in = the diff inside the area, the proof output, red then green for new behavior, the
-coverage map. On hand-in the executor stops: its worktree is frozen. When skeptic.md asks
-for a skeptic, dispatch it AT ONCE on that frozen worktree - in parallel with running
-executors and with other hand-ins' skeptics, one per hand-in. The controller then decides
-from package and verdict: accepted, or returned to the SAME executor (its context is the
-cheapest fix). Controller decisions are serial and short; the reading and proving are done
-before they reach it. orchestration.md still governs routing, the area diff and integration.
+## HAND-IN AND ACCEPTANCE (executors do not queue at the controller)
+Every dispatch's constraints add: prove with the row's proof, make ONE commit on the step's
+branch, report its sha, then stop. Hand-in = that sha; verdict and acceptance name it, and a
+branch that moved after it voids both.
+On hand-in the controller checks the area first: a file changed by the sha outside the area
+-> returned. Then, for a step that changes behavior, ONE skeptic on that sha AT ONCE - in a
+throwaway worktree of the sha, in parallel with running executors and with other hand-ins'
+skeptics. It is work nobody watched: skeptic.md's own reason.
+A verdict never replaces the controller's own look: it reads the load-bearing part of the
+diff and the proof output itself (core claim table), then decides. Accepted -> merge into
+the integration branch. Returned -> the same executor where the harness can resume it, else
+a fresh dispatch carrying the finding. Decisions are serial and short; waiting for them is
+not.
 
 ## SPECULATIVE START (a step that needs a handed-in, not yet accepted step)
 Independent steps need no permission. A dependent step may start early only when ALL hold:
-its own worktree on top of the handed-in state; it uses the base's CONTRACT, not its
+its branch starts from the base's handed-in sha; it uses the base's CONTRACT step, not its
 internals; the base is not itself speculative (depth 1). Mark the row `speculative on <id>`.
-Base returned: contract unchanged -> rebase onto the fix and rerun the proof; contract
+Base returned: contract unchanged -> rebase onto the new sha and rerun the proof; contract
 changed -> redo the step and record the loss in the map.
 
-## MACHINE CAPACITY (heavy checks are the scarce resource, not agents)
+## HEAVY LANES (heavy checks are the scarce resource, not agents)
 light = reading, planning, editing, review: run wide. heavy = a full build, a whole suite,
-anything that locks a shared build directory or a service.
-Measure once per project, never guess: run ONE heavy check alone and record wall time and
-peak memory (GNU `/usr/bin/time -v`, macOS `/usr/bin/time -l`; neither -> the OS monitor).
-slots = max(1, floor(0.7 x memory free before the run / peak)). A build that already uses
-every core, or one shared artifact directory, is ONE slot per directory: two such builds
-only take turns. Write the result into the map header.
-Before a heavy check, claim a slot in the map; release it after. No free slot -> the ladder,
-not a queue. A machine that swaps or kills a process -> halve the slots and re-measure.
+anything that locks a shared build directory.
+Lanes start at 1 and rise only on evidence; never run a heavy check just to measure. When
+one the plan needs anyway runs alone, sample available memory before and several times
+during it (Linux MemAvailable in /proc/meminfo, macOS vm_stat, Windows `Get-Counter
+'\Memory\Available MBytes'`). It never fell below half the starting value -> 2 lanes; prove
+3 the same way with two running. A build that uses every core -> 1 lane. A shared artifact
+directory -> one build at a time in it. Cannot measure -> 1.
+A lane is held only while the check runs: `mkdir .conductor/claims/heavy-<k>` for the first
+free k <= N, removed after; an executor gets that absolute path in its dispatch. None free
+-> the ladder (an executor retries later), never a second build. Swapping or a killed
+process -> back to 1.
 Parallelism pays on waiting and review, not on the build itself.
 
 ## Degradation

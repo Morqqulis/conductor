@@ -19,13 +19,14 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    check <c1>. H2: <cause>; check <c2>." Each must be falsifiable. Prove the top-ranked first.
 3. PROVE the top hypothesis with its named check (read / trace / instrument — instrumentation
    edits are strictly observational: logging/print lines only, never touching control flow or
-   the suspected cause, and removed before the falsification ritual) BEFORE any fix edit.
+   the suspected cause, and removed before the fix edit) BEFORE any fix edit.
    State the check's EXPECTED output before running it — the surprise against your prediction
    is the evidence; follow it, not the plan.
    Check contradicts H -> back to step 2 with the new evidence; do not edit. A falsified
    hypothesis is a lesson: append one line to ~/.claude/conductor/lessons.md
    (date | trigger | rule).
-4. PRE-REGISTER the attempt: todo entry "attempt N: <H>". Only then edit — minimal fix at the
+4. PRE-REGISTER the attempt: todo entry "attempt N: <H>" (T2+: step 6's test is already
+   written and red). Only then edit — minimal fix at the
    proven cause, not at the symptom site. ANY edit that changes program behavior is a fix
    attempt and MUST be pre-registered; an unregistered behavior-changing edit counts as a
    failed attempt.
@@ -47,9 +48,10 @@ A fix may only follow a hypothesis that has been PROVEN against the reproduced s
    consult the human.
 6. FALSIFICATION RITUAL (mandatory T2/T3; SKIP at T1 unless the user asks): the regression
    test for the ORIGINAL symptom must fail without the fix and pass with it.
-   RED FIRST (default): write that test BEFORE the fix edit - step 1's repro made a test -
-   and run it on the unfixed code: it MUST FAIL. That run is the red; after the fix the same
-   test must pass. Paste both; no undo run is needed.
+   RED FIRST (default): write that test BEFORE the fix edit and run it on the unfixed code:
+   it MUST FAIL (it passes -> repair the test). After the fix the same test must pass. Paste
+   both; no undo run. Valid only when the two runs differ by the fix alone - same test
+   bytes, base and environment; else the undo path.
    Test written AFTER the fix: `python3 <CLAUDE_CONFIG_DIR or ~/.claude>/conductor/evidence/falsify.py --test
    "<test command>" <fix files>` - an isolated copy of the CURRENT tree, fix files back to
    their pre-edit snapshot (else HEAD), expects FAIL then PASS; paste its verdict. It never

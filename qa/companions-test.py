@@ -173,6 +173,18 @@ class CompanionsTest(unittest.TestCase):
                 self.assertEqual(line, "OK installed (claude-plugins-official)", output)
                 self.assertEqual(calls, [LIST, INSTALL], output)
 
+    def test_refusal_names_the_first_line_it_could_not_read(self):
+        cases = (("garbage\n", "unknown text at line 1: garbage"),
+                 (HEADER + record(state="loaded"), "unknown Status value at line"),
+                 (HEADER, "incomplete list: 1 header(s), 0 plugin record(s)"),
+                 (HEADER + record(state=None), "has no single known Status"))
+        for listing, expected in cases:
+            with self.subTest(expected=expected):
+                line, calls, output = self.run_installer([listing])
+                self.assertTrue(line.startswith("FAIL unrecognized plugin list ("), output)
+                self.assertIn(expected, line, output)
+                self.assertEqual(calls, [LIST], output)
+
     def test_unknown_text_before_the_synced_section_is_still_not_evidence(self):
         synced = "Synced from claude.ai:\n\n  > pdf-viewer@synced\n    Status: √ loaded\n"
         for listing in ("garbage\n" + synced, record() + synced):

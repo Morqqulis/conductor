@@ -85,6 +85,9 @@ def main(argv=None):
     setup.add_argument('--scope', choices=['all', 'claude', 'global'], default='all')
     setup.add_argument('--language', help='reply language: ru, en, az or a full name (e.g. Russian)')
     setup.add_argument('--skip-global-md', action='store_true')
+    setup.add_argument('--replace-modified', action='store_true',
+                       help='replace managed files you changed, saving your versions as copies '
+                            '(a changed personal CLAUDE.md is kept, never replaced)')
     setup.add_argument('--skip-companions', action='store_true')
     setup.add_argument('--no-superpowers', action='store_true')
     uninstall = commands.add_parser('uninstall', help='remove global Conductor; keep lessons and independent tools')
@@ -141,9 +144,15 @@ def main(argv=None):
                         source, revision = fetched['source'], fetched['commit']
                     scopes = ['claude', 'global'] if args.scope == 'all' else [args.scope]
                     reply = args.language if args.language is not None else language(paths)
-                    changes = prepare_install(paths, source, scopes, reply, args.skip_global_md, revision)
+                    changes = prepare_install(paths, source, scopes, reply, args.skip_global_md, revision,
+                                              args.replace_modified)
                     backup = apply_install(paths, changes, changes.scopes)
                     print(f'Conductor installed and verified. Backup: {backup}')
+                    from deployment import save_replaced
+                    for installed, copy in save_replaced(paths, changes, backup):
+                        print(f'Replaced your changed file {installed}; your version is saved at {copy}')
+                    for key in changes.released:
+                        print(f'Kept your changed {paths.target(key)} as it is; Conductor no longer manages it.')
                     print('Restart agent sessions. Cursor: paste the prepared rule if used.')
                     if 'global' in changes.scopes:
                         print(f'Cursor rule: {paths.target("cursor")}')

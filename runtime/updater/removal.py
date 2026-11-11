@@ -24,8 +24,15 @@ def prepare_removal(paths, *, keep_lessons=True):
         observed[key] = current
         if key == 'claude-values' or key.startswith('launch/'):
             continue  # Personal values may have gained RTK/Graphify additions; never delete.
+        if current[0] is None:
+            # Already gone (deleted by hand, or the record came from another computer):
+            # nothing to remove and nothing of the user's to protect.
+            changes[key] = (None, 0o644)
+            continue
         if digest(current[0]) != entry['sha256'] or (os.name != 'nt' and current[1] != entry['mode']):
-            raise ValueError(f'locally modified or missing managed file: {key}; nothing removed')
+            raise ValueError(f'locally modified managed file: {key} ({paths.target(key)}); nothing removed. '
+                             'Restore it or delete it yourself, or run the installer with '
+                             '--replace-modified first, then remove again')
         changes[key] = (None, 0o644)
     helper = settings_module(Path(__file__).resolve().parents[2])
     for key in ('settings', 'cursor-settings', 'antigravity-settings'):

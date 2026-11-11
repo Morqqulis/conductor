@@ -255,6 +255,21 @@ memory or registration to bypass the safeguard. A corrupt registration is not tr
 a legacy installation. After migration, use normal `conductor update` and
 `conductor uninstall`; rollback restores the old files using the printed backup path.
 
+### Moving to another computer and changed files
+
+If the `~/.claude` folder was copied to another computer, run the ordinary installer: it
+puts back the files Conductor keeps outside that folder (the rules for Codex and
+Antigravity, the `conductor` command) and overwrites nothing that exists.
+
+A Conductor file that you changed stops the install: the message gives its full path. To
+replace it with the current version, run the installer with `--replace-modified`
+(PowerShell: `-ReplaceModified`) — your version is saved as a copy and its path is printed.
+Your changed personal `CLAUDE.md` is never replaced: with `--skip-global-md` or
+`--replace-modified` it stays as it is, Conductor stops managing it, and later installs and
+updates leave it alone (delete the file and run the installer to get Conductor's version
+back). `conductor update` itself neither replaces changed files nor restores missing ones —
+it stops and names the file.
+
 ### Companion tools
 
 After Conductor installation is verified, three tools are connected:

@@ -10,7 +10,7 @@ from legacy import plan_legacy
 from migration import retire_settings
 from payload import payload
 from recovery import unique_object
-from transaction import Transaction, read
+from transaction import Transaction, read, write
 
 
 def settings_module(source):
@@ -30,7 +30,21 @@ def settings_object(raw):
     return value
 
 
-def prepare_install(paths, source, scopes, reply, skip_values, revision):
+def save_replaced(paths, plan, backup):
+    """Readable copies of the changed files an install replaced on request, next to the
+    transaction backup. Returns [(installed path, copy path)]."""
+    copies = []
+    for key in plan.replaced:
+        data, _ = plan.expected[key]
+        if data is None:
+            continue
+        copy = backup / 'replaced' / key.replace('/', '__')
+        write(copy, data, 0o600)
+        copies.append((paths.target(key), copy))
+    return copies
+
+
+def prepare_install(paths, source, scopes, reply, skip_values, revision, replace_modified=False):
     reply = {'ru': 'Russian', 'en': 'English', 'az': 'Azerbaijani'}.get(reply.lower(), reply)
     if not re.fullmatch(r'[A-Za-z](?:[A-Za-z -]{0,28}[A-Za-z])?', reply):
         raise ValueError('invalid reply language')
@@ -39,8 +53,25 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
     if not scopes or any(s not in ('claude', 'global') for s in scopes):
         raise ValueError('invalid installation scope')
     previous = load_state(paths, optional=True)
+    replaced, released = [], []
+    if previous.get('keep_values'):
+        # An earlier install left the user's changed CLAUDE.md alone. That choice holds for
+        # every later install while the file exists; deleting the file hands it back.
+        if read(paths.target('claude-values'))[0] is not None:
+            skip_values = True
+        else:
+            previous = {key: value for key, value in previous.items() if key != 'keep_values'}
     if previous['scopes']:
-        observed = prepare(paths, source, previous['revision']).expected
+        checked = prepare(paths, source, previous['revision'], restore_missing=True,
+                          replace_modified=replace_modified, keep_values=skip_values)
+        observed, replaced, released = checked.expected, checked.replaced, checked.released
+        if released:
+            # The changed personal CLAUDE.md stays exactly as it is and leaves the record, so
+            # no later update or removal stops because of it.
+            skip_values = True
+            previous = dict(previous, scopes=[scope for scope in previous['scopes'] if scope != 'values'],
+                            files={key: value for key, value in previous['files'].items()
+                                   if key not in released}, keep_values=True)
     else:
         observed = {key: read(paths.target(key)) for key in ('state', 'language', 'settings')}
     migrating = observed['state'][0] is None
@@ -60,6 +91,7 @@ def prepare_install(paths, source, scopes, reply, skip_values, revision):
         owned['claude-values'] = previous['files']['claude-values']
     changes = UpdatePlan(observed)
     changes.scopes = sorted(selected)
+    changes.replaced, changes.released = replaced, released
 
     def stage(key, value):
         current = observed.setdefault(key, read(paths.target(key)))

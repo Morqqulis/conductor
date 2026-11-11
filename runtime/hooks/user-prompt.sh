@@ -74,5 +74,28 @@ $found"
         fi
     done
 fi
+# A work map in this checkout (playbooks/scheduling.md, TEAM): attach its state as git holds
+# it - which steps may start, which wait for acceptance, the first disagreement between the
+# plan and the facts - so nobody acts on a remembered state. Runs only where the map file
+# exists (or in a linked worktree, whose map lives in the main checkout); 3 s limit; any
+# failure adds nothing. Turn it off with CONDUCTOR_PLAN_STATUS=0.
+planner="$HOOK_DIR/../evidence/plan.py"
+if [ "${CONDUCTOR_PLAN_STATUS:-1}" != 0 ] && [ -f "$planner" ] &&
+   { [ -f .conductor/work-map.md ] || [ -f .git ]; }; then
+    limit=''
+    command -v timeout >/dev/null 2>&1 && limit='timeout 3'
+    for c in python3 python; do
+        command -v "$c" >/dev/null 2>&1 || continue
+        state="$($limit "$c" -B "$planner" status --brief 2>/dev/null)"
+        code=$?
+        case "$code" in
+            0|1) [ -n "$state" ] && line="$line
+$state (computed from git by evidence/plan.py status - never keep plan state by hand)." ;;
+            2) [ -f .conductor/work-map.md ] && line="$line
+PLAN: the work map here cannot be read - run evidence/plan.py status and fix what it names." ;;
+        esac
+        [ "$code" -le 2 ] && break
+    done
+fi
 emit_payload UserPromptSubmit "$line" || exit 0
 exit 0

@@ -169,6 +169,14 @@ sed -i 's/not verified in the real environment/fine/' "$WORK/runtime/playbooks/i
 expect_fail "reality line removed from a loaded playbook" \
     "reality/absence claims missing in runtime/playbooks/implementing.md (verification.md alone is rarely loaded)" \
     runtime/playbooks/implementing.md
+sed -i 's#conductor/evidence/plan.py#the map file#' "$WORK/runtime/playbooks/scheduling.md"
+expect_fail "computed plan state removed from the rule" \
+    "computed plan state (evidence/plan.py) missing in runtime/playbooks/scheduling.md" \
+    runtime/playbooks/scheduling.md
+rm -f "$WORK/runtime/evidence/plan_state.py"
+expect_fail "the plan state program does not ship" \
+    "runtime/evidence/plan_state.py missing: scheduling.md depends on it" \
+    runtime/evidence/plan_state.py
 sed -i 's/other instances of the same defect/nothing else/' "$WORK/runtime/playbooks/debugging.md"
 expect_fail "reach rule for fixes removed" \
     "reach rule for fixes (other instances of the same defect) missing in runtime/playbooks/debugging.md" \

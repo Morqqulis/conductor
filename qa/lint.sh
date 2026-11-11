@@ -53,7 +53,7 @@ grep -q 'CONDUCTOR-SUB-v1' "$CONTRACT" || check 1 "subagent-contract.md missing 
 declare -A BUDGETS=(
     [debugging.md]=7000 [implementing.md]=7700 [investigating.md]=6000
     [orchestration.md]=7400 [skeptic.md]=6500 [distill.md]=3000 [methods.md]=6000
-    [verification.md]=5600 [scheduling.md]=8800
+    [verification.md]=5600 [scheduling.md]=9800
 )
 hook_texts="$(cat "$RUNTIME"/hooks/*.sh 2>/dev/null)"
 core_text="$(cat "$CORE")"
@@ -127,6 +127,13 @@ tr '\n' ' ' < "$RUNTIME/playbooks/debugging.md" | grep -qF 'other instances of t
     check 1 "reach rule for fixes (other instances of the same defect) missing in runtime/playbooks/debugging.md"
 tr '\n' ' ' < "$RUNTIME/playbooks/debugging.md" | grep -qF 'conductor/evidence/falsify.py' || \
     check 1 "falsification command (evidence/falsify.py) missing in runtime/playbooks/debugging.md"
+# The state of a team plan is computed from git, never kept by hand: the rule must name the
+# command, and the command must ship (a rule pointing at a missing program is worse than none).
+tr '\n' ' ' < "$RUNTIME/playbooks/scheduling.md" | grep -qF 'conductor/evidence/plan.py' || \
+    check 1 "computed plan state (evidence/plan.py) missing in runtime/playbooks/scheduling.md"
+for part in plan.py plan_state.py plan_map.py; do
+    [ -f "$RUNTIME/evidence/$part" ] || check 1 "runtime/evidence/$part missing: scheduling.md depends on it"
+done
 for loaded in debugging implementing; do
     tr '\n' ' ' < "$RUNTIME/playbooks/$loaded.md" | grep -qF 'not verified in the real environment' || \
         check 1 "reality/absence claims missing in runtime/playbooks/$loaded.md (verification.md alone is rarely loaded)"

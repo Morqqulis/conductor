@@ -196,6 +196,14 @@ Söndürmək üçün bulud mühitinin dəyişənlərində `CONDUCTOR_AUTO_UPDATE
 skriptiniz `--ref` ilə versiyanı sabitləyirsə, onu söndürün: əks halda avtomatik yeniləmə
 sessiyanı `main` versiyasına keçirir.
 
+Bir neçə agent eyni plan üzrə işləyəndə layihədə iş xəritəsi olur:
+`.conductor/work-map.md` (onu agent özü yaradır, git-ə düşmür). Xəritədə yalnız plan yazılır;
+kimin nəyi başladığını, təhvil verdiyini və nəyin qəbul edildiyini `evidence/plan.py`
+proqramı git-dən oxuyur və planla faktlar arasındakı hər uyğunsuzluğu adlandırır. Xəritə
+faylı mövcud olduqca hər mesajınıza bu vəziyyəti göstərən bir sətir əlavə olunur (3 saniyəyə
+qədər; istənilən xətada sətir sadəcə əlavə olunmur). Sətri söndürmək üçün
+`CONDUCTOR_PLAN_STATUS=0` dəyişənini təyin edin.
+
 ### İstənilən qovluqdan quraşdırma, yeniləmə və silinmə
 
 Qlobal əmr `~/.local/bin` daxilindədir (Windows: `conductor.cmd`).

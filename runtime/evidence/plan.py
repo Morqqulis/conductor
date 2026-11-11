@@ -41,7 +41,7 @@ def load(args):
     main, _ = plan_state.worktrees(args.repo)
     args.map = Path(args.map) if args.map else Path(main) / '.conductor' / 'work-map.md'
     try:
-        text = args.map.read_text(encoding='utf-8-sig')
+        text = args.map.read_text(encoding='utf-8')
     except (OSError, UnicodeDecodeError) as error:
         raise ValueError(f'cannot read the work map {args.map}: {error}')
     plan = plan_map.parse(text)

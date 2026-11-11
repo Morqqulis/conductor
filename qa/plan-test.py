@@ -373,11 +373,11 @@ class PlanTest(unittest.TestCase):
 
     def test_map_forms_people_really_write(self):
         piped = MAP.replace("| python tests/invoice.py |", "| cargo test | grep ok |")
-        piped = "﻿" + piped + "\nNotes: a | b | c is free text after the table.\n"
+        piped = chr(0xFEFF) + piped + "\nNotes: a | b | c is free text after the table.\n"
         self.write_map(piped.replace("\n", "\r\n"))
         self.ok("status")
         self.assertEqual(plan_map.parse(piped).steps["B"].proof, "cargo test | grep ok")
-        marked = "﻿integration branch: p\nid | step | area | needs | proof | weight\nA | s | a | - | t | light\n"
+        marked = chr(0xFEFF) + "integration branch: p\nid | step | area | needs | proof | weight\nA | s | a | - | t | light\n"
         self.assertEqual(plan_map.parse(marked).branch, "p")  # the mark sits on the line that matters
         self.write_map(marked.replace("branch: p", "branch: plan/demo"))
         self.ok("status")

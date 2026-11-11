@@ -72,7 +72,7 @@ def _pattern(raw, number):
 
 def parse(text):
     branch, lanes, decided, steps, header, closed = None, 1, [], {}, False, False
-    for number, line in enumerate(text.lstrip('﻿').splitlines(), 1):
+    for number, line in enumerate(text.lstrip(chr(0xFEFF)).splitlines(), 1):  # a byte-order mark
         if steps and not line.strip():
             closed = True  # a blank line ends the table: later "|" is free text
         lowered = line.strip().lstrip('#*- ').lower()

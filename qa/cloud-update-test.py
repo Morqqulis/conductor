@@ -25,6 +25,9 @@ case "${STUB_MODE:-}" in
     rewrite) printf 'NEW CORE\n' > "$STUB_CORE" ;;
     fail) exit 1 ;;
     hang)
+        # Evidence for a failing run: which signals this process already ignores (an
+        # ignored SIGINT cannot be trapped) - Linux only, silently absent elsewhere.
+        grep -E '^Sig(Ign|Blk|Cgt)' "/proc/$$/status" > "$STUB_LOG.signals" 2>/dev/null || true
         sleep 30 &
         child=$!
         trap 'kill "$child" 2>/dev/null; printf "interrupted\n" >> "$STUB_LOG"; exit 130' INT
@@ -80,6 +83,22 @@ class CloudUpdateTests(unittest.TestCase):
         if not self.log.exists():
             return []
         return [json.loads(line) for line in self.log.read_text(encoding='utf-8').splitlines()]
+
+    def evidence(self, events):
+        """What a failed signal test needs to be understood from a CI log alone."""
+        def first_line(*command):
+            try:
+                result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+                return (result.stdout or result.stderr).splitlines()[0]
+            except (OSError, subprocess.SubprocessError, IndexError) as exc:
+                return f'unavailable ({exc})'
+        signals = Path(str(self.stub_log) + '.signals')
+        return json.dumps({
+            'elapsed_seconds': round(self.elapsed, 2), 'events': events,
+            'timeout': first_line('/usr/bin/timeout', '--version'),
+            'bash': first_line(bash_command(), '--version'),
+            'stub_signal_masks': signals.read_text().split() if signals.exists() else 'not recorded',
+        }, ensure_ascii=False)
 
     def test_new_cloud_session_injects_the_core_written_by_the_update(self):
         core, result = self.start()
@@ -142,8 +161,8 @@ class CloudUpdateTests(unittest.TestCase):
         self.assertEqual(core, 'OLD CORE')
         self.assertLess(self.elapsed, 8)
         # SIGINT first: the real updater turns it into a rollback of the files it wrote.
-        self.assertEqual(self.calls(), ['called: update --skip-companions', 'interrupted'])
         events = self.events()
+        self.assertEqual(self.calls(), ['called: update --skip-companions', 'interrupted'], self.evidence(events))
         self.assertEqual(len(events), 1)
         self.assertIn(events[0]['event'], ('timed-out', 'failed'))
         self.assertNotEqual(events[0]['exit'], 0)
